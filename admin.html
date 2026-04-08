@@ -6,35 +6,17 @@
   <title>Panel Comité - AEUDJ</title>
   <link rel="icon" href="img/comite.jpg" type="image/jpg">
   <link rel="stylesheet" href="css/styles.css">
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script type="text/javascript">
+    (function() {
+        emailjs.init({
+          publicKey: "AQUI_TU_PUBLIC_KEY_DE_EMAILJS", // Reemplazar con clave real
+        });
+    })();
+  </script>
 </head>
 <body data-page="admin">
-  <!-- LOGIN ADMIN -->
-  <div id="adminLogin" class="hidden" style="min-height: 100vh; display: flex; align-items: center; justify-content: center;">
-    <div class="card max-w-md w-full">
-      <div class="text-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">🛠️ Acceso Comité AEUDJ</h1>
-        <p class="text-gray-600">Ingresa tus credenciales</p>
-      </div>
-      
-      <div id="adminError" class="alert alert-error hidden">
-        Usuario o clave incorrectos.
-      </div>
-      
-      <form id="adminLoginForm" class="space-y-4">
-        <div class="form-group">
-          <input type="text" id="adminUser" class="form-input" placeholder="Usuario" required>
-        </div>
-        <div class="form-group">
-          <input type="password" id="adminPass" class="form-input" placeholder="Clave" required>
-        </div>
-        <button type="submit" class="btn btn-primary btn-block">Entrar</button>
-      </form>
-      
-      <div class="text-center mt-4">
-        <a href="index.html" class="text-gray-600 hover:underline text-sm">Volver al inicio</a>
-      </div>
-    </div>
-  </div>
+  <!-- ELIMINADO LOG DE ADMIN ANTIGUO; ahora todo pasa por index.html -->
 
   <!-- PANEL ADMIN -->
   <div id="adminPanel" class="hidden">
@@ -45,6 +27,27 @@
         </div>
         <h1 class="page-title">Panel Comité AEUDJ</h1>
         <p class="page-subtitle">Gestión de pasajeros - <span id="fechaAdmin"></span></p>
+      </div>
+
+      </div>
+
+      <!-- Centro de Notificaciones -->
+      <div class="card mb-6" style="background:#f0f9ff; border:1px solid #bae6fd; max-width: 600px; margin: 0 auto 2rem auto;">
+        <h2 class="text-xl font-bold text-blue-800 mb-4 text-center">📢 Centro de Notificaciones (Email)</h2>
+        <div class="flex flex-wrap gap-3 justify-center">
+          <button onclick="notificarAccion('apertura')" class="btn btn-primary" style="background:#3b82f6;">🔔 Avisar Apertura</button>
+          <button onclick="notificarAccion('llegada')" class="btn btn-success" style="background:#10b981;">🚌 Avisar Llegada</button>
+          <button onclick="notificarAccion('salida')" class="btn btn-warning" style="background:#f59e0b;">💨 Avisar Salida</button>
+        </div>
+      </div>
+
+      <!-- Gestión de Voluntarios -->
+      <div class="card mb-6" style="background:#f8fafc; border:1px solid #e2e8f0; max-width: 800px; margin: 0 auto 2rem auto;">
+        <h2 class="text-xl font-bold text-blue-800 mb-4 text-center">👥 Gestión de Voluntarios</h2>
+        <div id="voluntariosListContainer" class="mb-4">
+           <!-- Aquí se cargarán los usuarios y sus roles -->
+           <div class="spinner"></div>
+        </div>
       </div>
 
       <div id="adminContainer">

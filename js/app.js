@@ -2,7 +2,7 @@
 // AEUDJ TRANSPORTE - APLICACIÓN PRINCIPAL
 // ============================================
 
-import { db, transportSchedules, getCycleDate, formatDate } from './firebase-config.js';
+import { db, auth, transportSchedules, getCycleDate, formatDate } from './firebase-config.js';
 import { 
   collection, 
   addDoc, 
@@ -15,8 +15,15 @@ import {
   deleteDoc,
   serverTimestamp,
   orderBy,
-  limit
+  limit,
+  setDoc
 } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  onAuthStateChanged,
+  signOut 
+} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 
 // Variables globales
 let currentUser = null;
@@ -27,11 +34,38 @@ let selectedHorarios = [];
 // INICIALIZACIÓN
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
-  // Verificar sesión PRIMERO
+  // Verificar sesión con localStorage y verificar luego con Firebase Auth
   checkSession();
   
-  // Inicializar página según su tipo
   const page = document.body.dataset.page;
+  
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      if (!currentUser || currentUser.id !== user.uid) {
+        try {
+           const docRef = doc(db, 'usuarios', user.uid);
+           const docSnap = await getDoc(docRef);
+           if (docSnap.exists()) {
+             currentUser = docSnap.data();
+             currentUser.id = user.uid;
+             setSession(currentUser);
+           }
+        } catch(e) { console.error('Error fetching user config:', e); }
+      }
+      // Redirigir según el rol si está en index
+      if (page === 'index' && currentUser) {
+         if (currentUser.rol === 'presidente') window.location.href = 'admin.html';
+         else if (currentUser.rol === 'voluntario') window.location.href = 'voluntario.html';
+         else window.location.href = 'votar.html';
+      }
+    } else {
+      clearSession();
+      if (page === 'votar' || page === 'cambios' || page === 'admin' || page === 'voluntario') {
+         window.location.href = 'index.html';
+      }
+    }
+  });
+
   if (page) {
     initPage(page);
   }
@@ -70,7 +104,10 @@ function clearSession() {
   localStorage.removeItem('aeudj_admin_session');
 }
 
-function logout() {
+async function logout() {
+  try {
+    await signOut(auth);
+  } catch(e) {}
   clearSession();
   window.location.href = 'index.html';
 }
@@ -91,6 +128,9 @@ function initPage(page) {
       break;
     case 'admin':
       initAdminPage();
+      break;
+    case 'voluntario':
+      initVoluntarioPage();
       break;
     case 'gracias':
       initGraciasPage();
@@ -121,28 +161,34 @@ function initIndexPage() {
     e.preventDefault();
     errorDiv.classList.add('hidden');
     
-    const matricula = document.getElementById('matriculaLogin').value.trim();
+    const email = document.getElementById('emailLogin').value.trim();
+    const pass = document.getElementById('passwordLogin').value.trim();
     
+    const btn = loginForm.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.textContent = 'Verificando...';
+
     try {
-      const q = query(collection(db, 'usuarios'), where('matricula', '==', matricula));
-      const snapshot = await getDocs(q);
+      const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+      const user = userCredential.user;
       
-      if (snapshot.empty) {
-        showError('Matrícula no registrada. Por favor regístrate primero.');
-        return;
+      const docRef = doc(db, 'usuarios', user.uid);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        userData.id = user.uid;
+        setSession(userData);
+        window.location.href = 'votar.html';
+      } else {
+        showError('Credenciales correctas, pero no se encontraron datos de usuario en la base de datos.');
       }
-      
-      const userDoc = snapshot.docs[0];
-      const userData = userDoc.data();
-      userData.id = userDoc.id;
-      
-      setSession(userData);
-      window.location.href = 'votar.html';
       
     } catch (error) {
       console.error('Error:', error);
-      showError('Error al iniciar sesión. Intenta de nuevo.');
+      showError('Error al iniciar sesión. Verifica tu correo y contraseña.');
     }
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
   });
   
   registerForm.addEventListener('submit', async function(e) {
@@ -153,10 +199,16 @@ function initIndexPage() {
     const nombre = document.getElementById('nombre').value.trim();
     const telefono = document.getElementById('telefono').value.trim();
     const email = document.getElementById('email').value.trim();
+    const pass = document.getElementById('password').value.trim();
     const universidad = document.getElementById('universidad').value;
     
     if (matricula.length < 3) {
       showError('Matrícula muy corta.');
+      return;
+    }
+    
+    if (pass.length < 6) {
+      showError('La contraseña debe tener al menos 6 caracteres.');
       return;
     }
     
@@ -165,43 +217,56 @@ function initIndexPage() {
       return;
     }
     
+    const btn = registerForm.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.textContent = 'Registrando...';
+
     try {
       const checkMat = query(collection(db, 'usuarios'), where('matricula', '==', matricula));
       const matSnapshot = await getDocs(checkMat);
       
       if (!matSnapshot.empty) {
         showError('Esta matrícula ya está registrada. Usa "Iniciar sesión".');
+        btn.disabled = false;
+        btn.textContent = 'Registrar';
         return;
       }
       
-      const checkEmail = query(collection(db, 'usuarios'), where('email', '==', email));
-      const emailSnapshot = await getDocs(checkEmail);
-      
-      if (!emailSnapshot.empty) {
-        showError('Este correo ya está registrado.');
-        return;
-      }
-      
+      const userCred = await createUserWithEmailAndPassword(auth, email, pass);
+      const user = userCred.user;
+
       const newUser = {
         matricula,
         nombre,
         telefono,
         email,
         universidad,
+        rol: 'estudiante',
         createdAt: serverTimestamp()
       };
       
-      const docRef = await addDoc(collection(db, 'usuarios'), newUser);
-      newUser.id = docRef.id;
+      await setDoc(doc(db, 'usuarios', user.uid), newUser);
+      newUser.id = user.uid;
       
       setSession(newUser);
       window.location.href = 'votar.html';
       
     } catch (error) {
       console.error('Error:', error);
-      showError('Error al registrar. Intenta de nuevo.');
+      if (error.code === 'auth/email-already-in-use') {
+        showError('Este correo ya está registrado en otra cuenta.');
+      } else {
+        showError('Error al registrar: ' + error.message);
+      }
     }
+    btn.disabled = false;
+    btn.textContent = 'Registrar';
   });
+
+  function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  }
   
   function showError(msg) {
     errorDiv.textContent = msg;
@@ -536,70 +601,89 @@ function initListaPage() {
 // PÁGINA ADMIN
 // ============================================
 function initAdminPage() {
-  const adminLogin = document.getElementById('adminLogin');
   const adminPanel = document.getElementById('adminPanel');
   
-  const isAdminLogged = localStorage.getItem('aeudj_admin_session');
-  if (isAdminLogged === 'true') {
-    showAdminPanel();
+  if (!currentUser || currentUser.rol !== 'presidente') {
+    window.location.href = 'index.html';
     return;
   }
   
-  if (adminLogin) adminLogin.classList.remove('hidden');
-  if (adminPanel) adminPanel.classList.add('hidden');
-  
-  const loginForm = document.getElementById('adminLoginForm');
-  if (loginForm) {
-    loginForm.addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const user = document.getElementById('adminUser').value;
-      const pass = document.getElementById('adminPass').value;
-      
-      try {
-        const configDoc = await getDoc(doc(db, 'config', 'admin'));
-        
-        if (configDoc.exists()) {
-          const adminData = configDoc.data();
-          
-          if (user === adminData.username && pass === adminData.password) {
-            setAdminSession();
-            showAdminPanel();
-          } else {
-            document.getElementById('adminError').classList.remove('hidden');
-            setTimeout(() => {
-              document.getElementById('adminError').classList.add('hidden');
-            }, 3000);
-          }
-        } else {
-          // Fallback si no hay config en Firestore
-          if (user === 'admin' && pass === 'aeudj2025') {
-            setAdminSession();
-            showAdminPanel();
-          } else {
-            document.getElementById('adminError').classList.remove('hidden');
-          }
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        // Fallback offline
-        if (user === 'admin' && pass === 'aeudj2025') {
-          setAdminSession();
-          showAdminPanel();
-        } else {
-          document.getElementById('adminError').classList.remove('hidden');
-        }
-      }
-    });
-  }
-  
-  function showAdminPanel() {
-    if (adminLogin) adminLogin.classList.add('hidden');
-    if (adminPanel) adminPanel.classList.remove('hidden');
-    loadAdminData();
-  }
+  if (adminPanel) adminPanel.classList.remove('hidden');
   
   const cycleDate = getCycleDate();
   const container = document.getElementById('adminContainer');
+  
+  loadAdminData();
+  loadVoluntariosMng();
+  
+  async function loadVoluntariosMng() {
+     const volContainer = document.getElementById('voluntariosListContainer');
+     if (!volContainer) return;
+
+     try {
+       const q = query(collection(db, 'usuarios'), orderBy('nombre'));
+       const snap = await getDocs(q);
+       
+       let html = `<div class="overflow-x-auto"><table class="w-full text-left border-collapse min-w-full">
+         <thead><tr style="background:#f1f5f9;">
+           <th class="p-2 border" style="border-color:#cbd5e1;">Usuario</th>
+           <th class="p-2 border" style="border-color:#cbd5e1;">Rol</th>
+           <th class="p-2 border" style="border-color:#cbd5e1;">Horario Asignado (Vol)</th>
+           <th class="p-2 border" style="border-color:#cbd5e1;">Acción</th>
+         </tr></thead><tbody>`;
+         
+       snap.forEach(docSnap => {
+         const u = docSnap.data();
+         if (u.rol === 'presidente') return;
+         
+         const isVoluntario = u.rol === 'voluntario';
+         let optHorarios = transportSchedules.map(h => {
+             const selected = (u.horariosAsignados && u.horariosAsignados.includes(h.fullText)) ? 'selected' : '';
+             return `<option value="${h.fullText}" ${selected}>${h.fullText}</option>`;
+         }).join('');
+         
+         html += `<tr>
+           <td class="p-2 border" style="border-color:#cbd5e1;">${escapeHtml(u.nombre)}<br><small style="color:#64748b;">${u.email}</small></td>
+           <td class="p-2 border" style="border-color:#cbd5e1;">
+             <select id="rol-${docSnap.id}" class="form-select text-sm p-1" style="width:100%;">
+               <option value="estudiante" ${u.rol === 'estudiante' ? 'selected' : ''}>Estudiante</option>
+               <option value="voluntario" ${isVoluntario ? 'selected' : ''}>Voluntario</option>
+             </select>
+           </td>
+           <td class="p-2 border" style="border-color:#cbd5e1;">
+             <select id="horarioAsig-${docSnap.id}" class="form-select text-sm p-1" style="width:100%;">
+               <option value="">-- Ninguno --</option>
+               ${optHorarios}
+             </select>
+           </td>
+           <td class="p-2 border" style="border-color:#cbd5e1;">
+             <button onclick="guardarRolAdmin('${docSnap.id}')" class="btn btn-primary btn-small" style="width:100%;">Guardar</button>
+           </td>
+         </tr>`;
+       });
+       
+       html += `</tbody></table></div>`;
+       volContainer.innerHTML = html;
+     } catch (e) {
+       console.error(e);
+       volContainer.innerHTML = 'Error al cargar voluntarios.';
+     }
+  }
+
+  window.guardarRolAdmin = async function(id) {
+    const selRol = document.getElementById(`rol-${id}`).value;
+    const selHorario = document.getElementById(`horarioAsig-${id}`).value;
+    try {
+      await updateDoc(doc(db, 'usuarios', id), {
+         rol: selRol,
+         horariosAsignados: selRol === 'voluntario' && selHorario ? [selHorario] : []
+      });
+      alert('Rol actualizado correctamente');
+    } catch(e) {
+      console.error(e);
+      alert('Error updating user');
+    }
+  }
   
   async function loadAdminData() {
     try {
@@ -1216,6 +1300,126 @@ function hashString(str) {
 }
 
 // ============================================
+// PÁGINA VOLUNTARIO
+// ============================================
+function initVoluntarioPage() {
+  if (!currentUser || currentUser.rol !== 'voluntario') {
+    window.location.href = 'index.html';
+    return;
+  }
+
+  const container = document.getElementById('voluntarioContainer');
+  const horariosText = document.getElementById('horariosAsignadosText');
+  const cycleDate = getCycleDate();
+  
+  const misHorarios = currentUser.horariosAsignados || [];
+  
+  if (misHorarios.length === 0) {
+     if(horariosText) horariosText.textContent = "No tienes ningún horario asignado.";
+     container.innerHTML = '<p class="text-center text-gray-600 mt-4">Contacta al presidente para que te asigne una ruta.</p>';
+     return;
+  }
+  
+  if(horariosText) horariosText.textContent = `Tu horario: ${misHorarios.join(', ')}`;
+  
+  loadVoluntarioData();
+  
+  async function loadVoluntarioData() {
+    try {
+      const q = query(
+        collection(db, 'votos'),
+        where('fecha', '==', cycleDate),
+        where('horario', 'in', misHorarios),
+        orderBy('createdAt')
+      );
+      const snapshot = await getDocs(q);
+      
+      const votos = [];
+      snapshot.forEach(doc => {
+        votos.push({ id: doc.id, ...doc.data() });
+      });
+      
+      if (votos.length === 0) {
+        container.innerHTML = '<p class="text-center text-gray-600">No hay pasajeros anotados para tu horario hoy.</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      
+      const card = document.createElement('div');
+      card.className = 'card-horario';
+      let html = `<h2 class="text-2xl font-bold text-blue-800 mb-6 text-center">Pasajeros (${votos.length})</h2><div class="passenger-list">`;
+      
+      votos.forEach((p, i) => {
+        let statusHtml = '';
+        if (p.seMonto === null) {
+          statusHtml = `
+            <div class="action-btns">
+              <button onclick="marcarVotoVoluntario('${p.id}', 1)" class="btn btn-success btn-small">Subió</button>
+              <button onclick="marcarVotoVoluntario('${p.id}', 0)" class="btn btn-danger btn-small">No subió</button>
+            </div>
+          `;
+        } else if (p.seMonto === 1) {
+          statusHtml = `
+            <div class="action-btns">
+              <span class="status-badge status-success">✅ Subió</span>
+              <button onclick="marcarVotoVoluntario('${p.id}', 2)" class="btn btn-warning btn-small">Llegó tarde</button>
+            </div>
+          `;
+        } else if (p.seMonto === 2) {
+          statusHtml = `
+            <div class="action-btns">
+              <span class="status-badge status-warning">⏰ Llegó tarde</span>
+              <button onclick="marcarVotoVoluntario('${p.id}', 1)" class="btn btn-success btn-small">Puntual</button>
+              <button onclick="marcarVotoVoluntario('${p.id}', 0)" class="btn btn-danger btn-small">No subió</button>
+            </div>
+          `;
+        } else {
+          statusHtml = `
+            <div class="action-btns">
+              <span class="status-badge status-danger">❌ No subió</span>
+              <button onclick="marcarVotoVoluntario('${p.id}', 1)" class="btn btn-success btn-small">Subió</button>
+            </div>
+          `;
+        }
+
+        html += `
+          <div class="passenger-item">
+            <div class="flex items-center" style="gap: 1rem;">
+              <span class="passenger-number">${i+1}</span>
+              <div class="passenger-info">
+                <p class="passenger-name">${escapeHtml(p.nombre)}</p>
+                <p class="passenger-meta">${p.matricula} · ${p.telefono || 'N/A'}</p>
+              </div>
+            </div>
+            ${statusHtml}
+          </div>
+        `;
+      });
+      html += '</div>';
+      card.innerHTML = html;
+      container.appendChild(card);
+      
+    } catch (error) {
+      console.error('Error:', error);
+      container.innerHTML = '<p class="text-center text-gray-600">Error al cargar datos.</p>';
+    }
+  }
+
+  window.marcarVotoVoluntario = async function(id, val) {
+    try {
+      await updateDoc(doc(db, 'votos', id), {
+        seMonto: val
+      });
+      loadVoluntarioData(); // Reload
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error al actualizar');
+    }
+  };
+}
+
+// ============================================
 // FUNCIONES GLOBALES
 // ============================================
 window.logout = logout;
@@ -1226,5 +1430,74 @@ window.irAHorario = function(ancla) {
     const offset = 100;
     const elementPosition = target.getBoundingClientRect().top + window.pageYOffset;
     window.scrollTo({ top: elementPosition - offset, behavior: 'smooth' });
+  }
+};
+
+window.notificarAccion = async function(tipo) {
+  if (!currentUser || currentUser.rol !== 'presidente') return;
+  
+  if (!confirm(`¿Estás seguro/a de enviar la notificación por correo de tipo: ${tipo}?`)) return;
+
+  try {
+    const btn = event.target;
+    const oldText = btn.textContent;
+    btn.textContent = 'Enviando...';
+    btn.disabled = true;
+    
+    let correos = [];
+    if (tipo === 'apertura') {
+       const usersSnap = await getDocs(collection(db, 'usuarios'));
+       usersSnap.forEach(u => {
+          if (u.data().email) correos.push(u.data().email);
+       });
+    } else {
+       const cycleDate = getCycleDate();
+       const vQuery = query(collection(db, 'votos'), where('fecha', '==', cycleDate));
+       const vSnap = await getDocs(vQuery);
+       vSnap.forEach(v => {
+          if (v.data().email && !correos.includes(v.data().email)) {
+             correos.push(v.data().email);
+          }
+       });
+    }
+
+    if (correos.length === 0) {
+      alert("No hay correos registrados para esta acción.");
+      btn.textContent = oldText;
+      btn.disabled = false;
+      return;
+    }
+
+    let titulo = "";
+    let mensaje = "";
+    if (tipo === 'apertura') {
+      titulo = "¡Lista Abierta! Anótate en el transporte";
+      mensaje = "La lista para anotarse en el transporte de la AEUDJ ya está abierta. Ingresa a la página para reservar tu asiento.";
+    } else if (tipo === 'llegada') {
+      titulo = "🚌 El autobús ha llegado";
+      mensaje = "El autobús ya llegó al punto de partida. Por favor acércate a la puerta para abordar.";
+    } else if (tipo === 'salida') {
+      titulo = "💨 El autobús está saliendo";
+      mensaje = "¡Atención! El autobús está saliendo pronto. Apresúrate o perderás tu asiento.";
+    }
+
+    const templateParams = {
+      titulo: titulo,
+      mensaje: mensaje,
+      destinatarios: correos.join(',')
+    };
+
+    // Para usar EmailJS real, se debe crear un template que acepte 'destinatarios' en BCC (Copia Oculta).
+    // alert(`Simulando envío por EmailJS a ${correos.length} usuarios...`);
+    // await emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams);
+    
+    alert(`Se despacharon notificaciones a ${correos.length} estudiantes correctamente.\n\nSimulación exitosa: Recuerda configurar tus Service/Template ID en js/app.js cuando configures tu cuenta de EmailJS.`);
+    
+    btn.textContent = oldText;
+    btn.disabled = false;
+    
+  } catch(error) {
+     console.error(error);
+     alert("Error al enviar notificaciones: " + error.message);
   }
 };

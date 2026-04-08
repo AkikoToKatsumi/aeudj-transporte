@@ -1,6 +1,7 @@
 // firebase-config.js - Versión CDN ES modules
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
 import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+import { getAuth } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCEExKRz5L31LwzUZ9Aae6tyorxJ4ERyFk",
@@ -14,10 +15,12 @@ const firebaseConfig = {
 
 let app;
 let db;
+let auth;
 
 try {
   app = initializeApp(firebaseConfig);
   db = getFirestore(app);
+  auth = getAuth(app);
   console.log('✅ Firebase conectado correctamente');
 } catch (error) {
   console.error('❌ Error al conectar Firebase:', error);
@@ -55,4 +58,4 @@ function formatDate(dateStr) {
   return `${day}/${month}/${year}`;
 }
 
-export { db, transportSchedules, getCycleDate, formatDate };
+export { db, auth, transportSchedules, getCycleDate, formatDate };
