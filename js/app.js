@@ -222,8 +222,8 @@ function initIndexPage() {
         const userData = docSnap.data();
         userData.id = user.uid;
         
-        // Auto-promover a administradora si la cuenta se creó vieja
-        if (userData.matricula === '20230105' && userData.rol !== 'administrador') {
+        // Auto-promover a administradora
+        if (userData.matricula === '0000' && userData.rol !== 'administrador') {
           userData.rol = 'administrador';
           await updateDoc(docRef, { rol: 'administrador' });
         }
@@ -294,7 +294,7 @@ function initIndexPage() {
         telefono,
         email,
         universidad,
-        rol: matricula === '20230105' ? 'administrador' : 'estudiante',
+        rol: matricula === '0000' ? 'administrador' : 'estudiante',
         createdAt: serverTimestamp()
       };
       
