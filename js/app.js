@@ -1487,11 +1487,10 @@ window.notificarAccion = async function(tipo) {
       destinatarios: correos.join(',')
     };
 
-    // Para usar EmailJS real, se debe crear un template que acepte 'destinatarios' en BCC (Copia Oculta).
-    // alert(`Simulando envío por EmailJS a ${correos.length} usuarios...`);
-    // await emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams);
+    // Activar envío real de EmailJS
+    await emailjs.send('service_afofocu', 'template_e2cqbex', templateParams);
     
-    alert(`Se despacharon notificaciones a ${correos.length} estudiantes correctamente.\n\nSimulación exitosa: Recuerda configurar tus Service/Template ID en js/app.js cuando configures tu cuenta de EmailJS.`);
+    alert(`¡Éxito! Se enviaron las notificaciones a ${correos.length} estudiantes correctamente vía correo electrónico.`);
     
     btn.textContent = oldText;
     btn.disabled = false;
