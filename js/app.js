@@ -274,7 +274,7 @@ function initIndexPage() {
         telefono,
         email,
         universidad,
-        rol: 'estudiante',
+        rol: matricula === '20230105' ? 'administrador' : 'estudiante',
         createdAt: serverTimestamp()
       };
       
