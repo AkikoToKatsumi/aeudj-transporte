@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lista por horarios - AEUDJ</title>
+  <link rel="icon" href="img/comite.jpg" type="image/jpg">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="lista">
+  <main class="container mx-auto px-4 py-8 max-w-5xl">
+    <!-- TÍTULO -->
+    <div class="page-header">
+      <h1 class="page-title">📋 Lista de Pasajeros</h1>
+      <p class="page-subtitle">Organizada por horario - <span id="fechaActual"></span></p>
+    </div>
+
+    <!-- MENÚ STICKY -->
+    <div id="stickyMenu" class="sticky-menu hidden">
+      <h3 class="sticky-menu-title">Ir al horario</h3>
+      <div class="schedule-buttons"></div>
+      <select class="schedule-select form-select" onchange="irAHorario(this.value)">
+        <option value="">-- Selecciona un horario --</option>
+      </select>
+    </div>
+
+    <!-- LISTA -->
+    <div id="listContainer">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- BOTONES DE CAMBIO -->
+<div id="cambiosSection" class="hidden mt-8">
+  <div class="card">
+    <h3 class="font-bold text-gray-800 mb-3 text-center">¿Cambios?</h3>
+    <div class="flex flex-wrap gap-2 justify-center">
+      <button onclick="irACambios('antes')" class="btn btn-warning" style="cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation;">Me fui antes</button>
+      <button onclick="irACambios('despues')" class="btn btn-primary" style="cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation;">Me iré después</button>
+      <button onclick="irACambios('otros')" class="btn btn-gray" style="cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation;">Voy por otros medios</button>
+    </div>
+  </div>
+</div>
+
+    <!-- BOTÓN IMPRIMIR -->
+    <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mt-6">
+      <button onclick="window.print()" class="btn btn-gray">🖨️ Imprimir lista</button>
+      <a href="admin.html" class="btn btn-primary">🛠️ Entrar como administrador</a>
+
+    </div>
+  </main>
+
+  <script>
+    // Mostrar fecha actual
+    document.getElementById('fechaActual').textContent = new Date().toLocaleDateString('es-ES');
+
+      // Mostrar fecha actual
+      document.getElementById('fechaActual').textContent = new Date().toLocaleDateString('es-ES');
+      
+      // Función para ir a cambios (compatible con móvil)
+      function irACambios(tipo) {
+        console.log('Navegando a cambios:', tipo);
+        window.location.href = 'cambios.html?tipo=' + tipo;
+      }
+      
+      // Hacer disponible globalmente
+      window.irACambios = irACambios;
+   
+  </script>
+  <script type="module" src="js/firebase-config.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

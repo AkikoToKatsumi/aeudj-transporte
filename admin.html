@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Comité - AEUDJ</title>
+  <link rel="icon" href="img/comite.jpg" type="image/jpg">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="admin">
+  <!-- LOGIN ADMIN -->
+  <div id="adminLogin" class="hidden" style="min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+    <div class="card max-w-md w-full">
+      <div class="text-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">🛠️ Acceso Comité AEUDJ</h1>
+        <p class="text-gray-600">Ingresa tus credenciales</p>
+      </div>
+      
+      <div id="adminError" class="alert alert-error hidden">
+        Usuario o clave incorrectos.
+      </div>
+      
+      <form id="adminLoginForm" class="space-y-4">
+        <div class="form-group">
+          <input type="text" id="adminUser" class="form-input" placeholder="Usuario" required>
+        </div>
+        <div class="form-group">
+          <input type="password" id="adminPass" class="form-input" placeholder="Clave" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+      </form>
+      
+      <div class="text-center mt-4">
+        <a href="index.html" class="text-gray-600 hover:underline text-sm">Volver al inicio</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL ADMIN -->
+  <div id="adminPanel" class="hidden">
+    <main class="container mx-auto px-4 py-8 max-w-5xl">
+      <div class="page-header">
+        <div class="logo">
+          <img src="img/comite.jpg" alt="Logo AEUDJ" onerror="this.style.display='none'">
+        </div>
+        <h1 class="page-title">Panel Comité AEUDJ</h1>
+        <p class="page-subtitle">Gestión de pasajeros - <span id="fechaAdmin"></span></p>
+      </div>
+
+      <div id="adminContainer">
+        <div class="spinner"></div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mt-8">
+        <a href="lista.html" class="btn btn-gray">Ver lista pública</a>
+        <a href="no-subieron.html" class="btn btn-danger">Ver quienes no subieron</a>
+        <button onclick="logout()" class="btn btn-gray">Cerrar sesión</button>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    document.getElementById('fechaAdmin').textContent = new Date().toLocaleDateString('es-ES');
+  </script>
+  <script type="module" src="js/firebase-config.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>No subieron - AEUDJ</title>
+  <link rel="icon" href="img/comite.jpg" type="image/jpg">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="no-subieron">
+  <main class="container mx-auto px-4 py-8 max-w-4xl">
+    <div class="page-header">
+      <h1 class="page-title text-red-800">📵 Personas que NO subieron</h1>
+      <p class="text-red-600">Día <span id="fechaNoSubieron"></span> - para contactar</p>
+    </div>
+
+    <div id="noSubieronContainer">
+      <div class="spinner"></div>
+    </div>
+
+    <div class="text-center mt-8">
+      <a href="admin.html" class="btn btn-gray">Volver al panel</a>
+    </div>
+  </main>
+
+  <script>
+    document.getElementById('fechaNoSubieron').textContent = new Date().toLocaleDateString('es-ES');
+  </script>
+  <script type="module" src="js/firebase-config.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

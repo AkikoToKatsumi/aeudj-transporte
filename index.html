@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AEUDJ - Registro / Inicio</title>
+  <link rel="icon" href="img/comite.jpg" type="image/jpg">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="index">
+  <main class="container mx-auto px-4 py-8" style="min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+    <div class="card max-w-xl w-full">
+      <div class="text-center mb-6">
+        <div class="logo">
+          <img src="img/comite.jpg" alt="Logo AEUDJ" onerror="this.style.display='none'">
+        </div>
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">🚌 AEUDJ Transporte</h1>
+        <h2 class="text-xl font-semibold text-gray-700">👤 Registro / Inicio</h2>
+        <p class="text-gray-600 mt-2">Datos reales para evitar duplicados</p>
+      </div>
+
+      <div id="errorMsg" class="alert alert-error hidden"></div>
+
+      <!-- INICIO DE SESIÓN -->
+      <form id="loginForm" class="mb-6">
+        <h3 class="text-lg font-semibold text-gray-700 mb-2">Iniciar sesión</h3>
+        <div class="form-group">
+          <input type="text" id="matriculaLogin" class="form-input" placeholder="Matrícula (sin guiones)" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+      </form>
+
+      <hr class="my-6" style="border-color: #e5e7eb;">
+
+      <!-- REGISTRO NUEVO -->
+      <form id="registerForm" class="space-y-4">
+        <h3 class="text-lg font-semibold text-gray-700 mb-2">¿Eres nuevo? Regístrate</h3>
+        <div class="form-group">
+          <input type="text" id="matricula" class="form-input" placeholder="Matrícula (sin guiones)" required>
+        </div>
+        <div class="form-group">
+          <input type="text" id="nombre" class="form-input" placeholder="Nombre completo" required>
+        </div>
+        <div class="form-group">
+          <input type="tel" id="telefono" class="form-input" placeholder="Teléfono" required>
+        </div>
+        <div class="form-group">
+          <input type="email" id="email" class="form-input" placeholder="Correo electrónico" required>
+        </div>
+        <div class="form-group">
+          <select id="universidad" class="form-select" required>
+            <option value="">-- Selecciona tu universidad --</option>
+            <option value="UCATECI">UCATECI</option>
+            <option value="UNEV">UAFAM</option>
+            <option value="UAPA">UAPA</option>
+            <option value="Otra">Otra</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-success btn-block">Registrar</button>
+      </form>
+
+      <div class="text-center mt-6">
+        <a href="lista.html" class="text-blue-600 hover:underline text-sm">Ver lista pública sin registrar</a>
+        <div class="mt-3">
+          <a href="admin.html" class="text-sm text-gray-600 hover:underline">🛠️ Entrar como administrador</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Scripts de Firebase v10 ES modules -->
+  <script type="module" src="js/firebase-config.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

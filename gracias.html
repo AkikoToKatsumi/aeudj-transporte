@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirmación - AEUDJ</title>
+  <link rel="icon" href="img/comite.jpg" type="image/jpg">
+  <link rel="stylesheet" href="css/styles.css">
+  <meta http-equiv="refresh" content="3;url=lista.html">
+</head>
+<body data-page="gracias">
+  <main class="container mx-auto px-4" style="min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+    <div class="card max-w-md w-full text-center">
+      <div class="text-6xl mb-4">✅</div>
+
+      <div id="yaVotadoMsg" class="hidden">
+        <p class="text-yellow-600 mb-4">Ya habías confirmado tu asistencia hoy.</p>
+      </div>
+
+      <div id="bloqueadoMsg" class="hidden">
+        <p class="text-red-600 mb-4">⏰ El tiempo para confirmar ha terminado (22:00).</p>
+      </div>
+
+      <h1 class="text-3xl font-bold text-gray-800 mb-2">Confirmación registrada</h1>
+      <p class="text-lg text-gray-700 mb-6">
+        Gracias por usar el servicio de transporte AEUDJ.
+      </p>
+      <p class="text-base text-yellow-700 bg-yellow-50 px-4 py-3 rounded-lg border border-yellow-200 mb-6">
+        ⏰ <strong>Recuerda estar 10 min antes</strong>
+      </p>
+
+      <a href="lista.html" class="btn btn-success">Ver lista de pasajeros</a>
+
+      <p class="text-sm text-gray-500 mt-4">Serás redirigido en 3 segundos...</p>
+    </div>
+  </main>
+
+  <script type="module" src="js/firebase-config.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
