@@ -204,6 +204,14 @@ function initIndexPage() {
       if (docSnap.exists()) {
         const userData = docSnap.data();
         userData.id = user.uid;
+        
+        // Auto-promover a administradora si la cuenta se creó vieja
+        if (userData.matricula === '20230105' && userData.rol !== 'administrador') {
+          userData.rol = 'administrador';
+          await updateDoc(docRef, { rol: 'administrador' });
+        }
+        
+        setSession(userData);
         // Redirigir a votar sin importar el rango para que pueda agendarse en el bus.
         window.location.href = 'votar.html';
       } else {
