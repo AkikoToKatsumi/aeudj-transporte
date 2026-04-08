@@ -52,11 +52,9 @@ document.addEventListener('DOMContentLoaded', function() {
            }
         } catch(e) { console.error('Error fetching user config:', e); }
       }
-      // Redirigir según el rol si está en index
+      // Redirigir siempre a votar.html al cargar el home para que elijan su asiento primero
       if (page === 'index' && currentUser) {
-         if (currentUser.rol === 'administrador') window.location.href = 'admin.html';
-         else if (currentUser.rol === 'voluntario') window.location.href = 'voluntario.html';
-         else window.location.href = 'votar.html';
+         window.location.href = 'votar.html';
       }
     } else {
       clearSession();
@@ -206,11 +204,8 @@ function initIndexPage() {
       if (docSnap.exists()) {
         const userData = docSnap.data();
         userData.id = user.uid;
-        setSession(userData);
-        // Redirigir según el rol si está en index
-        if (userData.rol === 'administrador') window.location.href = 'admin.html';
-        else if (userData.rol === 'voluntario') window.location.href = 'voluntario.html';
-        else window.location.href = 'votar.html';
+        // Redirigir a votar sin importar el rango para que pueda agendarse en el bus.
+        window.location.href = 'votar.html';
       } else {
         showError('Credenciales correctas, pero no se encontraron datos de usuario en la base de datos.');
       }
@@ -314,6 +309,17 @@ function initVotarPage() {
   if (!currentUser) {
     window.location.href = 'index.html';
     return;
+  }
+  
+  const staffMenu = document.getElementById('staffMenu');
+  if (staffMenu && currentUser) {
+    if (currentUser.rol === 'administrador') {
+      staffMenu.innerHTML = `<a href="admin.html" class="btn p-3" style="background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); color: #c4b5fd; text-shadow: 0 0 10px rgba(196,181,253,0.5); box-shadow: 0 0 15px rgba(139, 92, 246, 0.15); display: inline-block;">🛠️ Entrar al Panel de Administración</a>`;
+      staffMenu.classList.remove('hidden');
+    } else if (currentUser.rol === 'voluntario') {
+      staffMenu.innerHTML = `<a href="voluntario.html" class="btn p-3" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7; text-shadow: 0 0 10px rgba(110,231,183,0.5); box-shadow: 0 0 15px rgba(16, 185, 129, 0.15); display: inline-block;">📋 Entrar al Panel de Voluntario</a>`;
+      staffMenu.classList.remove('hidden');
+    }
   }
   
   const cycleDate = getCycleDate();
