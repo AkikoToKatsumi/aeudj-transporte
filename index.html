@@ -22,22 +22,24 @@
       <div id="errorMsg" class="alert alert-error hidden"></div>
 
       <!-- INICIO DE SESIÓN -->
-      <form id="loginForm" class="mb-6">
+      <form id="loginForm" class="mb-2">
         <h3 class="text-lg font-semibold text-gray-700 mb-2">Iniciar sesión</h3>
         <div class="form-group">
-          <input type="email" id="emailLogin" class="form-input" placeholder="Correo electrónico" required>
+          <input type="text" id="userInput" class="form-input" placeholder="Matrícula o Teléfono" required>
         </div>
         <div class="form-group mt-3">
           <input type="password" id="passwordLogin" class="form-input" placeholder="Contraseña" required>
         </div>
         <button type="submit" class="btn btn-primary btn-block mt-4">Entrar</button>
+        
+        <div class="text-center mt-4">
+          <a href="#" id="showRegisterBtn" class="text-blue-600 hover:underline text-sm">¿No tienes una cuenta? Regístrate</a>
+        </div>
       </form>
 
-      <hr class="my-6" style="border-color: #e5e7eb;">
-
       <!-- REGISTRO NUEVO -->
-      <form id="registerForm" class="space-y-4">
-        <h3 class="text-lg font-semibold text-gray-700 mb-2">¿Eres nuevo? Regístrate</h3>
+      <form id="registerForm" class="space-y-4 hidden">
+        <h3 class="text-lg font-semibold text-gray-700 mb-2">Crear nueva cuenta</h3>
         <div class="form-group">
           <input type="text" id="matricula" class="form-input" placeholder="Matrícula (sin guiones)" required>
         </div>
@@ -51,7 +53,7 @@
           <input type="email" id="email" class="form-input" placeholder="Correo electrónico" required>
         </div>
         <div class="form-group">
-          <input type="password" id="password" class="form-input" placeholder="Crea una contraseña" required>
+          <input type="password" id="password" class="form-input" placeholder="Crea una contraseña (mín. 6 chars)" required>
         </div>
         <div class="form-group">
           <select id="universidad" class="form-select" required>
@@ -63,13 +65,14 @@
           </select>
         </div>
         <button type="submit" class="btn btn-success btn-block">Registrar</button>
+        
+        <div class="text-center mt-4">
+          <a href="#" id="showLoginBtn" class="text-blue-600 hover:underline text-sm">¿Ya tienes una cuenta? Inicia sesión</a>
+        </div>
       </form>
 
-      <div class="text-center mt-6">
-        <a href="lista.html" class="text-blue-600 hover:underline text-sm">Ver lista pública sin registrar</a>
-        <div class="mt-3">
-          <a href="admin.html" class="text-sm text-gray-600 hover:underline">🛠️ Entrar como administrador</a>
-        </div>
+      <div class="text-center mt-6 pt-4" style="border-top: 1px solid rgba(255,255,255,0.1);">
+        <a href="lista.html" class="text-gray-500 hover:text-white transition-colors text-sm">Ver lista pública sin iniciar sesión</a>
       </div>
     </div>
   </main>

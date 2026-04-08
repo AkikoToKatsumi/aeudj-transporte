@@ -156,12 +156,30 @@ function initIndexPage() {
   const loginForm = document.getElementById('loginForm');
   const registerForm = document.getElementById('registerForm');
   const errorDiv = document.getElementById('errorMsg');
-  
+  const showRegisterBtn = document.getElementById('showRegisterBtn');
+  const showLoginBtn = document.getElementById('showLoginBtn');
+
+  if(showRegisterBtn) {
+    showRegisterBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      loginForm.classList.add('hidden');
+      registerForm.classList.remove('hidden');
+    });
+  }
+
+  if(showLoginBtn) {
+    showLoginBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      registerForm.classList.add('hidden');
+      loginForm.classList.remove('hidden');
+    });
+  }
+
   loginForm.addEventListener('submit', async function(e) {
     e.preventDefault();
     errorDiv.classList.add('hidden');
     
-    const email = document.getElementById('emailLogin').value.trim();
+    const userInput = document.getElementById('userInput').value.trim().replace(/\s+/g, '');
     const pass = document.getElementById('passwordLogin').value.trim();
     
     const btn = loginForm.querySelector('button[type="submit"]');
@@ -169,7 +187,18 @@ function initIndexPage() {
     btn.textContent = 'Verificando...';
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+      let matriculaLogin = userInput;
+      
+      // Consultar si es un teléfono primero
+      const qTel = query(collection(db, 'usuarios'), where('telefono', '==', userInput));
+      const snapTel = await getDocs(qTel);
+      if (!snapTel.empty) {
+         matriculaLogin = snapTel.docs[0].data().matricula;
+      }
+      
+      const pseudoEmail = `${matriculaLogin}@aeudj.com`;
+
+      const userCredential = await signInWithEmailAndPassword(auth, pseudoEmail, pass);
       const user = userCredential.user;
       
       const docRef = doc(db, 'usuarios', user.uid);
@@ -178,14 +207,17 @@ function initIndexPage() {
         const userData = docSnap.data();
         userData.id = user.uid;
         setSession(userData);
-        window.location.href = 'votar.html';
+        // Redirigir según el rol si está en index
+        if (userData.rol === 'administrador') window.location.href = 'admin.html';
+        else if (userData.rol === 'voluntario') window.location.href = 'voluntario.html';
+        else window.location.href = 'votar.html';
       } else {
         showError('Credenciales correctas, pero no se encontraron datos de usuario en la base de datos.');
       }
       
     } catch (error) {
       console.error('Error:', error);
-      showError('Error al iniciar sesión. Verifica tu correo y contraseña.');
+      showError('Error al iniciar sesión. Verifica tu matrícula o contraseña.');
     }
     btn.disabled = false;
     btn.textContent = 'Entrar';
@@ -232,7 +264,8 @@ function initIndexPage() {
         return;
       }
       
-      const userCred = await createUserWithEmailAndPassword(auth, email, pass);
+      const pseudoEmail = `${matricula.replace(/\s+/g, '')}@aeudj.com`;
+      const userCred = await createUserWithEmailAndPassword(auth, pseudoEmail, pass);
       const user = userCred.user;
 
       const newUser = {
