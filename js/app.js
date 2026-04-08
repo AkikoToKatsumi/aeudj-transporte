@@ -186,17 +186,34 @@ function initIndexPage() {
 
     try {
       let matriculaLogin = userInput;
+      let userDataLocal = null;
       
-      // Consultar si es un teléfono primero
-      const qTel = query(collection(db, 'usuarios'), where('telefono', '==', userInput));
-      const snapTel = await getDocs(qTel);
-      if (!snapTel.empty) {
-         matriculaLogin = snapTel.docs[0].data().matricula;
+      const qMat = query(collection(db, 'usuarios'), where('matricula', '==', userInput));
+      const snapMat = await getDocs(qMat);
+      if (!snapMat.empty) {
+        userDataLocal = snapMat.docs[0].data();
+      } else {
+        const qTel = query(collection(db, 'usuarios'), where('telefono', '==', userInput));
+        const snapTel = await getDocs(qTel);
+        if (!snapTel.empty) {
+           userDataLocal = snapTel.docs[0].data();
+           matriculaLogin = userDataLocal.matricula;
+        }
       }
       
       const pseudoEmail = `${matriculaLogin}@aeudj.com`;
 
-      const userCredential = await signInWithEmailAndPassword(auth, pseudoEmail, pass);
+      let userCredential;
+      try {
+        userCredential = await signInWithEmailAndPassword(auth, pseudoEmail, pass);
+      } catch (authErr) {
+        if (userDataLocal && userDataLocal.email) {
+          userCredential = await signInWithEmailAndPassword(auth, userDataLocal.email, pass);
+        } else {
+          throw authErr;
+        }
+      }
+      
       const user = userCredential.user;
       
       const docRef = doc(db, 'usuarios', user.uid);
