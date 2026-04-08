@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       // Redirigir según el rol si está en index
       if (page === 'index' && currentUser) {
-         if (currentUser.rol === 'presidente') window.location.href = 'admin.html';
+         if (currentUser.rol === 'administrador') window.location.href = 'admin.html';
          else if (currentUser.rol === 'voluntario') window.location.href = 'voluntario.html';
          else window.location.href = 'votar.html';
       }
@@ -603,7 +603,7 @@ function initListaPage() {
 function initAdminPage() {
   const adminPanel = document.getElementById('adminPanel');
   
-  if (!currentUser || currentUser.rol !== 'presidente') {
+  if (!currentUser || currentUser.rol !== 'administrador') {
     window.location.href = 'index.html';
     return;
   }
@@ -634,7 +634,7 @@ function initAdminPage() {
          
        snap.forEach(docSnap => {
          const u = docSnap.data();
-         if (u.rol === 'presidente') return;
+         if (u.rol === 'administrador') return;
          
          const isVoluntario = u.rol === 'voluntario';
          let optHorarios = transportSchedules.map(h => {
@@ -1316,7 +1316,7 @@ function initVoluntarioPage() {
   
   if (misHorarios.length === 0) {
      if(horariosText) horariosText.textContent = "No tienes ningún horario asignado.";
-     container.innerHTML = '<p class="text-center text-gray-600 mt-4">Contacta al presidente para que te asigne una ruta.</p>';
+     container.innerHTML = '<p class="text-center text-gray-600 mt-4">Contacta al administrador para que te asigne una ruta.</p>';
      return;
   }
   
@@ -1434,7 +1434,7 @@ window.irAHorario = function(ancla) {
 };
 
 window.notificarAccion = async function(tipo) {
-  if (!currentUser || currentUser.rol !== 'presidente') return;
+  if (!currentUser || currentUser.rol !== 'administrador') return;
   
   if (!confirm(`¿Estás seguro/a de enviar la notificación por correo de tipo: ${tipo}?`)) return;
 
