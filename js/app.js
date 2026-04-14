@@ -1216,43 +1216,77 @@ function initCambiosPage() {
       if (error) throw error;
       
       if (!votos || votos.length === 0) {
-        container.innerHTML = '<p class="text-center">No tienes votos hoy.</p>';
+        container.innerHTML = '<div class="card p-6 text-center"><p class="mb-4">No tienes votos registrados para hoy.</p><a href="lista.html" class="btn btn-gray">Volver</a></div>';
         return;
       }
       
-      const vuelta = votos.find(v => v.horario && v.horario.includes('La Vega → Jarabacoa'));
-      
-      if (!vuelta) {
-        container.innerHTML = '<p class="text-center">No tienes horario de vuelta.</p>';
-        return;
-      }
-      
-      if (tipo === 'otros') {
-        const { error: delErr } = await supabase.from('votos').delete().eq('id', vuelta.id);
-        if (delErr) throw delErr;
+      if (votos.length > 1) {
+        // Mostrar selección de cuál voto quiere cambiar
+        let html = `
+          <div class="card p-6">
+            <h2 class="text-xl font-bold mb-4 text-center">¿Qué viaje deseas cambiar?</h2>
+            <div class="space-y-3">
+        `;
         
-        await supabase.from('cambios_audit').insert({
-          usuario_id: currentUser.id,
-          matricula: currentUser.matricula,
-          tipo: 'otros',
-          fecha: cycleDate
+        votos.forEach(v => {
+          html += `
+            <button onclick="seleccionarVotoParaCambio('${v.id}')" class="btn btn-primary btn-block text-left" style="height: auto; padding: 1rem;">
+              <span class="block font-bold">${v.horario}</span>
+            </button>
+          `;
         });
-        window.location.href = 'gracias.html?cambio=1';
-        return;
+        
+        html += `
+            </div>
+            <button onclick="window.location.href='lista.html'" class="btn btn-gray btn-block mt-4">Cancelar</button>
+          </div>
+        `;
+        container.innerHTML = html;
+        
+        window.seleccionarVotoParaCambio = (id) => {
+          const v = votos.find(x => x.id === id);
+          procesarCambioParaVoto(v);
+        };
+      } else {
+        procesarCambioParaVoto(votos[0]);
       }
-      
-      mostrarSelector(tipo, vuelta.horario, vuelta.id);
       
     } catch (error) {
       console.error('Error:', error);
       container.innerHTML = '<p class="text-center text-red-600">Error: ' + error.message + '</p>';
     }
   }
+
+  async function procesarCambioParaVoto(voto) {
+    if (tipo === 'otros') {
+      try {
+        container.innerHTML = '<div class="text-center"><p>Procesando cancelación...</p></div>';
+        const { error: delErr } = await supabase.from('votos').delete().eq('id', voto.id);
+        if (delErr) throw delErr;
+        
+        await supabase.from('cambios_audit').insert({
+          usuario_id: currentUser.id,
+          matricula: currentUser.matricula,
+          tipo: 'otros',
+          horario_anterior: voto.horario,
+          fecha: cycleDate
+        });
+        window.location.href = 'gracias.html?cambio=1';
+      } catch (e) {
+        alert('Error: ' + e.message);
+        cargarDatos();
+      }
+      return;
+    }
+    
+    mostrarSelector(tipo, voto);
+  }
   
-  function mostrarSelector(tipo, horarioActual, votoId) {
+  function mostrarSelector(tipo, voto) {
+    const horarioActual = voto.horario;
     const parseHorario = (h) => {
       const match = h.match(/(\d+):(\d+)\s*(AM|PM)/i);
-      if (!match) return null;
+      if (!match) return 0;
       let horas = parseInt(match[1]);
       const mins = parseInt(match[2]);
       const ampm = match[3].toUpperCase();
@@ -1265,52 +1299,48 @@ function initCambiosPage() {
     const ahora = new Date();
     const minutosAhora = ahora.getHours() * 60 + ahora.getMinutes();
     
+    // IMPORTANTE: Filtrar solo horarios de la MISMA RUTA (ida o vuelta)
+    const isIda = horarioActual.includes('Jarabacoa → La Vega');
+    const ruta = isIda ? 'Jarabacoa → La Vega' : 'La Vega → Jarabacoa';
+
     const disponibles = [];
     
     transportSchedules.forEach(s => {
-      if (!s.route.includes('La Vega → Jarabacoa')) return;
+      if (!s.route.includes(ruta)) return;
       const min = parseHorario(s.fullText);
-      let yaPaso = false;
-      const hoy = new Date().toISOString().split('T')[0];
-      if (hoy === cycleDate) {
-        yaPaso = min < minutosAhora;
-      }
       
-      if (tipo === 'antes') {
-        if (min < minutosActual && !yaPaso) disponibles.push(s.fullText);
-      } else if (tipo === 'despues') {
+      // Regla de negocio: "Me iré después" => todos los posteriores
+      if (tipo === 'despues') {
         if (min > minutosActual) disponibles.push(s.fullText);
+      } else if (tipo === 'antes') {
+        // Regla de negocio: "Me fui antes" => todos los anteriores que no hayan pasado
+        let yaPaso = false;
+        const hoy = new Date().toISOString().split('T')[0];
+        if (hoy === cycleDate) yaPaso = min < minutosAhora;
+        
+        if (min < minutosActual && !yaPaso) disponibles.push(s.fullText);
       }
     });
     
-    if (disponibles.length === 0) {
-      transportSchedules.forEach(s => {
-        if (!s.route.includes('La Vega → Jarabacoa')) return;
-        const min = parseHorario(s.fullText);
-        if (tipo === 'antes' && min < minutosActual) disponibles.push(s.fullText);
-        else if (tipo === 'despues' && min > minutosActual) disponibles.push(s.fullText);
-      });
-    }
-    
     let html = `
-      <div class="card" style="padding: 1.5rem;">
-        <h2 class="text-center mb-4">Horario ${tipo === 'antes' ? 'anterior' : 'posterior'}</h2>
-        <p class="text-center text-gray-600 mb-4">Actual: <strong>${horarioActual}</strong></p>
+      <div class="card p-6">
+        <h2 class="text-xl font-bold mb-4 text-center">Cambio a horario ${tipo === 'antes' ? 'anterior' : 'posterior'}</h2>
+        <p class="text-center text-gray-400 mb-4">Actual: <span class="text-blue-400 font-bold">${horarioActual}</span></p>
     `;
     
     if (disponibles.length === 0) {
       html += `
-        <p class="text-center text-orange-600 mb-4">No hay horarios ${tipo === 'antes' ? 'anteriores' : 'posteriores'} disponibles.</p>
-        <button onclick="window.location.href='lista.html'" class="btn btn-gray" style="width: 100%;">Volver</button>
+        <p class="text-center text-orange-400 mb-4">No hay horarios ${tipo === 'antes' ? 'anteriores' : 'posteriores'} disponibles.</p>
+        <button onclick="window.location.href='lista.html'" class="btn btn-gray btn-block">Volver</button>
       `;
     } else {
       html += `
-        <select id="nuevoHorario" style="width: 100%; padding: 0.75rem; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 0.5rem; font-size: 16px;">
-          <option value="">-- Selecciona --</option>
+        <select id="nuevoHorario" class="form-select mb-4">
+          <option value="">-- Selecciona nuevo horario --</option>
           ${disponibles.map(h => `<option value="${h}">${h}</option>`).join('')}
         </select>
-        <button id="btnGuardar" class="btn btn-primary" style="width: 100%; margin-bottom: 0.5rem; padding: 0.75rem; font-size: 16px;">Guardar</button>
-        <button onclick="window.location.href='lista.html'" class="btn btn-gray" style="width: 100%; padding: 0.75rem; font-size: 16px;">Cancelar</button>
+        <button id="btnGuardarCambio" class="btn btn-primary btn-block mb-3">Guardar Cambio</button>
+        <button onclick="window.location.href='lista.html'" class="btn btn-gray btn-block">Cancelar</button>
       `;
     }
     
@@ -1318,33 +1348,52 @@ function initCambiosPage() {
     container.innerHTML = html;
     
     if (disponibles.length > 0) {
-      document.getElementById('btnGuardar').addEventListener('click', async () => {
+      document.getElementById('btnGuardarCambio').addEventListener('click', async () => {
         const nuevo = document.getElementById('nuevoHorario').value;
-        if (!nuevo) {
-          alert('Selecciona un horario');
-          return;
-        }
+        if (!nuevo) { alert('Selecciona un horario'); return; }
         
-        const btn = document.getElementById('btnGuardar');
+        const btn = document.getElementById('btnGuardarCambio');
         btn.disabled = true;
-        btn.textContent = 'Guardando...';
+        btn.textContent = 'Procesando...';
         
         try {
-          const { error: upErr } = await supabase
+          // Lógica de capacidad (máximo 30) para el nuevo puesto
+          const { count, error: countErr } = await supabase
             .from('votos')
-            .update({
-              horario: nuevo,
-              se_monto: null,
-              created_at: new Date().toISOString()
-            })
-            .eq('id', votoId);
+            .select('*', { count: 'exact', head: true })
+            .eq('horario', nuevo)
+            .eq('fecha', cycleDate)
+            .eq('en_espera', false);
           
-          if (upErr) throw upErr;
+          if (countErr) throw countErr;
+          
+          const enEspera = count >= 30;
+
+          // Primero borramos el viejo para liberar el puesto (dispara trigger de promoción si aplica)
+          await supabase.from('votos').delete().eq('id', voto.id);
+
+          // Insertamos el nuevo
+          const { error: insErr } = await supabase.from('votos').insert({
+            usuario_id: currentUser.id,
+            nombre: currentUser.nombre,
+            universidad: currentUser.universidad,
+            matricula: currentUser.matricula,
+            telefono: currentUser.telefono || '',
+            email: currentUser.email || '',
+            horario: nuevo,
+            fecha: cycleDate,
+            se_monto: null,
+            en_espera: enEspera,
+            created_at: new Date().toISOString()
+          });
+          
+          if (insErr) throw insErr;
           
           await supabase.from('cambios_audit').insert({
             usuario_id: currentUser.id,
             matricula: currentUser.matricula,
             tipo: tipo,
+            horario_anterior: horarioActual,
             nuevo_horario: nuevo,
             fecha: cycleDate
           });
@@ -1355,7 +1404,7 @@ function initCambiosPage() {
           console.error('Error:', err);
           alert('Error: ' + err.message);
           btn.disabled = false;
-          btn.textContent = 'Guardar';
+          btn.textContent = 'Guardar Cambio';
         }
       });
     }
