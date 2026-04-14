@@ -389,7 +389,17 @@ function initVotarPage() {
   function renderHorarios() {
     scheduleGrid.innerHTML = '';
     
-    transportSchedules.forEach(schedule => {
+    // Nueva lógica de visibilidad por grupos
+    const ahora = new Date();
+    const hora = ahora.getHours();
+    
+    // Grupo Mañana: 10 PM a 9:59 AM
+    // Grupo Tarde: 10 AM a 9:59 PM
+    const currentGroup = (hora >= 22 || hora < 10) ? 'mañana' : 'tarde';
+    
+    const visibleSchedules = transportSchedules.filter(s => s.group === currentGroup);
+    
+    visibleSchedules.forEach(schedule => {
       const direction = schedule.route.includes('Jarabacoa → La Vega') ? 'ida' : 'vuelta';
       const icon = direction === 'ida' ? '🚌➡️' : '⬅️🚌';
       
@@ -438,13 +448,8 @@ function initVotarPage() {
   horarioForm.addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    if (selectedHorarios.length === 0) {
-      alert('Selecciona al menos un horario');
-      return;
-    }
-    
-    if (selectedHorarios.length > 2) {
-      alert('Máximo 2 horarios permitidos');
+    if (selectedHorarios.length !== 2) {
+      alert('Debes seleccionar exactamente 2 horarios: uno de ida y uno de vuelta.');
       return;
     }
     
