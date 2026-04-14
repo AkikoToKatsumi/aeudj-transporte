@@ -361,6 +361,8 @@ function initVotarPage() {
   const scheduleGrid = document.getElementById('scheduleGrid');
   const statusMsg = document.getElementById('status-message');
   
+  let isEditing = false;
+  
   checkYaVotado();
   
   async function checkYaVotado() {
@@ -372,8 +374,13 @@ function initVotarPage() {
         .eq('fecha', cycleDate);
       
       if (snapshot && snapshot.length > 0) {
-        window.location.href = 'gracias.html?ya_votado=1';
-        return;
+        isEditing = true;
+        selectedHorarios = snapshot.map(v => v.horario);
+        const submitBtn = horarioForm.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.textContent = 'Actualizar Selección';
+        
+        statusMsg.textContent = `📝 Tienes ${selectedHorarios.length} horarios registrados. Puedes cambiarlos si deseas.`;
+        statusMsg.className = 'text-center text-sm font-medium text-blue-400 mt-4';
       }
       
       renderHorarios();
@@ -402,16 +409,17 @@ function initVotarPage() {
     visibleSchedules.forEach(schedule => {
       const direction = schedule.route.includes('Jarabacoa → La Vega') ? 'ida' : 'vuelta';
       const icon = direction === 'ida' ? '🚌➡️' : '⬅️🚌';
+      const isSelected = selectedHorarios.includes(schedule.fullText);
       
       const slot = document.createElement('div');
-      slot.className = 'time-slot';
+      slot.className = `time-slot ${isSelected ? 'selected' : ''}`;
       slot.dataset.direction = direction;
       slot.dataset.fulltext = schedule.fullText;
       slot.innerHTML = `
         <div class="time-icon">${icon}</div>
         <div class="time-text">${schedule.time}</div>
         <div class="time-route">${schedule.route}</div>
-        <div class="checkmark hidden">✅</div>
+        <div class="checkmark ${isSelected ? '' : 'hidden'}">✅</div>
       `;
       
       slot.addEventListener('click', () => toggleSlot(slot, schedule.fullText, direction));
@@ -458,20 +466,44 @@ function initVotarPage() {
     btn.textContent = 'Guardando...';
     
     try {
-      const insertData = selectedHorarios.map(horario => ({
-        usuario_id: currentUser.id,
-        nombre: currentUser.nombre,
-        universidad: currentUser.universidad,
-        matricula: currentUser.matricula,
-        telefono: currentUser.telefono || '',
-        email: currentUser.email || '',
-        horario: horario,
-        fecha: cycleDate,
-        se_monto: null,
-        en_espera: false
-      }));
+      // 1. Si estamos editando, borrar los votos previos primero
+      if (isEditing) {
+        await supabase.from('votos').delete().eq('usuario_id', currentUser.id).eq('fecha', cycleDate);
+      }
+
+      // 2. Preparar los datos con lógica de capacidad (30 personas)
+      const dataToInsert = [];
       
-      const { error } = await supabase.from('votos').insert(insertData);
+      for (const hor of selectedHorarios) {
+        // Contar cuántos hay inscritos (que no estén en espera)
+        const { count, error: countErr } = await supabase
+          .from('votos')
+          .select('*', { count: 'exact', head: true })
+          .eq('horario', hor)
+          .eq('fecha', cycleDate)
+          .eq('en_espera', false);
+        
+        if (countErr) throw countErr;
+        
+        // Si ya hay 30 o más, el nuevo entra en espera
+        const enEspera = count >= 30;
+        
+        dataToInsert.push({
+          usuario_id: currentUser.id,
+          nombre: currentUser.nombre,
+          universidad: currentUser.universidad,
+          matricula: currentUser.matricula,
+          telefono: currentUser.telefono || '',
+          email: currentUser.email || '',
+          horario: hor,
+          fecha: cycleDate,
+          se_monto: null,
+          en_espera: enEspera,
+          created_at: new Date().toISOString()
+        });
+      }
+      
+      const { error } = await supabase.from('votos').insert(dataToInsert);
       if (error) throw error;
       
       window.location.href = 'gracias.html';
