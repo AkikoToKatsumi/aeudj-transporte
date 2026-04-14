@@ -537,21 +537,25 @@ function initVotarPage() {
 
 // Lógica de visualización de contraseña
 function initPasswordToggle() {
-  const toggleBtn = document.getElementById('togglePasswordLogin');
-  const passwordInput = document.getElementById('passwordLogin');
-  if (!toggleBtn || !passwordInput) return;
+  const setupToggle = (btnId, inputId) => {
+    const toggleBtn = document.getElementById(btnId);
+    const passwordInput = document.getElementById(inputId);
+    if (!toggleBtn || !passwordInput) return;
 
-  toggleBtn.addEventListener('click', () => {
-    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-    passwordInput.setAttribute('type', type);
-    
-    // Cambiar icono
-    const icon = toggleBtn.querySelector('i');
-    if (icon) {
-      icon.setAttribute('data-lucide', type === 'password' ? 'eye' : 'eye-off');
-      if (window.lucide) window.lucide.createIcons();
-    }
-  });
+    toggleBtn.addEventListener('click', () => {
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      
+      const icon = toggleBtn.querySelector('i');
+      if (icon) {
+        icon.setAttribute('data-lucide', type === 'password' ? 'eye' : 'eye-off');
+        if (window.lucide) window.lucide.createIcons();
+      }
+    });
+  };
+
+  setupToggle('togglePasswordLogin', 'passwordLogin');
+  setupToggle('togglePasswordReg', 'password');
 }
 
 // ============================================
