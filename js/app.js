@@ -488,7 +488,16 @@ function initVotarPage() {
 // ============================================
 // PÁGINA LISTA
 // ============================================
-function initListaPage() {
+async function initListaPage() {
+  const listContainer = document.getElementById('listContainer');
+  const btnVolverInicio = document.getElementById('btnVolverInicio');
+
+  if (btnVolverInicio) {
+    btnVolverInicio.addEventListener('click', async () => {
+      await supabase.auth.signOut();
+      window.location.href = 'index.html';
+    });
+  }
   const cycleDate = getCycleDate();
   const container = document.getElementById('listContainer');
   const stickyMenu = document.getElementById('stickyMenu');
