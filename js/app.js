@@ -360,8 +360,8 @@ function initVotarPage() {
   const horarioForm = document.getElementById('horarioForm');
   const scheduleGrid = document.getElementById('scheduleGrid');
   const statusMsg = document.getElementById('status-message');
-  
   let isEditing = false;
+  let initialVotes = []; // Guardar para no borrar lo que no cambia
   
   checkYaVotado();
   
@@ -375,6 +375,7 @@ function initVotarPage() {
       
       if (snapshot && snapshot.length > 0) {
         isEditing = true;
+        initialVotes = snapshot;
         selectedHorarios = snapshot.map(v => v.horario);
         const submitBtn = horarioForm.querySelector('button[type="submit"]');
         if (submitBtn) submitBtn.textContent = 'Actualizar Selección';
@@ -466,45 +467,52 @@ function initVotarPage() {
     btn.textContent = 'Guardando...';
     
     try {
-      // 1. Si estamos editando, borrar los votos previos primero
-      if (isEditing) {
-        await supabase.from('votos').delete().eq('usuario_id', currentUser.id).eq('fecha', cycleDate);
+      // 1. Identificar qué cambió
+      const currentHorarios = selectedHorarios;
+      const hViejos = initialVotes.map(v => v.horario);
+      
+      const toDeleteIds = initialVotes.filter(v => !currentHorarios.includes(v.horario)).map(v => v.id);
+      const toInsertHorarios = currentHorarios.filter(h => !hViejos.includes(h));
+
+      // 2. Borrar SOLO los horarios que el usuario ya NO quiere
+      if (toDeleteIds.length > 0) {
+        await supabase.from('votos').delete().in('id', toDeleteIds);
       }
 
-      // 2. Preparar los datos con lógica de capacidad (30 personas)
-      const dataToInsert = [];
-      
-      for (const hor of selectedHorarios) {
-        // Contar cuántos hay inscritos (que no estén en espera)
-        const { count, error: countErr } = await supabase
-          .from('votos')
-          .select('*', { count: 'exact', head: true })
-          .eq('horario', hor)
-          .eq('fecha', cycleDate)
-          .eq('en_espera', false);
+      // 3. Insertar SOLO los nuevos horarios (calculando lista de espera)
+      if (toInsertHorarios.length > 0) {
+        const dataToInsert = [];
         
-        if (countErr) throw countErr;
+        for (const hor of toInsertHorarios) {
+          const { count, error: countErr } = await supabase
+            .from('votos')
+            .select('*', { count: 'exact', head: true })
+            .eq('horario', hor)
+            .eq('fecha', cycleDate)
+            .eq('en_espera', false);
+          
+          if (countErr) throw countErr;
+          
+          const enEspera = count >= 30;
+          
+          dataToInsert.push({
+            usuario_id: currentUser.id,
+            nombre: currentUser.nombre,
+            universidad: currentUser.universidad,
+            matricula: currentUser.matricula,
+            telefono: currentUser.telefono || '',
+            email: currentUser.email || '',
+            horario: hor,
+            fecha: cycleDate,
+            se_monto: null,
+            en_espera: enEspera,
+            created_at: new Date().toISOString()
+          });
+        }
         
-        // Si ya hay 30 o más, el nuevo entra en espera
-        const enEspera = count >= 30;
-        
-        dataToInsert.push({
-          usuario_id: currentUser.id,
-          nombre: currentUser.nombre,
-          universidad: currentUser.universidad,
-          matricula: currentUser.matricula,
-          telefono: currentUser.telefono || '',
-          email: currentUser.email || '',
-          horario: hor,
-          fecha: cycleDate,
-          se_monto: null,
-          en_espera: enEspera,
-          created_at: new Date().toISOString()
-        });
+        const { error: insErr } = await supabase.from('votos').insert(dataToInsert);
+        if (insErr) throw insErr;
       }
-      
-      const { error } = await supabase.from('votos').insert(dataToInsert);
-      if (error) throw error;
       
       window.location.href = 'gracias.html';
       
