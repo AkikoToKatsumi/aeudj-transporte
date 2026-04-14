@@ -6,77 +6,112 @@
   <title>AEUDJ - Registro / Inicio</title>
   <link rel="icon" href="img/comite.jpg" type="image/jpg">
   <link rel="stylesheet" href="css/styles.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body data-page="index">
-  <main class="container mx-auto px-4 py-8" style="min-height: 100vh; display: flex; align-items: center; justify-content: center;">
-    <div class="card max-w-xl w-full">
-      <div class="text-center mb-6">
-        <div class="logo">
-          <img src="img/comite.jpg" alt="Logo AEUDJ" onerror="this.style.display='none'">
-        </div>
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">🚌 AEUDJ Transporte</h1>
-        <h2 class="text-xl font-semibold text-gray-700">👤 Registro / Inicio</h2>
-        <p class="text-gray-600 mt-2">Datos reales para evitar duplicados</p>
+  <main class="login-container">
+    <div class="card glass-card">
+      <!-- Logo circular solapado -->
+      <div class="mockup-logo">
+        <img src="img/comite.jpg" alt="Logo AEUDJ">
+      </div>
+
+      <div class="text-center mb-8 pt-4">
+        <h1 class="text-3xl font-bold text-white mb-2">🚌 AEUDJ Transporte</h1>
+        <p class="text-gray-300">Accede a tu cuenta</p>
       </div>
 
       <div id="errorMsg" class="alert alert-error hidden"></div>
 
       <!-- INICIO DE SESIÓN -->
-      <form id="loginForm" class="mb-2">
-        <h3 class="text-lg font-semibold text-gray-700 mb-2">Iniciar sesión</h3>
-        <div class="form-group">
-          <input type="text" id="userInput" class="form-input" placeholder="Matrícula o Teléfono" required>
-        </div>
-        <div class="form-group mt-3">
-          <input type="password" id="passwordLogin" class="form-input" placeholder="Contraseña" required>
-        </div>
-        <button type="submit" class="btn btn-primary btn-block mt-4">Entrar</button>
+      <form id="loginForm" class="space-y-5">
+        <h3 class="text-lg font-semibold text-white">Iniciar sesión</h3>
         
-        <div class="text-center mt-4">
-          <a href="#" id="showRegisterBtn" style="color: #60a5fa; font-weight: 500;" class="hover:underline text-sm">¿No tienes una cuenta? Regístrate</a>
+        <div class="input-wrapper">
+          <i data-lucide="smartphone" class="input-icon"></i>
+          <input type="text" id="userInput" class="premium-input" placeholder="Teléfono o matrícula" required>
         </div>
+
+        <div class="input-wrapper">
+          <i data-lucide="lock" class="input-icon"></i>
+          <input type="password" id="passwordLogin" class="premium-input" placeholder="Contraseña" required>
+          <button type="button" id="togglePasswordLogin" class="toggle-password">
+            <i data-lucide="eye"></i>
+          </button>
+        </div>
+
+        <button type="submit" class="btn-premium btn-block">
+          Entrar 
+          <i data-lucide="arrow-right" class="btn-arrow"></i>
+        </button>
+        
+        <div class="text-center mt-6">
+          <p class="text-gray-400 text-sm">
+            ¿No tienes una cuenta? 
+            <a href="#" id="showRegisterBtn" class="text-blue-400 font-bold hover:underline">Regístrate <i data-lucide="chevron-right" class="icon-inline"></i></a>
+          </p>
+        </div>
+
+        <div class="divider mt-8"></div>
+
+        <a href="lista.html" class="btn-pill-outline btn-block mt-6">
+          <i data-lucide="eye" class="icon-left"></i>
+          Ver lista pública de pasajeros
+          <i data-lucide="chevron-right" class="icon-right"></i>
+        </a>
+        <p class="text-center text-xs text-gray-500 mt-2">Consulta rutas y pasajeros de forma pública</p>
       </form>
 
       <!-- REGISTRO NUEVO -->
       <form id="registerForm" class="space-y-4 hidden">
-        <h3 class="text-lg font-semibold text-gray-700 mb-2">Crear nueva cuenta</h3>
-        <div class="form-group">
-          <input type="text" id="matricula" class="form-input" placeholder="Matrícula (sin guiones)" required>
+        <h3 class="text-lg font-semibold text-white mb-2">Crear nueva cuenta</h3>
+        <div class="input-wrapper">
+          <i data-lucide="user" class="input-icon"></i>
+          <input type="text" id="nombre" class="premium-input" placeholder="Nombre completo" required>
         </div>
-        <div class="form-group">
-          <input type="text" id="nombre" class="form-input" placeholder="Nombre completo" required>
+        <div class="input-wrapper">
+          <i data-lucide="hash" class="input-icon"></i>
+          <input type="text" id="matricula" class="premium-input" placeholder="Matrícula (sin guiones)" required>
         </div>
-        <div class="form-group">
-          <input type="tel" id="telefono" class="form-input" placeholder="Teléfono" required>
+        <div class="input-wrapper">
+          <i data-lucide="phone" class="input-icon"></i>
+          <input type="tel" id="telefono" class="premium-input" placeholder="Teléfono" required>
         </div>
-        <div class="form-group">
-          <input type="email" id="email" class="form-input" placeholder="Correo electrónico" required>
+        <div class="input-wrapper">
+          <i data-lucide="mail" class="input-icon"></i>
+          <input type="email" id="email" class="premium-input" placeholder="Correo electrónico" required>
         </div>
-        <div class="form-group">
-          <input type="password" id="password" class="form-input" placeholder="Crea una contraseña (mín. 6 chars)" required>
+        <div class="input-wrapper">
+          <i data-lucide="lock" class="input-icon"></i>
+          <input type="password" id="password" class="premium-input" placeholder="Contraseña (mín. 6)" required>
         </div>
-        <div class="form-group">
-          <select id="universidad" class="form-select" required>
-            <option value="">-- Selecciona tu universidad --</option>
+        <div class="input-wrapper">
+          <i data-lucide="school" class="input-icon"></i>
+          <select id="universidad" class="premium-select" required>
+            <option value="">-- Universidad --</option>
             <option value="UCATECI">UCATECI</option>
             <option value="UAFAM">UAFAM</option>
             <option value="UAPA">UAPA</option>
             <option value="Otra">Otra</option>
           </select>
         </div>
-        <button type="submit" class="btn btn-success btn-block">Registrar</button>
+        <button type="submit" class="btn-premium btn-success btn-block">Registrar cuenta</button>
         
         <div class="text-center mt-4">
-          <a href="#" id="showLoginBtn" style="color: #60a5fa; font-weight: 500;" class="hover:underline text-sm">¿Ya tienes una cuenta? Inicia sesión</a>
+          <a href="#" id="showLoginBtn" class="text-blue-400 font-medium hover:underline">¿Ya tienes cuenta? Inicia sesión</a>
         </div>
       </form>
-
-      <div class="text-center mt-6 pt-6" style="border-top: 1px solid rgba(255,255,255,0.1);">
-        <a href="lista.html" class="btn" style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); color: #93c5fd; display: block; padding: 12px; border-radius: 12px; font-weight: 600; text-shadow: 0 0 10px rgba(147,197,253,0.5); box-shadow: 0 0 15px rgba(59,130,246,0.15); transition: all 0.3s; animation: pulse 3s infinite;">
-          👁️ Ver lista pública de pasajeros
-        </a>
-      </div>
     </div>
+
+    <!-- FOOTER MOCKUP STYLE -->
+    <footer class="login-footer">
+      <p class="footer-location">
+        <i data-lucide="map-pin" class="icon-xs"></i> 
+        Jarabacoa, <em>La Ciudad de la Eterna Primavera</em> 🍃
+      </p>
+      <p class="footer-tagline">Conectamos personas, unimos caminos</p>
+      <div class="footer-dot-indicator"></div>
+    </footer>
   </main>
 
   <!-- Scripts de Firebase v10 ES modules -->
