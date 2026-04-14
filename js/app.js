@@ -1,29 +1,8 @@
 // ============================================
-// AEUDJ TRANSPORTE - APLICACIÓN PRINCIPAL
+// AEUDJ TRANSPORTE - APLICACIÓN PRINCIPAL (SUPABASE VERSION)
 // ============================================
 
-import { db, auth, transportSchedules, getCycleDate, formatDate } from './firebase-config.js';
-import { 
-  collection, 
-  addDoc, 
-  getDocs, 
-  query, 
-  where, 
-  doc, 
-  getDoc,
-  updateDoc, 
-  deleteDoc,
-  serverTimestamp,
-  orderBy,
-  limit,
-  setDoc
-} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
-import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  onAuthStateChanged,
-  signOut 
-} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+import { supabase, transportSchedules, getCycleDate, formatDate } from './supabase-config.js';
 
 // Variables globales
 let currentUser = null;
@@ -33,21 +12,26 @@ let selectedHorarios = [];
 // ============================================
 // INICIALIZACIÓN
 // ============================================
-document.addEventListener('DOMContentLoaded', function() {
-  // Verificar sesión con localStorage y verificar luego con Firebase Auth
+document.addEventListener('DOMContentLoaded', async function() {
+  // Verificar sesión con localStorage y verificar luego con Supabase Auth
   checkSession();
   
   const page = document.body.dataset.page;
   
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      if (!currentUser || currentUser.id !== user.uid) {
+  // Escuchar cambios de autenticación
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    if (session) {
+      const user = session.user;
+      if (!currentUser || currentUser.id !== user.id) {
         try {
-           const docRef = doc(db, 'usuarios', user.uid);
-           const docSnap = await getDoc(docRef);
-           if (docSnap.exists()) {
-             currentUser = docSnap.data();
-             currentUser.id = user.uid;
+           const { data, error } = await supabase
+             .from('profiles')
+             .select('*')
+             .eq('id', user.id)
+             .single();
+             
+           if (data) {
+             currentUser = data;
              setSession(currentUser);
            }
         } catch(e) { console.error('Error fetching user config:', e); }
@@ -104,7 +88,7 @@ function clearSession() {
 
 async function logout() {
   try {
-    await signOut(auth);
+    await supabase.auth.signOut();
   } catch(e) {}
   clearSession();
   window.location.href = 'index.html';
@@ -188,48 +172,65 @@ function initIndexPage() {
       let matriculaLogin = userInput;
       let userDataLocal = null;
       
-      const qMat = query(collection(db, 'usuarios'), where('matricula', '==', userInput));
-      const snapMat = await getDocs(qMat);
-      if (!snapMat.empty) {
-        userDataLocal = snapMat.docs[0].data();
+      // Buscar por matrícula o teléfono
+      const { data: userByMat, error: errMat } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('matricula', userInput)
+        .maybeSingle();
+
+      if (userByMat) {
+        userDataLocal = userByMat;
       } else {
-        const qTel = query(collection(db, 'usuarios'), where('telefono', '==', userInput));
-        const snapTel = await getDocs(qTel);
-        if (!snapTel.empty) {
-           userDataLocal = snapTel.docs[0].data();
+        const { data: userByTel, error: errTel } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('telefono', userInput)
+          .maybeSingle();
+        
+        if (userByTel) {
+           userDataLocal = userByTel;
            matriculaLogin = userDataLocal.matricula;
         }
       }
       
       const pseudoEmail = `${matriculaLogin}@aeudj.com`;
 
-      let userCredential;
-      try {
-        userCredential = await signInWithEmailAndPassword(auth, pseudoEmail, pass);
-      } catch (authErr) {
+      let authResult;
+      // Intentar con pseudo-email
+      authResult = await supabase.auth.signInWithPassword({
+        email: pseudoEmail,
+        password: pass
+      });
+
+      if (authResult.error) {
+        // Intentar con email real si existe en el perfil
         if (userDataLocal && userDataLocal.email) {
-          userCredential = await signInWithEmailAndPassword(auth, userDataLocal.email, pass);
-        } else {
-          throw authErr;
+          authResult = await supabase.auth.signInWithPassword({
+            email: userDataLocal.email,
+            password: pass
+          });
         }
       }
+
+      if (authResult.error) throw authResult.error;
       
-      const user = userCredential.user;
+      const user = authResult.data.user;
       
-      const docRef = doc(db, 'usuarios', user.uid);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const userData = docSnap.data();
-        userData.id = user.uid;
-        
-        // Auto-promover a administradora
+      const { data: userData, error: fetchErr } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (userData) {
+        // Auto-promover a administradora (ejemplo del código original)
         if (userData.matricula === '0000' && userData.rol !== 'administrador') {
           userData.rol = 'administrador';
-          await updateDoc(docRef, { rol: 'administrador' });
+          await supabase.from('profiles').update({ rol: 'administrador' }).eq('id', user.id);
         }
         
         setSession(userData);
-        // Redirigir a votar sin importar el rango para que pueda agendarse en el bus.
         window.location.href = 'votar.html';
       } else {
         showError('Credenciales correctas, pero no se encontraron datos de usuario en la base de datos.');
@@ -274,10 +275,14 @@ function initIndexPage() {
     btn.textContent = 'Registrando...';
 
     try {
-      const checkMat = query(collection(db, 'usuarios'), where('matricula', '==', matricula));
-      const matSnapshot = await getDocs(checkMat);
+      // Verificar si la matrícula ya existe
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('matricula', matricula)
+        .maybeSingle();
       
-      if (!matSnapshot.empty) {
+      if (existingUser) {
         showError('Esta matrícula ya está registrada. Usa "Iniciar sesión".');
         btn.disabled = false;
         btn.textContent = 'Registrar';
@@ -285,32 +290,36 @@ function initIndexPage() {
       }
       
       const pseudoEmail = `${matricula.replace(/\s+/g, '')}@aeudj.com`;
-      const userCred = await createUserWithEmailAndPassword(auth, pseudoEmail, pass);
-      const user = userCred.user;
+      
+      // Registrar en Supabase Auth
+      const { data: authData, error: authErr } = await supabase.auth.signUp({
+        email: pseudoEmail,
+        password: pass
+      });
+
+      if (authErr) throw authErr;
+      const user = authData.user;
 
       const newUser = {
+        id: user.id,
         matricula,
         nombre,
         telefono,
         email,
         universidad,
-        rol: matricula === '0000' ? 'administrador' : 'estudiante',
-        createdAt: serverTimestamp()
+        rol: matricula === '0000' ? 'administrador' : 'estudiante'
       };
       
-      await setDoc(doc(db, 'usuarios', user.uid), newUser);
-      newUser.id = user.uid;
+      // Guardar en tabla de perfiles
+      const { error: profileErr } = await supabase.from('profiles').insert(newUser);
+      if (profileErr) throw profileErr;
       
       setSession(newUser);
       window.location.href = 'votar.html';
       
     } catch (error) {
       console.error('Error:', error);
-      if (error.code === 'auth/email-already-in-use') {
-        showError('Este correo ya está registrado en otra cuenta.');
-      } else {
-        showError('Error al registrar: ' + error.message);
-      }
+      showError('Error al registrar: ' + error.message);
     }
     btn.disabled = false;
     btn.textContent = 'Registrar';
@@ -356,18 +365,13 @@ function initVotarPage() {
   
   async function checkYaVotado() {
     try {
-      const q = query(
-        collection(db, 'votos'),
-        where('usuarioId', '==', currentUser.id)
-      );
-      const snapshot = await getDocs(q);
+      const { data: snapshot, error } = await supabase
+        .from('votos')
+        .select('*')
+        .eq('usuario_id', currentUser.id)
+        .eq('fecha', cycleDate);
       
-      const yaVotoHoy = snapshot.docs.some(doc => {
-        const data = doc.data();
-        return data.fecha === cycleDate;
-      });
-      
-      if (yaVotoHoy) {
+      if (snapshot && snapshot.length > 0) {
         window.location.href = 'gracias.html?ya_votado=1';
         return;
       }
@@ -449,23 +453,21 @@ function initVotarPage() {
     btn.textContent = 'Guardando...';
     
     try {
-      for (const horario of selectedHorarios) {
-        const docData = {
-          usuarioId: currentUser.id,
-          nombre: currentUser.nombre,
-          universidad: currentUser.universidad,
-          matricula: currentUser.matricula,
-          telefono: currentUser.telefono || '',
-          email: currentUser.email || '',
-          horario: horario,
-          fecha: cycleDate,
-          seMonto: null,
-          enEspera: false,
-          createdAt: serverTimestamp()
-        };
-        
-        await addDoc(collection(db, 'votos'), docData);
-      }
+      const insertData = selectedHorarios.map(horario => ({
+        usuario_id: currentUser.id,
+        nombre: currentUser.nombre,
+        universidad: currentUser.universidad,
+        matricula: currentUser.matricula,
+        telefono: currentUser.telefono || '',
+        email: currentUser.email || '',
+        horario: horario,
+        fecha: cycleDate,
+        se_monto: null,
+        en_espera: false
+      }));
+      
+      const { error } = await supabase.from('votos').insert(insertData);
+      if (error) throw error;
       
       window.location.href = 'gracias.html';
       
@@ -495,18 +497,14 @@ function initListaPage() {
   
   async function loadLista() {
     try {
-      const q = query(
-        collection(db, 'votos'),
-        where('fecha', '==', cycleDate),
-        orderBy('horario'),
-        orderBy('createdAt')
-      );
-      const snapshot = await getDocs(q);
+      const { data: votos, error } = await supabase
+        .from('votos')
+        .select('*')
+        .eq('fecha', cycleDate)
+        .order('horario')
+        .order('created_at');
       
-      const votos = [];
-      snapshot.forEach(doc => {
-        votos.push({ id: doc.id, ...doc.data() });
-      });
+      if (error) throw error;
       
       const listado = {};
       const listaEspera = {};
@@ -515,12 +513,12 @@ function initListaPage() {
         const datos = {
           nombre: voto.nombre,
           universidad: voto.universidad,
-          createdAt: voto.createdAt?.toDate?.() || new Date(),
-          enEspera: voto.enEspera,
-          seMonto: voto.seMonto
+          createdAt: new Date(voto.created_at),
+          enEspera: voto.en_espera,
+          seMonto: voto.se_monto
         };
         
-        if (voto.enEspera) {
+        if (voto.en_espera) {
           if (!listaEspera[voto.horario]) listaEspera[voto.horario] = [];
           listaEspera[voto.horario].push(datos);
         } else {
@@ -685,8 +683,12 @@ function initAdminPage() {
      if (!volContainer) return;
 
      try {
-       const q = query(collection(db, 'usuarios'), orderBy('nombre'));
-       const snap = await getDocs(q);
+       const { data: users, error } = await supabase
+         .from('profiles')
+         .select('*')
+         .order('nombre');
+       
+       if (error) throw error;
        
        let html = `<div class="overflow-x-auto"><table class="w-full text-left border-collapse min-w-full">
          <thead><tr style="background:#f1f5f9;">
@@ -696,32 +698,31 @@ function initAdminPage() {
            <th class="p-2 border" style="border-color:#cbd5e1;">Acción</th>
          </tr></thead><tbody>`;
          
-       snap.forEach(docSnap => {
-         const u = docSnap.data();
+       users.forEach(u => {
          if (u.rol === 'administrador') return;
          
          const isVoluntario = u.rol === 'voluntario';
          let optHorarios = transportSchedules.map(h => {
-             const selected = (u.horariosAsignados && u.horariosAsignados.includes(h.fullText)) ? 'selected' : '';
+             const selected = (u.horarios_asignados && u.horarios_asignados.includes(h.fullText)) ? 'selected' : '';
              return `<option value="${h.fullText}" ${selected}>${h.fullText}</option>`;
          }).join('');
          
          html += `<tr>
            <td class="p-2 border" style="border-color:#cbd5e1;">${escapeHtml(u.nombre)}<br><small style="color:#64748b;">${u.email}</small></td>
            <td class="p-2 border" style="border-color:#cbd5e1;">
-             <select id="rol-${docSnap.id}" class="form-select text-sm p-1" style="width:100%;">
+             <select id="rol-${u.id}" class="form-select text-sm p-1" style="width:100%;">
                <option value="estudiante" ${u.rol === 'estudiante' ? 'selected' : ''}>Estudiante</option>
                <option value="voluntario" ${isVoluntario ? 'selected' : ''}>Voluntario</option>
              </select>
            </td>
            <td class="p-2 border" style="border-color:#cbd5e1;">
-             <select id="horarioAsig-${docSnap.id}" class="form-select text-sm p-1" style="width:100%;">
+             <select id="horarioAsig-${u.id}" class="form-select text-sm p-1" style="width:100%;">
                <option value="">-- Ninguno --</option>
                ${optHorarios}
              </select>
            </td>
            <td class="p-2 border" style="border-color:#cbd5e1;">
-             <button onclick="guardarRolAdmin('${docSnap.id}')" class="btn btn-primary btn-small" style="width:100%;">Guardar</button>
+             <button onclick="guardarRolAdmin('${u.id}')" class="btn btn-primary btn-small" style="width:100%;">Guardar</button>
            </td>
          </tr>`;
        });
@@ -738,10 +739,15 @@ function initAdminPage() {
     const selRol = document.getElementById(`rol-${id}`).value;
     const selHorario = document.getElementById(`horarioAsig-${id}`).value;
     try {
-      await updateDoc(doc(db, 'usuarios', id), {
-         rol: selRol,
-         horariosAsignados: selRol === 'voluntario' && selHorario ? [selHorario] : []
-      });
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          rol: selRol,
+          horarios_asignados: (selRol === 'voluntario' && selHorario) ? [selHorario] : []
+        })
+        .eq('id', id);
+      
+      if (error) throw error;
       alert('Rol actualizado correctamente');
     } catch(e) {
       console.error(e);
@@ -751,24 +757,20 @@ function initAdminPage() {
   
   async function loadAdminData() {
     try {
-      const q = query(
-        collection(db, 'votos'),
-        where('fecha', '==', cycleDate),
-        orderBy('horario'),
-        orderBy('createdAt')
-      );
-      const snapshot = await getDocs(q);
+      const { data: votos, error } = await supabase
+        .from('votos')
+        .select('*')
+        .eq('fecha', cycleDate)
+        .order('horario')
+        .order('created_at');
       
-      const votos = [];
-      snapshot.forEach(doc => {
-        votos.push({ id: doc.id, ...doc.data() });
-      });
+      if (error) throw error;
       
       const listado = {};
       const listaEspera = [];
       
       votos.forEach(voto => {
-        if (voto.enEspera) {
+        if (voto.en_espera) {
           listaEspera.push(voto);
         } else {
           if (!listado[voto.horario]) listado[voto.horario] = [];
@@ -840,22 +842,21 @@ function initAdminPage() {
   function renderAdminItem(p, isEspera = false) {
     let statusHtml = '';
     
-    if (p.seMonto === null) {
+    if (p.se_monto === null) {
       statusHtml = `
         <div class="action-btns">
           <button onclick="marcarVoto('${p.id}', 1)" class="btn btn-success btn-small">Subió</button>
           <button onclick="marcarVoto('${p.id}', 0)" class="btn btn-danger btn-small">No subió</button>
         </div>
       `;
-    } else if (p.seMonto === 1) {
+    } else if (p.se_monto === 1) {
       statusHtml = `
         <div class="action-btns">
           <span class="status-badge status-success">✅ Subió</span>
           <button onclick="marcarVoto('${p.id}', 2)" class="btn btn-warning btn-small">Llegó tarde</button>
         </div>
       `;
-    } else if (p.seMonto === 2) {
-      // Llegó tarde - se considera que subió, con opción de revertir
+    } else if (p.se_monto === 2) {
       statusHtml = `
         <div class="action-btns">
           <span class="status-badge status-warning">⏰ Llegó tarde (Subió)</span>
@@ -864,7 +865,6 @@ function initAdminPage() {
         </div>
       `;
     } else {
-      // No subió (0)
       statusHtml = `
         <div class="action-btns">
           <span class="status-badge status-danger">❌ No subió</span>
@@ -892,16 +892,17 @@ function initAdminPage() {
   
   window.marcarVoto = async function(id, val) {
     try {
-      await updateDoc(doc(db, 'votos', id), {
-        seMonto: val
-      });
+      const { error } = await supabase
+        .from('votos')
+        .update({ se_monto: val })
+        .eq('id', id);
       
-      // Si marcó como "No subió" (0), mover de lista de espera
+      if (error) throw error;
+      
       if (val === 0) {
         await moverDeEspera(id);
       }
       
-      // Recargar para mostrar cambios
       loadAdminData();
       
     } catch (error) {
@@ -911,456 +912,33 @@ function initAdminPage() {
   };
   
   async function moverDeEspera(votoId) {
-    const votoDoc = await getDoc(doc(db, 'votos', votoId));
-    if (!votoDoc.exists()) return;
+    // Obtener datos del voto que se canceló
+    const { data: voto, error: fetchErr } = await supabase
+      .from('votos')
+      .select('*')
+      .eq('id', votoId)
+      .single();
     
-    const voto = votoDoc.data();
+    if (fetchErr || !voto) return;
     
-    const q = query(
-      collection(db, 'votos'),
-      where('fecha', '==', voto.fecha),
-      where('horario', '==', voto.horario),
-      where('enEspera', '==', true),
-      orderBy('createdAt'),
-      limit(1)
-    );
-    const esperaSnapshot = await getDocs(q);
+    // Buscar el primero en espera para ese horario/fecha
+    const { data: esperaArr, error: qErr } = await supabase
+      .from('votos')
+      .select('*')
+      .eq('fecha', voto.fecha)
+      .eq('horario', voto.horario)
+      .eq('en_espera', true)
+      .order('created_at')
+      .limit(1);
     
-    if (!esperaSnapshot.empty) {
-      const esperaDoc = esperaSnapshot.docs[0];
-      await updateDoc(doc(db, 'votos', esperaDoc.id), {
-        enEspera: false
-      });
+    if (esperaArr && esperaArr.length > 0) {
+      const esperaDoc = esperaArr[0];
+      await supabase
+        .from('votos')
+        .update({ en_espera: false })
+        .eq('id', esperaDoc.id);
     }
   }
-}
-
-// ============================================
-// PÁGINA GRACIAS
-// ============================================
-function initGraciasPage() {
-  const params = new URLSearchParams(window.location.search);
-  
-  if (params.has('ya_votado')) {
-    const yaVotadoMsg = document.getElementById('yaVotadoMsg');
-    if (yaVotadoMsg) yaVotadoMsg.classList.remove('hidden');
-  }
-  
-  if (params.has('bloqueado')) {
-    const bloqueadoMsg = document.getElementById('bloqueadoMsg');
-    if (bloqueadoMsg) bloqueadoMsg.classList.remove('hidden');
-  }
-  
-  setTimeout(() => {
-    window.location.href = 'lista.html';
-  }, 3000);
-}
-
-// ============================================
-// PÁGINA CAMBIOS - CORREGIDA PARA MÓVILES
-// ============================================
-function initCambiosPage() {
-  console.log('=== INICIANDO CAMBIOS ===');
-  
-  if (!currentUser) {
-    window.location.href = 'index.html';
-    return;
-  }
-  
-  const params = new URLSearchParams(window.location.search);
-  const tipo = params.get('tipo');
-  
-  if (!tipo) {
-    window.location.href = 'lista.html';
-    return;
-  }
-  
-  const cycleDate = getCycleDate();
-  const container = document.getElementById('cambiosContainer');
-  
-  if (!container) {
-    console.error('ERROR: No existe cambiosContainer');
-    return;
-  }
-  
-  container.innerHTML = '<div class="text-center"><p>Cargando...</p></div>';
-  
-  cargarDatos();
-  
-  async function cargarDatos() {
-    try {
-      const q = query(
-        collection(db, 'votos'),
-        where('usuarioId', '==', currentUser.id),
-        where('fecha', '==', cycleDate)
-      );
-      
-      const snapshot = await getDocs(q);
-      
-      if (snapshot.empty) {
-        container.innerHTML = '<p class="text-center">No tienes votos hoy.</p>';
-        return;
-      }
-      
-      const votos = [];
-      snapshot.forEach(doc => {
-        votos.push({ id: doc.id, ...doc.data() });
-      });
-      
-      const vuelta = votos.find(v => v.horario && v.horario.includes('La Vega → Jarabacoa'));
-      
-      if (!vuelta) {
-        container.innerHTML = '<p class="text-center">No tienes horario de vuelta.</p>';
-        return;
-      }
-      
-      if (tipo === 'otros') {
-        await deleteDoc(doc(db, 'votos', vuelta.id));
-        await addDoc(collection(db, 'cambios'), {
-          usuarioId: currentUser.id,
-          matricula: currentUser.matricula,
-          tipo: 'otros',
-          fecha: cycleDate,
-          createdAt: serverTimestamp()
-        });
-        window.location.href = 'gracias.html?cambio=1';
-        return;
-      }
-      
-      mostrarSelector(tipo, vuelta.horario, vuelta.id);
-      
-    } catch (error) {
-      console.error('Error:', error);
-      container.innerHTML = '<p class="text-center text-red-600">Error: ' + error.message + '</p>';
-    }
-  }
-  
-  function mostrarSelector(tipo, horarioActual, votoId) {
-    console.log('Horario actual:', horarioActual);
-    console.log('Tipo:', tipo);
-    
-    // CORRECCIÓN: Parse manual robusto para horario actual
-    const parseHorario = (h) => {
-      const match = h.match(/(\d+):(\d+)\s*(AM|PM)/i);
-      if (!match) return null;
-      
-      let horas = parseInt(match[1]);
-      const mins = parseInt(match[2]);
-      const ampm = match[3].toUpperCase();
-      
-      if (ampm === 'PM' && horas !== 12) horas += 12;
-      if (ampm === 'AM' && horas === 12) horas = 0;
-      
-      return horas * 60 + mins;
-    };
-    
-    const minutosActual = parseHorario(horarioActual);
-    
-    // CORRECCIÓN: Obtener hora actual de forma compatible
-    const ahora = new Date();
-    // Usar hora local del dispositivo explícitamente
-    const horasLocal = ahora.getHours();
-    const minsLocal = ahora.getMinutes();
-    const minutosAhora = horasLocal * 60 + minsLocal;
-    
-    console.log('Hora local del móvil:', horasLocal + ':' + minsLocal);
-    console.log('Minutos actual (vuelta):', minutosActual);
-    console.log('Minutos ahora:', minutosAhora);
-    
-    const disponibles = [];
-    
-    transportSchedules.forEach(s => {
-      if (!s.route.includes('La Vega → Jarabacoa')) return;
-      
-      const min = parseHorario(s.fullText);
-      
-      // CORRECCIÓN: En móviles, a veces la hora está mal calculada
-      // Vamos a ser más permisivos y solo comparar con el horario actual
-      // sin verificar si ya pasó la hora (eso lo haremos opcional)
-      
-      let yaPaso = false;
-      
-      // Solo verificar si ya pasó si estamos en el mismo día
-      // Comparar fechas para evitar problemas de zona horaria
-      const hoy = new Date().toISOString().split('T')[0];
-      const fechaVoto = cycleDate;
-      
-      if (hoy === fechaVoto) {
-        yaPaso = min < minutosAhora;
-      }
-      
-      console.log('Evaluando:', s.fullText, 'min:', min, 'ya pasó:', yaPaso);
-      
-      if (tipo === 'antes') {
-        // Para "antes": horario menor al actual Y que no haya pasado
-        if (min < minutosActual && !yaPaso) {
-          disponibles.push(s.fullText);
-          console.log('  -> AGREGADO antes');
-        }
-      } else if (tipo === 'despues') {
-        // Para "después": horario mayor al actual (sin importar si pasó)
-        // o si es el mismo día, que no haya pasado
-        if (min > minutosActual) {
-          disponibles.push(s.fullText);
-          console.log('  -> AGREGADO después');
-        }
-      }
-    });
-    
-    // CORRECCIÓN: Si no hay disponibles, mostrar todos los del tipo sin filtro de hora
-    // Esto es para debug y para casos donde la hora del móvil esté mal
-    if (disponibles.length === 0) {
-      console.log('Sin horarios con filtro estricto, intentando filtro permisivo...');
-      
-      transportSchedules.forEach(s => {
-        if (!s.route.includes('La Vega → Jarabacoa')) return;
-        const min = parseHorario(s.fullText);
-        
-        if (tipo === 'antes' && min < minutosActual) {
-          disponibles.push(s.fullText);
-        } else if (tipo === 'despues' && min > minutosActual) {
-          disponibles.push(s.fullText);
-        }
-      });
-    }
-    
-    console.log('Total disponibles:', disponibles.length);
-    
-    // Renderizar
-    let html = `
-      <div class="card" style="padding: 1.5rem;">
-        <h2 class="text-center mb-4">Horario ${tipo === 'antes' ? 'anterior' : 'posterior'}</h2>
-        <p class="text-center text-gray-600 mb-4">Actual: <strong>${horarioActual}</strong></p>
-    `;
-    
-    if (disponibles.length === 0) {
-      html += `
-        <p class="text-center text-orange-600 mb-4">No hay horarios ${tipo === 'antes' ? 'anteriores' : 'posteriores'} disponibles.</p>
-        <button onclick="window.location.href='lista.html'" class="btn btn-gray" style="width: 100%;">Volver</button>
-      `;
-    } else {
-      html += `
-        <select id="nuevoHorario" style="width: 100%; padding: 0.75rem; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 0.5rem; font-size: 16px;">
-          <option value="">-- Selecciona --</option>
-          ${disponibles.map(h => `<option value="${h}">${h}</option>`).join('')}
-        </select>
-        <button id="btnGuardar" class="btn btn-primary" style="width: 100%; margin-bottom: 0.5rem; padding: 0.75rem; font-size: 16px;">Guardar</button>
-        <button onclick="window.location.href='lista.html'" class="btn btn-gray" style="width: 100%; padding: 0.75rem; font-size: 16px;">Cancelar</button>
-      `;
-    }
-    
-    html += '</div>';
-    container.innerHTML = html;
-    
-    if (disponibles.length > 0) {
-      const btn = document.getElementById('btnGuardar');
-      
-      const guardar = async (e) => {
-        if (e) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-        
-        const select = document.getElementById('nuevoHorario');
-        const nuevo = select.value;
-        
-        if (!nuevo) {
-          alert('Selecciona un horario');
-          return;
-        }
-        
-        btn.disabled = true;
-        btn.textContent = 'Guardando...';
-        
-        try {
-          // Nuevo timestamp para ir al final
-          await updateDoc(doc(db, 'votos', votoId), {
-            horario: nuevo,
-            seMonto: null,
-            createdAt: serverTimestamp()
-          });
-          
-          await addDoc(collection(db, 'cambios'), {
-            usuarioId: currentUser.id,
-            matricula: currentUser.matricula,
-            tipo: tipo,
-            nuevoHorario: nuevo,
-            fecha: cycleDate,
-            createdAt: serverTimestamp()
-          });
-          
-          window.location.href = 'lista.html?cambio=1';
-          
-        } catch (err) {
-          console.error('Error:', err);
-          alert('Error: ' + err.message);
-          btn.disabled = false;
-          btn.textContent = 'Guardar';
-        }
-      };
-      
-      // Eventos para móvil y desktop
-      btn.addEventListener('click', guardar);
-      btn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        guardar();
-      }, { passive: false });
-    }
-  }
-}
-// ============================================
-// PÁGINA NO SUBIERON - CORREGIDA
-// ============================================
-function initNoSubieronPage() {
-  // Verificar sesión de admin correctamente
-  const adminSession = localStorage.getItem('aeudj_admin_session');
-  if (adminSession !== 'true') {
-    window.location.href = 'admin.html';
-    return;
-  }
-  
-  const cycleDate = getCycleDate();
-  const container = document.getElementById('noSubieronContainer');
-  
-  loadNoSubieron();
-  
-  async function loadNoSubieron() {
-    try {
-      // Consulta simplificada para evitar índices compuestos
-      const q = query(
-        collection(db, 'votos'),
-        where('fecha', '==', cycleDate)
-      );
-      
-      const snapshot = await getDocs(q);
-      
-      // Filtrar en memoria los que no subieron (seMonto === 0)
-      const personas = [];
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        if (data.seMonto === 0) {
-          personas.push({ id: doc.id, ...data });
-        }
-      });
-      
-      // Ordenar por horario
-      personas.sort((a, b) => horarioAMinutos(a.horario) - horarioAMinutos(b.horario));
-      
-      if (personas.length === 0) {
-        container.innerHTML = `
-          <div class="text-center">
-            <p class="text-green-700 text-lg">¡Todos subieron! 🎉</p>
-            <p class="text-gray-600 mt-2">No hay personas para contactar</p>
-          </div>
-        `;
-        return;
-      }
-      
-      let html = '<div class="card">';
-      html += `<h3 class="text-lg font-bold text-red-700 mb-4">Total: ${personas.length} persona(s)</h3>`;
-      
-      personas.forEach(p => {
-        html += `
-          <div class="passenger-item" style="background: #fef2f2; border: 1px solid #fecaca; margin-bottom: 0.5rem; padding: 1rem; border-radius: 0.5rem;">
-            <div style="flex: 1;">
-              <p class="passenger-name" style="font-weight: 600; color: #1f2937;">${escapeHtml(p.nombre)}</p>
-              <p class="passenger-meta" style="color: #6b7280; font-size: 0.875rem; margin-top: 0.25rem;">
-                📞 ${p.telefono || 'N/A'} · ✉️ ${p.email || 'N/A'}
-              </p>
-              <p class="passenger-meta" style="color: #dc2626; font-size: 0.875rem; margin-top: 0.25rem;">
-                🚌 ${p.horario} · 🆔 ${p.matricula}
-              </p>
-            </div>
-            <button onclick="marcarComoSubio('${p.id}')" class="btn btn-success btn-small" style="margin-left: 1rem;">
-              Subió
-            </button>
-          </div>
-        `;
-      });
-      
-      html += '</div>';
-      container.innerHTML = html;
-      
-    } catch (error) {
-      console.error('Error:', error);
-      container.innerHTML = `
-        <div class="text-center text-red-600">
-          <p>Error al cargar datos.</p>
-          <p class="text-sm mt-2">${error.message}</p>
-          <button onclick="location.reload()" class="btn btn-gray mt-4">Reintentar</button>
-        </div>
-      `;
-    }
-  }
-  
-  // Función para marcar como que sí subió desde la página de no subieron
-  window.marcarComoSubio = async function(id) {
-    try {
-      await updateDoc(doc(db, 'votos', id), {
-        seMonto: 1
-      });
-      alert('Marcado como "Subió" correctamente');
-      loadNoSubieron(); // Recargar lista
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Error al actualizar: ' + error.message);
-    }
-  };
-}
-
-// ============================================
-// UTILIDADES
-// ============================================
-function validateEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function escapeHtml(text) {
-  if (!text) return '';
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-function formatTime(date) {
-  if (!date) return '';
-  if (typeof date === 'string') date = new Date(date);
-  if (date.toDate) date = date.toDate(); // Firebase timestamp
-  return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-}
-
-function horarioAMinutos(horario) {
-  try {
-    // Extraer hora y minutos del formato "7:00 AM" o "2:15 PM"
-    const match = horario.match(/(\d+):(\d+)\s*(AM|PM)/i);
-    if (!match) return 0;
-    
-    let horas = parseInt(match[1]);
-    const minutos = parseInt(match[2]);
-    const periodo = match[3].toUpperCase();
-    
-    // Convertir a formato 24 horas
-    if (periodo === 'PM' && horas !== 12) {
-      horas += 12;
-    } else if (periodo === 'AM' && horas === 12) {
-      horas = 0;
-    }
-    
-    return horas * 60 + minutos;
-  } catch (e) {
-    console.error('Error en horarioAMinutos:', e, horario);
-    return 0;
-  }
-}
-
-function hashString(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return Math.abs(hash).toString(16);
 }
 
 // ============================================
@@ -1376,7 +954,7 @@ function initVoluntarioPage() {
   const horariosText = document.getElementById('horariosAsignadosText');
   const cycleDate = getCycleDate();
   
-  const misHorarios = currentUser.horariosAsignados || [];
+  const misHorarios = currentUser.horarios_asignados || [];
   
   if (misHorarios.length === 0) {
      if(horariosText) horariosText.textContent = "No tienes ningún horario asignado.";
@@ -1390,18 +968,14 @@ function initVoluntarioPage() {
   
   async function loadVoluntarioData() {
     try {
-      const q = query(
-        collection(db, 'votos'),
-        where('fecha', '==', cycleDate),
-        where('horario', 'in', misHorarios),
-        orderBy('createdAt')
-      );
-      const snapshot = await getDocs(q);
+      const { data: votos, error } = await supabase
+        .from('votos')
+        .select('*')
+        .eq('fecha', cycleDate)
+        .in('horario', misHorarios)
+        .order('created_at');
       
-      const votos = [];
-      snapshot.forEach(doc => {
-        votos.push({ id: doc.id, ...doc.data() });
-      });
+      if (error) throw error;
       
       if (votos.length === 0) {
         container.innerHTML = '<p class="text-center text-gray-600">No hay pasajeros anotados para tu horario hoy.</p>';
@@ -1416,21 +990,21 @@ function initVoluntarioPage() {
       
       votos.forEach((p, i) => {
         let statusHtml = '';
-        if (p.seMonto === null) {
+        if (p.se_monto === null) {
           statusHtml = `
             <div class="action-btns">
               <button onclick="marcarVotoVoluntario('${p.id}', 1)" class="btn btn-success btn-small">Subió</button>
               <button onclick="marcarVotoVoluntario('${p.id}', 0)" class="btn btn-danger btn-small">No subió</button>
             </div>
           `;
-        } else if (p.seMonto === 1) {
+        } else if (p.se_monto === 1) {
           statusHtml = `
             <div class="action-btns">
               <span class="status-badge status-success">✅ Subió</span>
               <button onclick="marcarVotoVoluntario('${p.id}', 2)" class="btn btn-warning btn-small">Llegó tarde</button>
             </div>
           `;
-        } else if (p.seMonto === 2) {
+        } else if (p.se_monto === 2) {
           statusHtml = `
             <div class="action-btns">
               <span class="status-badge status-warning">⏰ Llegó tarde</span>
@@ -1472,10 +1046,13 @@ function initVoluntarioPage() {
 
   window.marcarVotoVoluntario = async function(id, val) {
     try {
-      await updateDoc(doc(db, 'votos', id), {
-        seMonto: val
-      });
-      loadVoluntarioData(); // Reload
+      const { error } = await supabase
+        .from('votos')
+        .update({ se_monto: val })
+        .eq('id', id);
+      
+      if (error) throw error;
+      loadVoluntarioData();
     } catch (error) {
       console.error('Error:', error);
       alert('Error al actualizar');
@@ -1484,83 +1061,333 @@ function initVoluntarioPage() {
 }
 
 // ============================================
+// PÁGINA CAMBIOS
+// ============================================
+function initCambiosPage() {
+  if (!currentUser) {
+    window.location.href = 'index.html';
+    return;
+  }
+  
+  const params = new URLSearchParams(window.location.search);
+  const tipo = params.get('tipo');
+  
+  if (!tipo) {
+    window.location.href = 'lista.html';
+    return;
+  }
+  
+  const cycleDate = getCycleDate();
+  const container = document.getElementById('cambiosContainer');
+  
+  container.innerHTML = '<div class="text-center"><p>Cargando...</p></div>';
+  
+  cargarDatos();
+  
+  async function cargarDatos() {
+    try {
+      const { data: votos, error } = await supabase
+        .from('votos')
+        .select('*')
+        .eq('usuario_id', currentUser.id)
+        .eq('fecha', cycleDate);
+      
+      if (error) throw error;
+      
+      if (!votos || votos.length === 0) {
+        container.innerHTML = '<p class="text-center">No tienes votos hoy.</p>';
+        return;
+      }
+      
+      const vuelta = votos.find(v => v.horario && v.horario.includes('La Vega → Jarabacoa'));
+      
+      if (!vuelta) {
+        container.innerHTML = '<p class="text-center">No tienes horario de vuelta.</p>';
+        return;
+      }
+      
+      if (tipo === 'otros') {
+        const { error: delErr } = await supabase.from('votos').delete().eq('id', vuelta.id);
+        if (delErr) throw delErr;
+        
+        await supabase.from('cambios_audit').insert({
+          usuario_id: currentUser.id,
+          matricula: currentUser.matricula,
+          tipo: 'otros',
+          fecha: cycleDate
+        });
+        window.location.href = 'gracias.html?cambio=1';
+        return;
+      }
+      
+      mostrarSelector(tipo, vuelta.horario, vuelta.id);
+      
+    } catch (error) {
+      console.error('Error:', error);
+      container.innerHTML = '<p class="text-center text-red-600">Error: ' + error.message + '</p>';
+    }
+  }
+  
+  function mostrarSelector(tipo, horarioActual, votoId) {
+    const parseHorario = (h) => {
+      const match = h.match(/(\d+):(\d+)\s*(AM|PM)/i);
+      if (!match) return null;
+      let horas = parseInt(match[1]);
+      const mins = parseInt(match[2]);
+      const ampm = match[3].toUpperCase();
+      if (ampm === 'PM' && horas !== 12) horas += 12;
+      if (ampm === 'AM' && horas === 12) horas = 0;
+      return horas * 60 + mins;
+    };
+    
+    const minutosActual = parseHorario(horarioActual);
+    const ahora = new Date();
+    const minutosAhora = ahora.getHours() * 60 + ahora.getMinutes();
+    
+    const disponibles = [];
+    
+    transportSchedules.forEach(s => {
+      if (!s.route.includes('La Vega → Jarabacoa')) return;
+      const min = parseHorario(s.fullText);
+      let yaPaso = false;
+      const hoy = new Date().toISOString().split('T')[0];
+      if (hoy === cycleDate) {
+        yaPaso = min < minutosAhora;
+      }
+      
+      if (tipo === 'antes') {
+        if (min < minutosActual && !yaPaso) disponibles.push(s.fullText);
+      } else if (tipo === 'despues') {
+        if (min > minutosActual) disponibles.push(s.fullText);
+      }
+    });
+    
+    if (disponibles.length === 0) {
+      transportSchedules.forEach(s => {
+        if (!s.route.includes('La Vega → Jarabacoa')) return;
+        const min = parseHorario(s.fullText);
+        if (tipo === 'antes' && min < minutosActual) disponibles.push(s.fullText);
+        else if (tipo === 'despues' && min > minutosActual) disponibles.push(s.fullText);
+      });
+    }
+    
+    let html = `
+      <div class="card" style="padding: 1.5rem;">
+        <h2 class="text-center mb-4">Horario ${tipo === 'antes' ? 'anterior' : 'posterior'}</h2>
+        <p class="text-center text-gray-600 mb-4">Actual: <strong>${horarioActual}</strong></p>
+    `;
+    
+    if (disponibles.length === 0) {
+      html += `
+        <p class="text-center text-orange-600 mb-4">No hay horarios ${tipo === 'antes' ? 'anteriores' : 'posteriores'} disponibles.</p>
+        <button onclick="window.location.href='lista.html'" class="btn btn-gray" style="width: 100%;">Volver</button>
+      `;
+    } else {
+      html += `
+        <select id="nuevoHorario" style="width: 100%; padding: 0.75rem; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 0.5rem; font-size: 16px;">
+          <option value="">-- Selecciona --</option>
+          ${disponibles.map(h => `<option value="${h}">${h}</option>`).join('')}
+        </select>
+        <button id="btnGuardar" class="btn btn-primary" style="width: 100%; margin-bottom: 0.5rem; padding: 0.75rem; font-size: 16px;">Guardar</button>
+        <button onclick="window.location.href='lista.html'" class="btn btn-gray" style="width: 100%; padding: 0.75rem; font-size: 16px;">Cancelar</button>
+      `;
+    }
+    
+    html += '</div>';
+    container.innerHTML = html;
+    
+    if (disponibles.length > 0) {
+      document.getElementById('btnGuardar').addEventListener('click', async () => {
+        const nuevo = document.getElementById('nuevoHorario').value;
+        if (!nuevo) {
+          alert('Selecciona un horario');
+          return;
+        }
+        
+        const btn = document.getElementById('btnGuardar');
+        btn.disabled = true;
+        btn.textContent = 'Guardando...';
+        
+        try {
+          const { error: upErr } = await supabase
+            .from('votos')
+            .update({
+              horario: nuevo,
+              se_monto: null,
+              created_at: new Date().toISOString()
+            })
+            .eq('id', votoId);
+          
+          if (upErr) throw upErr;
+          
+          await supabase.from('cambios_audit').insert({
+            usuario_id: currentUser.id,
+            matricula: currentUser.matricula,
+            tipo: tipo,
+            nuevo_horario: nuevo,
+            fecha: cycleDate
+          });
+          
+          window.location.href = 'lista.html?cambio=1';
+          
+        } catch (err) {
+          console.error('Error:', err);
+          alert('Error: ' + err.message);
+          btn.disabled = false;
+          btn.textContent = 'Guardar';
+        }
+      });
+    }
+  }
+}
+
+// ============================================
+// PÁGINA NO SUBIERON
+// ============================================
+function initNoSubieronPage() {
+  const adminSession = localStorage.getItem('aeudj_admin_session');
+  if (adminSession !== 'true') {
+    window.location.href = 'admin.html';
+    return;
+  }
+  
+  const cycleDate = getCycleDate();
+  const container = document.getElementById('noSubieronContainer');
+  
+  loadNoSubieron();
+  
+  async function loadNoSubieron() {
+    try {
+      const { data: snapshot, error } = await supabase
+        .from('votos')
+        .select('*')
+        .eq('fecha', cycleDate)
+        .eq('se_monto', 0);
+      
+      if (error) throw error;
+      
+      const personas = snapshot || [];
+      personas.sort((a, b) => horarioAMinutos(a.horario) - horarioAMinutos(b.horario));
+      
+      if (personas.length === 0) {
+        container.innerHTML = `<div class="text-center"><p class="text-green-700 text-lg">¡Todos subieron! 🎉</p></div>`;
+        return;
+      }
+      
+      let html = '<div class="card">';
+      html += `<h3 class="text-lg font-bold text-red-700 mb-4">Total: ${personas.length} persona(s)</h3>`;
+      
+      personas.forEach(p => {
+        html += `
+          <div class="passenger-item" style="background: #fef2f2; border: 1px solid #fecaca; margin-bottom: 0.5rem; padding: 1rem; border-radius: 0.5rem;">
+            <div style="flex: 1;">
+              <p class="passenger-name" style="font-weight: 600;">${escapeHtml(p.nombre)}</p>
+              <p class="passenger-meta">📞 ${p.telefono || 'N/A'} · 🚌 ${p.horario}</p>
+            </div>
+            <button onclick="marcarComoSubio('${p.id}')" class="btn btn-success btn-small">Subió</button>
+          </div>
+        `;
+      });
+      
+      html += '</div>';
+      container.innerHTML = html;
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+  
+  window.marcarComoSubio = async function(id) {
+    try {
+      await supabase.from('votos').update({ se_monto: 1 }).eq('id', id);
+      loadNoSubieron();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+}
+
+// ============================================
+// UTILIDADES
+// ============================================
+function validateEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function formatTime(date) {
+  if (!date) return '';
+  const d = new Date(date);
+  return d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+}
+
+function horarioAMinutos(horario) {
+  try {
+    const match = horario.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (!match) return 0;
+    let horas = parseInt(match[1]);
+    const minutos = parseInt(match[2]);
+    const periodo = match[3].toUpperCase();
+    if (periodo === 'PM' && horas !== 12) horas += 12;
+    else if (periodo === 'AM' && horas === 12) horas = 0;
+    return horas * 60 + minutos;
+  } catch (e) {
+    return 0;
+  }
+}
+
+function hashString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash).toString(16);
+}
+
+// ============================================
 // FUNCIONES GLOBALES
 // ============================================
 window.logout = logout;
-window.irAHorario = function(ancla) {
-  if (!ancla) return;
-  const target = document.querySelector(ancla);
-  if (target) {
-    const offset = 100;
-    const elementPosition = target.getBoundingClientRect().top + window.pageYOffset;
-    window.scrollTo({ top: elementPosition - offset, behavior: 'smooth' });
-  }
-};
-
 window.notificarAccion = async function(tipo) {
   if (!currentUser || currentUser.rol !== 'administrador') return;
-  
-  if (!confirm(`¿Estás seguro/a de enviar la notificación por correo de tipo: ${tipo}?`)) return;
+  if (!confirm(`¿Estás seguro/a de enviar la notificación?`)) return;
 
   try {
     const btn = event.target;
-    const oldText = btn.textContent;
-    btn.textContent = 'Enviando...';
     btn.disabled = true;
     
     let correos = [];
     if (tipo === 'apertura') {
-       const usersSnap = await getDocs(collection(db, 'usuarios'));
-       usersSnap.forEach(u => {
-          if (u.data().email) correos.push(u.data().email);
-       });
+       const { data: users } = await supabase.from('profiles').select('email');
+       users.forEach(u => u.email && correos.push(u.email));
     } else {
-       const cycleDate = getCycleDate();
-       const vQuery = query(collection(db, 'votos'), where('fecha', '==', cycleDate));
-       const vSnap = await getDocs(vQuery);
-       vSnap.forEach(v => {
-          if (v.data().email && !correos.includes(v.data().email)) {
-             correos.push(v.data().email);
-          }
-       });
+       const { data: vs } = await supabase.from('votos').select('email').eq('fecha', getCycleDate());
+       vs.forEach(v => v.email && !correos.includes(v.email) && correos.push(v.email));
     }
 
     if (correos.length === 0) {
-      alert("No hay correos registrados para esta acción.");
-      btn.textContent = oldText;
+      alert("No hay correos.");
       btn.disabled = false;
       return;
     }
 
-    let titulo = "";
-    let mensaje = "";
-    if (tipo === 'apertura') {
-      titulo = "¡Lista Abierta! Anótate en el transporte";
-      mensaje = "La lista para anotarse en el transporte de la AEUDJ ya está abierta. Ingresa a la página para reservar tu asiento.";
-    } else if (tipo === 'llegada') {
-      titulo = "🚌 El autobús ha llegado";
-      mensaje = "El autobús ya llegó al punto de partida. Por favor acércate a la puerta para abordar.";
-    } else if (tipo === 'salida') {
-      titulo = "💨 El autobús está saliendo";
-      mensaje = "¡Atención! El autobús está saliendo pronto. Apresúrate o perderás tu asiento.";
-    }
-
     const templateParams = {
-      titulo: titulo,
-      mensaje: mensaje,
+      titulo: tipo === 'apertura' ? "¡Lista Abierta!" : (tipo === 'llegada' ? "🚌 El autobús ha llegado" : "💨 El autobús está saliendo"),
+      mensaje: "Mensaje de notificación de transporte AEUDJ.",
       destinatarios: correos.join(',')
     };
 
-    // Activar envío real de EmailJS
     await emailjs.send('service_afofocu', 'template_e2cqbex', templateParams);
-    
-    alert(`¡Éxito! Se enviaron las notificaciones a ${correos.length} estudiantes correctamente vía correo electrónico.`);
-    
-    btn.textContent = oldText;
+    alert(`Enviado a ${correos.length} personas.`);
     btn.disabled = false;
-    
   } catch(error) {
      console.error(error);
-     alert("Error al enviar notificaciones: " + error.message);
+     alert("Error: " + error.message);
   }
 };

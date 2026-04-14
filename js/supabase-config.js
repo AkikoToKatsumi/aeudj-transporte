@@ -1,33 +1,20 @@
-// firebase-config.js - Versión CDN ES modules
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
-import { getAuth } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+// supabase-config.js - Configuración de Supabase
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCEExKRz5L31LwzUZ9Aae6tyorxJ4ERyFk",
-  authDomain: "aeudj-94bc2.firebaseapp.com",
-  projectId: "aeudj-94bc2",
-  storageBucket: "aeudj-94bc2.firebasestorage.app",
-  messagingSenderId: "466789232026",
-  appId: "1:466789232026:web:a066439702cc908ac05e23",
-  measurementId: "G-XB9YS85CN0"
-};
+// REEMPLAZA ESTOS VALORES CON LOS DE TU PANEL DE SUPABASE (Project Settings > API)
+const SUPABASE_URL = 'https://irjwxegepkznqrisbrys.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyand4ZWdlcGt6bnFyaXNicnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNjk0NDIsImV4cCI6MjA5MTc0NTQ0Mn0.TZOhsy0ghfmjK8rd4GWcgbtOLpERKRJ62mjqc5gaYOM';
 
-let app;
-let db;
-let auth;
+let supabase;
 
 try {
-  app = initializeApp(firebaseConfig);
-  db = getFirestore(app);
-  auth = getAuth(app);
-  console.log('✅ Firebase conectado correctamente');
+    supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log('✅ Supabase configurado');
 } catch (error) {
-  console.error('❌ Error al conectar Firebase:', error);
-  alert('Error de conexión a la base de datos. Verifica tu configuración.');
+    console.error('❌ Error configurando Supabase:', error);
 }
 
-// Configuración de horarios
+// Configuración de horarios (Copiado de firebase-config.js)
 const transportSchedules = [
   { time: "7:00 AM",  route: "Jarabacoa → La Vega", fullText: "7:00 AM Jarabacoa → La Vega" },
   { time: "9:00 AM",  route: "Jarabacoa → La Vega", fullText: "9:00 AM Jarabacoa → La Vega" },
@@ -58,4 +45,4 @@ function formatDate(dateStr) {
   return `${day}/${month}/${year}`;
 }
 
-export { db, auth, transportSchedules, getCycleDate, formatDate };
+export { supabase, transportSchedules, getCycleDate, formatDate };
