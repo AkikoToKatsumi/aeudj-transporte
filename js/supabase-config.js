@@ -45,4 +45,4 @@ function formatDate(dateStr) {
   return `${day}/${month}/${year}`;
 }
 
-export { supabase, transportSchedules, getCycleDate, formatDate };
+export { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY };

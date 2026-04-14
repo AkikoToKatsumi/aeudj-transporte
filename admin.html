@@ -41,6 +41,26 @@
         </div>
       </div>
 
+      <!-- Crear Nuevo Staff -->
+      <div class="card mb-6" style="background:#f0fdf4; border:1px solid #bbf7d0; max-width: 800px; margin: 0 auto 2rem auto;">
+        <h2 class="text-xl font-bold text-green-800 mb-4 text-center">➕ Registrar Nuevo Staff/Voluntario</h2>
+        <form id="createStaffForm" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="text" id="staffMatricula" class="form-input" placeholder="Matrícula" required>
+            <input type="text" id="staffNombre" class="form-input" placeholder="Nombre completo" required>
+            <input type="tel" id="staffTelefono" class="form-input" placeholder="Teléfono" required>
+            <input type="email" id="staffEmail" class="form-input" placeholder="Correo (opcional)">
+            <input type="password" id="staffPassword" class="form-input" placeholder="Contraseña inicial" required>
+            <select id="staffRol" class="form-select" required>
+              <option value="voluntario">Voluntario</option>
+              <option value="administrador">Administrador</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-success btn-block mt-4">Crear Usuario</button>
+          <p id="staffStatus" class="text-center text-sm mt-2 hidden"></p>
+        </form>
+      </div>
+
       <!-- Gestión de Voluntarios -->
       <div class="card mb-6" style="background:#f8fafc; border:1px solid #e2e8f0; max-width: 800px; margin: 0 auto 2rem auto;">
         <h2 class="text-xl font-bold text-blue-800 mb-4 text-center">👥 Gestión de Voluntarios</h2>

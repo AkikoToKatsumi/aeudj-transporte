@@ -2,7 +2,8 @@
 // AEUDJ TRANSPORTE - APLICACIÓN PRINCIPAL (SUPABASE VERSION)
 // ============================================
 
-import { supabase, transportSchedules, getCycleDate, formatDate } from './supabase-config.js';
+import { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY } from './supabase-config.js';
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
 // Variables globales
 let currentUser = null;
@@ -731,6 +732,72 @@ function initAdminPage() {
   
   loadAdminData();
   loadVoluntariosMng();
+  initCreateStaff();
+  
+  function initCreateStaff() {
+    const form = document.getElementById('createStaffForm');
+    const status = document.getElementById('staffStatus');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      status.classList.remove('hidden');
+      status.textContent = 'Procesando...';
+      status.className = 'text-center text-sm mt-2 text-blue-400';
+
+      const matricula = document.getElementById('staffMatricula').value.trim();
+      const nombre = document.getElementById('staffNombre').value.trim();
+      const telefono = document.getElementById('staffTelefono').value.trim();
+      const emailInput = document.getElementById('staffEmail').value.trim();
+      const password = document.getElementById('staffPassword').value;
+      const rol = document.getElementById('staffRol').value;
+
+      // Generar email pseudo si no hay uno real
+      const email = emailInput || `${matricula}@aeudj.com`;
+
+      try {
+        // Crear cliente aislado para no cerrar la sesión del admin
+        const tempClient = createClient(SUPABASE_URL, SUPABASE_KEY, {
+          auth: { persistSession: false }
+        });
+
+        const { data: authData, error: authErr } = await tempClient.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { nombre, matricula, telefono, rol, universidad: 'AEUDJ' }
+          }
+        });
+
+        if (authErr) throw authErr;
+
+        // Crear/Actualizar perfil
+        const { error: profErr } = await supabase.from('profiles').insert([{
+          id: authData.user.id,
+          nombre,
+          matricula,
+          telefono,
+          email,
+          rol,
+          universidad: 'AEUDJ'
+        }]);
+
+        if (profErr) {
+            // Si falló el perfil pero la cuenta se creó, al menos avisamos
+            console.error('Error perfil:', profErr);
+        }
+
+        status.textContent = '✅ Usuario creado exitosamente.';
+        status.className = 'text-center text-sm mt-2 text-green-400';
+        form.reset();
+        loadVoluntariosMng(); // Recargar lista
+      } catch (err) {
+        console.error(err);
+        status.textContent = '❌ Error: ' + err.message;
+        status.className = 'text-center text-sm mt-2 text-red-400';
+      }
+    });
+  }
   
   async function loadVoluntariosMng() {
      const volContainer = document.getElementById('voluntariosListContainer');
