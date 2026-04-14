@@ -446,25 +446,26 @@ tr:last-child td { border-bottom: none; }
   position: relative;
   width: 100%;
   max-width: 420px;
-  overflow: visible; /* Para que el logo solape */
+  overflow: visible !important; /* Esencial para el logo solapado */
+  margin: 2rem auto;
 }
 
-/* Logo solapado */
+/* Logo solapado - Refinado para centrado absoluto */
 .mockup-logo {
   position: absolute;
   top: 0;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 100px;
-  height: 100px;
+  width: 90px;
+  height: 90px;
   background: white;
   border-radius: 50%;
   padding: 4px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-  display: flex;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+  display: flex !important;
   align-items: center;
   justify-content: center;
-  z-index: 10;
+  z-index: 99;
 }
 
 .mockup-logo img {
