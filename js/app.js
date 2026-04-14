@@ -319,7 +319,7 @@ function initIndexPage() {
       
     } catch (error) {
       console.error('Error:', error);
-      showError('Error al registrar: ' + error.message);
+      showError('Error al registrar: ' + (error.message || 'Error desconocido'));
     }
     btn.disabled = false;
     btn.textContent = 'Registrar';
