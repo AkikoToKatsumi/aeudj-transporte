@@ -72,15 +72,20 @@ document.addEventListener('DOMContentLoaded', async function() {
 // GESTIÓN DE SESIÓN
 // ============================================
 function checkSession() {
-  const userData = localStorage.getItem('aeudj_user');
-  const adminData = localStorage.getItem('aeudj_admin_session');
-  
-  if (userData) {
-    currentUser = JSON.parse(userData);
-  }
-  
-  if (adminData === 'true') {
-    isAdmin = true;
+  try {
+    const userData = localStorage.getItem('aeudj_user');
+    const adminData = localStorage.getItem('aeudj_admin_session');
+    
+    if (userData && userData !== 'undefined') {
+      currentUser = JSON.parse(userData);
+    }
+    
+    if (adminData === 'true') {
+      isAdmin = true;
+    }
+  } catch (e) {
+    console.error('Error loading session:', e);
+    clearSession();
   }
 }
 
@@ -156,7 +161,7 @@ function initIndexPage() {
   const showRegisterBtn = document.getElementById('showRegisterBtn');
   const showLoginBtn = document.getElementById('showLoginBtn');
 
-  if(showRegisterBtn) {
+  if(showRegisterBtn && loginForm && registerForm) {
     showRegisterBtn.addEventListener('click', (e) => {
       e.preventDefault();
       loginForm.classList.add('hidden');
@@ -165,7 +170,7 @@ function initIndexPage() {
     });
   }
 
-  if(showLoginBtn) {
+  if(showLoginBtn && loginForm && registerForm) {
     showLoginBtn.addEventListener('click', (e) => {
       e.preventDefault();
       registerForm.classList.add('hidden');
@@ -174,21 +179,34 @@ function initIndexPage() {
     });
   }
 
-  initPasswordToggle();
+  if (typeof initPasswordToggle === 'function') initPasswordToggle();
+  
+  const showError = (msg) => {
+    if (errorDiv) {
+      errorDiv.textContent = msg;
+      errorDiv.classList.remove('hidden');
+    } else {
+      alert(msg);
+    }
+  };
 
-  loginForm.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    errorDiv.classList.add('hidden');
+  if (loginForm) {
+    loginForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      if (errorDiv) errorDiv.classList.add('hidden');
     
     const userInput = document.getElementById('userInput').value.trim().replace(/\s+/g, '');
     const pass = document.getElementById('passwordLogin').value.trim();
     
     const btn = loginForm.querySelector('button[type="submit"]');
-    btn.disabled = true;
-    btn.textContent = 'Verificando...';
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Verificando...';
+    }
 
     try {
       let matriculaLogin = userInput;
+
       let userDataLocal = null;
       
       // Buscar por matrícula o teléfono
