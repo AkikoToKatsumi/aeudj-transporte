@@ -12,14 +12,22 @@ let selectedHorarios = [];
 const cycleDate = getCycleDate(); // Definida globalmente para todas las funciones
 let currentAdminStats = null; // Para compartir datos con el modal
 
+function refreshIcons() {
+  try {
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+  } catch (e) {
+    console.error('Error loading Lucide icons:', e);
+  }
+}
+
 // ============================================
 // INICIALIZACIÓN
 // ============================================
 document.addEventListener('DOMContentLoaded', async function() {
   // Inicializar Iconos Lucide
-  if (window.lucide) {
-    window.lucide.createIcons();
-  }
+  refreshIcons();
 
   // Verificar sesión con localStorage y verificar luego con Supabase Auth
   checkSession();
@@ -150,6 +158,7 @@ function initPage(page) {
 // PÁGINA INDEX (LOGIN/REGISTRO)
 // ============================================
 function initIndexPage() {
+  refreshIcons();
   if (currentUser) {
     window.location.href = 'votar.html';
     return;
