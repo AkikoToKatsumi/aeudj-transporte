@@ -390,8 +390,12 @@ function initVotarPage() {
         const submitBtn = horarioForm.querySelector('button[type="submit"]');
         if (submitBtn) submitBtn.textContent = 'Actualizar Selección';
         
-        statusMsg.textContent = `📝 Tienes ${selectedHorarios.length} horarios registrados. Puedes cambiarlos si deseas.`;
-        statusMsg.className = 'text-center text-sm font-medium text-blue-400 mt-4';
+        const msg = document.createElement('p');
+        msg.className = 'text-center text-sm text-gray-400 mt-4';
+        msg.innerHTML = `📝 Tienes ${initialVotes.length} horarios registrados. Puedes cambiarlos si deseas.`;
+        const statusMsgEl = document.getElementById('status-message');
+        if (statusMsgEl) statusMsgEl.parentNode.insertBefore(msg, statusMsgEl);
+        else horarioForm.appendChild(msg);
       }
       
       renderHorarios();
