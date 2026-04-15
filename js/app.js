@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', async function() {
            if (data) {
              currentUser = data;
              
-             // Auto-promover a desarrolladora si es la matrÃ­cula de Gabriela
+             // Auto-promover a desarrolladora si es la matrícula de Gabriela
              if (currentUser.matricula === '20230105' && currentUser.rol !== 'desarrolladora') {
                currentUser.rol = 'desarrolladora';
                supabase.from('profiles').update({ rol: 'desarrolladora' }).eq('id', user.id).then();
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 // ============================================
-// GESTIÃ“N DE SESIÃ“N
+// GESTIÓN DE SESIÓN
 // ============================================
 function checkSession() {
   try {
