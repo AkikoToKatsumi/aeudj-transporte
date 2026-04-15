@@ -673,3 +673,54 @@ tr:last-child td { border-bottom: none; }
 /* Scrollbar para listas de pasajeros en el dashboard */
 .custom-scroll::-webkit-scrollbar { width: 5px; }
 .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+/* ============================================
+   GRID DE PASAJEROS ADMIN
+   ============================================ */
+.admin-passenger-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.card-horario-compact {
+  padding: 1.5rem !important;
+  border-radius: 1.5rem !important;
+  background: rgba(30, 41, 59, 0.4) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.horario-header {
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+
+.compact-passenger-list {
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.compact-passenger-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: rgba(0,0,0,0.2);
+  border-radius: 1rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.95rem;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.compact-passenger-item:hover {
+  border-color: rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.05);
+}
+
+.compact-name { font-weight: 600; color: #fff; }
+.compact-meta { font-size: 0.8rem; color: #94a3b8; }

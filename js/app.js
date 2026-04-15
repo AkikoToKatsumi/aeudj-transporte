@@ -1091,29 +1091,38 @@ function initAdminPage() {
 
   function renderAdminList(listado, listaEspera) {
     container.innerHTML = '';
+    // Aplicar clase de grid al contenedor principal
+    container.className = 'admin-passenger-grid';
     
     const horarios = Object.keys(listado).sort((a, b) => {
       return horarioAMinutos(a) - horarioAMinutos(b);
     });
     
     if (horarios.length === 0 && listaEspera.length === 0) {
-      container.innerHTML = '<p class="text-center text-gray-600">No hay votos hoy.</p>';
+      container.innerHTML = '<p class="text-center text-gray-600 w-full col-span-full">No hay votos hoy.</p>';
       return;
     }
     
     horarios.forEach(horario => {
       const personas = listado[horario];
-      
       const card = document.createElement('div');
-      card.className = 'card-horario';
+      card.className = 'card-horario-compact';
       
+      const precio = getPrecio(horario);
+      const recaudado = personas.filter(p => p.se_monto === 1).length * precio;
+
       let html = `
-        <h2 class="text-2xl font-bold text-blue-800 mb-6 text-center">${horario}</h2>
-        <div class="passenger-list">
+        <div class="horario-header">
+          <h2 class="text-xl font-bold text-blue-400 mb-1">🚌 Pasajeros ${horario}</h2>
+          <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">
+            ${personas.length} Estudiantes | <span class="text-emerald-400">RD$ ${recaudado.toLocaleString()} Recaudado</span>
+          </p>
+        </div>
+        <div class="compact-passenger-list custom-scroll">
       `;
       
       personas.forEach(p => {
-        html += renderAdminItem(p);
+        html += renderAdminItem(p, false, true);
       });
       
       html += '</div>';
@@ -1123,17 +1132,20 @@ function initAdminPage() {
     
     if (listaEspera.length > 0) {
       const esperaCard = document.createElement('div');
-      esperaCard.className = 'card-horario';
-      esperaCard.style.background = '#fffbeb';
-      esperaCard.style.border = '2px solid #fcd34d';
+      esperaCard.className = 'card-horario-compact';
+      esperaCard.style.background = 'rgba(245, 158, 11, 0.1)';
+      esperaCard.style.border = '1px solid rgba(245, 158, 11, 0.3)';
       
       let html = `
-        <h2 class="text-2xl font-bold text-yellow-800 mb-6 text-center">⏳ Lista de Espera</h2>
-        <div class="passenger-list">
+        <div class="horario-header">
+          <h2 class="text-xl font-bold text-yellow-500 mb-1">⏳ Lista de Espera</h2>
+          <p class="text-xs text-slate-400 uppercase tracking-wider">${listaEspera.length} Estudiantes esperando cupo</p>
+        </div>
+        <div class="compact-passenger-list custom-scroll">
       `;
       
       listaEspera.forEach(p => {
-        html += renderAdminItem(p, true);
+        html += renderAdminItem(p, true, true);
       });
       
       html += '</div>';
@@ -1142,18 +1154,46 @@ function initAdminPage() {
     }
   }
   
-  function renderAdminItem(p, isEspera = false) {
+  function renderAdminItem(p, isEspera = false, isCompact = false) {
+    if (isCompact) {
+      // Versión compacta para la cuadrícula
+      const statusClass = p.se_monto === 1 ? 'border-emerald-500/30' : (p.se_monto === 0 ? 'border-rose-500/30' : '');
+      const bgClass = p.se_monto === 1 ? 'bg-emerald-500/10' : (p.se_monto === 0 ? 'bg-rose-500/10' : 'bg-slate-800/40');
+      
+      let actions = '';
+      if (!isEspera && p.se_monto === null) {
+        actions = `
+          <div class="flex gap-1">
+            <button onclick="marcarVoto(${p.id}, 1)" class="p-1.5 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/40 rounded-md transition-colors" title="Sí subió">
+              <span style="font-size:0.8rem;">✅</span>
+            </button>
+            <button onclick="marcarVoto(${p.id}, 0)" class="p-1.5 bg-rose-500/20 text-rose-400 hover:bg-rose-500/40 rounded-md transition-colors" title="No subió">
+              <span style="font-size:0.8rem;">❌</span>
+            </button>
+          </div>
+        `;
+      } else if (p.se_monto !== null) {
+        actions = `<span class="text-xs font-bold uppercase ${p.se_monto === 1 ? 'text-emerald-400' : 'text-rose-400'}">${p.se_monto === 1 ? 'SUBIÓ' : 'NO SUBIÓ'}</span>`;
+      }
+
+      return `
+        <div class="compact-passenger-item border ${statusClass} ${bgClass}">
+          <div class="flex flex-col flex-1 min-w-0 pr-2">
+            <span class="compact-name truncate">${escapeHtml(p.nombre)}</span>
+            <span class="compact-meta truncate">${escapeHtml(p.universidad || 'S/U')} • ${escapeHtml(p.matricula)}</span>
+          </div>
+          <div class="flex items-center shrink-0">
+            ${actions}
+          </div>
+        </div>
+      `;
+    }
+
+    // Versión original (fallback o para listas largas si se requiere)
     let statusHtml = '';
-    
     if (p.se_monto === null) {
       statusHtml = `
         <div class="action-btns">
-          <button onclick="marcarVoto('${p.id}', 1)" class="btn btn-success btn-small">Subió</button>
-          <button onclick="marcarVoto('${p.id}', 0)" class="btn btn-danger btn-small">No subió</button>
-        </div>
-      `;
-    } else if (p.se_monto === 1) {
-      statusHtml = `
         <div class="action-btns">
           <span class="status-badge status-success">✅ Subió</span>
           <button onclick="marcarVoto('${p.id}', 2)" class="btn btn-warning btn-small">Llegó tarde</button>
