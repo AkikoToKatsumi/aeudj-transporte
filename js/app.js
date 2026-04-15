@@ -242,7 +242,8 @@ function initIndexPage() {
         
         if (userData.matricula === '20230105' && userData.rol !== 'desarrolladora') {
           userData.rol = 'desarrolladora';
-          await supabase.from('profiles').update({ rol: 'desarrolladora' }).eq('id', user.id);
+          // Actualización silenciosa (si el RLS lo bloquea, aún retendrá el rol en su sesión actual)
+          supabase.from('profiles').update({ rol: 'desarrolladora' }).eq('id', user.id).then();
         }
         
         setSession(userData);
