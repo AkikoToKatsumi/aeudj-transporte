@@ -567,8 +567,11 @@ async function initListaPage() {
 
   if (btnVolverInicio) {
     btnVolverInicio.addEventListener('click', async () => {
-      await supabase.auth.signOut();
-      window.location.href = 'index.html';
+      if (currentUser) {
+        window.location.href = 'votar.html';
+      } else {
+        window.location.href = 'index.html';
+      }
     });
   }
   const cycleDate = getCycleDate();
