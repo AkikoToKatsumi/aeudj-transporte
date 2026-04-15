@@ -487,6 +487,13 @@ function initVotarPage() {
       // 2. Borrar SOLO los horarios que el usuario ya NO quiere
       if (toDeleteIds.length > 0) {
         await supabase.from('votos').delete().in('id', toDeleteIds);
+        
+        const horariosEliminados = initialVotes.filter(v => toDeleteIds.includes(v.id));
+        for (const v of horariosEliminados) {
+          if (window.promoverDeEspera) {
+            await window.promoverDeEspera(v.fecha, v.horario);
+          }
+        }
       }
 
       // 3. Insertar SOLO los nuevos horarios (calculando lista de espera)
@@ -1293,16 +1300,20 @@ function initCambiosPage() {
   }
 
   async function procesarCambioParaVoto(voto) {
-    if (tipo === 'otros') {
+    if (tipo === 'otros' || tipo === 'antes') {
       try {
         container.innerHTML = '<div class="text-center"><p>Procesando cancelación...</p></div>';
         const { error: delErr } = await supabase.from('votos').delete().eq('id', voto.id);
         if (delErr) throw delErr;
         
+        if (window.promoverDeEspera) {
+           await window.promoverDeEspera(voto.fecha, voto.horario);
+        }
+        
         await supabase.from('cambios_audit').insert({
           usuario_id: currentUser.id,
           matricula: currentUser.matricula,
-          tipo: 'otros',
+          tipo: tipo,
           horario_anterior: voto.horario,
           fecha: cycleDate
         });
@@ -1347,9 +1358,6 @@ function initCambiosPage() {
       // Regla de negocio: "Me iré después" => todos los posteriores
       if (tipo === 'despues') {
         if (min > minutosActual) disponibles.push(s.fullText);
-      } else if (tipo === 'antes') {
-        // Regla de negocio: "Me fui antes" => todos los anteriores (incluso si ya pasaron, para liberar su cupo original informando en qué bus se fue)
-        if (min < minutosActual) disponibles.push(s.fullText);
       }
     });
     
@@ -1402,6 +1410,9 @@ function initCambiosPage() {
 
           // Primero borramos el viejo para liberar el puesto (dispara trigger de promoción si aplica)
           await supabase.from('votos').delete().eq('id', voto.id);
+          if (window.promoverDeEspera) {
+            await window.promoverDeEspera(voto.fecha, voto.horario);
+          }
 
           // Insertamos el nuevo
           const { error: insErr } = await supabase.from('votos').insert({
@@ -1590,5 +1601,27 @@ window.notificarAccion = async function(tipo) {
   } catch(error) {
      console.error(error);
      alert("Error: " + error.message);
+  }
+};
+
+window.promoverDeEspera = async function(fecha, horario) {
+  try {
+    const { data: esperaArr } = await supabase
+      .from('votos')
+      .select('*')
+      .eq('fecha', fecha)
+      .eq('horario', horario)
+      .eq('en_espera', true)
+      .order('created_at')
+      .limit(1);
+    
+    if (esperaArr && esperaArr.length > 0) {
+      await supabase
+        .from('votos')
+        .update({ en_espera: false })
+        .eq('id', esperaArr[0].id);
+    }
+  } catch (err) {
+    console.error('Error al promover lista espera:', err);
   }
 };
