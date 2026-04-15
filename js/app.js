@@ -439,23 +439,28 @@ function initVotarPage() {
   }
   
   function toggleSlot(el, fullText, direction) {
-    const prevSelected = document.querySelector(`.time-slot.selected[data-direction="${direction}"]`);
-    if (prevSelected) {
-      prevSelected.classList.remove('selected');
-      prevSelected.querySelector('.checkmark').classList.add('hidden');
-    }
+    const prevSelectedList = document.querySelectorAll(`.time-slot.selected[data-direction="${direction}"]`);
+    
+    // Si el usuario hizo clic en el que ya estaba seleccionado (y es el único), se deselecciona.
+    // Si hay varios seleccionados por estado residual, los limpiamos todos primero de la vista.
+    const isCurrentlySelected = el.classList.contains('selected');
+    
+    prevSelectedList.forEach(node => {
+      node.classList.remove('selected');
+      node.querySelector('.checkmark').classList.add('hidden');
+    });
     
     selectedHorarios = selectedHorarios.filter(h => {
       const hDirection = h.includes('Jarabacoa → La Vega') ? 'ida' : 'vuelta';
       return hDirection !== direction;
     });
     
-    if (el.classList.contains('selected')) {
-      el.classList.remove('selected');
-      el.querySelector('.checkmark').classList.add('hidden');
+    // Si ya estaba seleccionado, simplemente queríamos apagarlo, así que salimos.
+    if (isCurrentlySelected && prevSelectedList.length === 1) {
       return;
     }
     
+    // Si no, lo encendemos.
     el.classList.add('selected');
     el.querySelector('.checkmark').classList.remove('hidden');
     selectedHorarios.push(fullText);
