@@ -1,4 +1,4 @@
-import { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY } from './supabase-config.js';
+import { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY } from './supabase-config.js?v=200';
 
 alert('SISTEMA ACTIVADO ✅');
 console.log('🚀 AEUDJ App Iniciada');
