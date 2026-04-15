@@ -724,3 +724,32 @@ tr:last-child td { border-bottom: none; }
 
 .compact-name { font-weight: 600; color: #fff; }
 .compact-meta { font-size: 0.8rem; color: #94a3b8; }
+
+/* Sub-lista de espera dentro del cuadro */
+.waitlist-divider {
+  margin: 1.5rem 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #f59e0b;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.waitlist-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, rgba(245, 158, 11, 0.4), transparent);
+}
+
+.compact-passenger-item.waiting {
+  background: rgba(245, 158, 11, 0.05);
+  border-color: rgba(245, 158, 11, 0.15);
+}
+
+.compact-passenger-item.waiting .compact-name {
+  color: #fcd34d;
+}

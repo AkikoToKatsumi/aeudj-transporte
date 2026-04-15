@@ -975,23 +975,27 @@ function initAdminPage() {
 
       // Inicializar porHorario con 0
       transportSchedules.forEach(s => {
-        stats.porHorario[s.fullText] = { count: 0, precio: getPrecio(s.fullText) };
+        stats.porHorario[s.fullText] = { 
+          count: 0, 
+          precio: getPrecio(s.fullText),
+          confirmados: [],
+          enEspera: []
+        };
       });
-      
+
       votos.forEach(voto => {
         const precio = getPrecio(voto.horario);
+        const horData = stats.porHorario[voto.horario];
         
+        if (!horData) return; // Por si acaso hay un horario huérfano
+
         if (voto.en_espera) {
-          listaEspera.push(voto);
+          horData.enEspera.push(voto);
           stats.enEspera++;
         } else {
-          if (!listado[voto.horario]) listado[voto.horario] = [];
-          listado[voto.horario].push(voto);
-          
+          horData.confirmados.push(voto);
+          horData.count++;
           stats.totalPasajeros++;
-          if (stats.porHorario[voto.horario]) {
-            stats.porHorario[voto.horario].count++;
-          }
           
           // Contabilidad
           stats.ingresosEstimados += precio;
@@ -1002,7 +1006,7 @@ function initAdminPage() {
       });
       
       renderDashboard(stats);
-      renderAdminList(listado, listaEspera);
+      renderAdminList(stats.porHorario);
       
     } catch (error) {
       console.error('Error:', error);
@@ -1096,69 +1100,58 @@ function initAdminPage() {
     });
   }
 
-  function renderAdminList(listado, listaEspera) {
+  function renderAdminList(porHorario) {
+    const container = document.getElementById('adminContainer');
+    if (!container) return;
+    
     container.innerHTML = '';
-    // Aplicar clase de grid al contenedor principal
     container.className = 'admin-passenger-grid';
     
-    const horarios = Object.keys(listado).sort((a, b) => {
+    const horarios = Object.keys(porHorario).sort((a, b) => {
       return horarioAMinutos(a) - horarioAMinutos(b);
     });
     
-    if (horarios.length === 0 && listaEspera.length === 0) {
+    if (horarios.length === 0) {
       container.innerHTML = '<p class="text-center text-gray-600 w-full col-span-full">No hay votos hoy.</p>';
       return;
     }
     
     horarios.forEach(horario => {
-      const personas = listado[horario];
+      const data = porHorario[horario];
+      if (data.confirmados.length === 0 && data.enEspera.length === 0) return;
+
       const card = document.createElement('div');
       card.className = 'card-horario-compact';
       
-      const precio = getPrecio(horario);
-      const recaudado = personas.filter(p => p.se_monto === 1).length * precio;
+      const recaudado = data.confirmados.filter(p => p.se_monto === 1).length * data.precio;
 
       let html = `
         <div class="horario-header">
           <h2 class="text-xl font-bold text-blue-400 mb-1">🚌 Pasajeros ${horario}</h2>
           <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">
-            ${personas.length} Estudiantes | <span class="text-emerald-400">RD$ ${recaudado.toLocaleString()} Recaudado</span>
+            ${data.confirmados.length} Confirmados | <span class="text-emerald-400">RD$ ${recaudado.toLocaleString()}</span>
           </p>
         </div>
         <div class="compact-passenger-list custom-scroll">
       `;
       
-      personas.forEach(p => {
+      // Lista de confirmados
+      data.confirmados.forEach(p => {
         html += renderAdminItem(p, false, true);
       });
+      
+      // Lista de espera para este horario
+      if (data.enEspera.length > 0) {
+        html += `<div class="waitlist-divider">Lista de Espera (${data.enEspera.length})</div>`;
+        data.enEspera.forEach(p => {
+          html += renderAdminItem(p, true, true);
+        });
+      }
       
       html += '</div>';
       card.innerHTML = html;
       container.appendChild(card);
     });
-    
-    if (listaEspera.length > 0) {
-      const esperaCard = document.createElement('div');
-      esperaCard.className = 'card-horario-compact';
-      esperaCard.style.background = 'rgba(245, 158, 11, 0.1)';
-      esperaCard.style.border = '1px solid rgba(245, 158, 11, 0.3)';
-      
-      let html = `
-        <div class="horario-header">
-          <h2 class="text-xl font-bold text-yellow-500 mb-1">⏳ Lista de Espera</h2>
-          <p class="text-xs text-slate-400 uppercase tracking-wider">${listaEspera.length} Estudiantes esperando cupo</p>
-        </div>
-        <div class="compact-passenger-list custom-scroll">
-      `;
-      
-      listaEspera.forEach(p => {
-        html += renderAdminItem(p, true, true);
-      });
-      
-      html += '</div>';
-      esperaCard.innerHTML = html;
-      container.appendChild(esperaCard);
-    }
   }
   
   function renderAdminItem(p, isEspera = false, isCompact = false) {
