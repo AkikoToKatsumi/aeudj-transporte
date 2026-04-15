@@ -1,5 +1,4 @@
 import { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY } from './supabase-config.js';
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
 alert('SISTEMA ACTIVADO ✅');
 console.log('🚀 AEUDJ App Iniciada');
