@@ -1,7 +1,7 @@
+﻿// ============================================
+// AEUDJ TRANSPORTE - APLICACIN PRINCIPAL (SUPABASE VERSION)
 // ============================================
-// AEUDJ TRANSPORTE - APLICACIÓN PRINCIPAL (SUPABASE VERSION)
-// ============================================
-console.log('🚀 AEUDJ App Iniciada');
+console.log(' AEUDJ App Iniciada');
 
 import { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY } from './supabase-config.js';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
@@ -24,19 +24,19 @@ function refreshIcons() {
 }
 
 // ============================================
-// INICIALIZACIÓN
+// INICIALIZACIN
 // ============================================
 document.addEventListener('DOMContentLoaded', async function() {
   // Inicializar Iconos Lucide
   refreshIcons();
 
-  // Verificar sesión con localStorage y verificar luego con Supabase Auth
+  // Verificar sesin con localStorage y verificar luego con Supabase Auth
   checkSession();
   
   const page = document.body.dataset.page;
-  console.log('Página detectada:', page);
+  console.log('Pgina detectada:', page);
   
-  // Escuchar cambios de autenticación
+  // Escuchar cambios de autenticacin
   supabase.auth.onAuthStateChange(async (event, session) => {
     if (session) {
       const user = session.user;
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', async function() {
            if (data) {
              currentUser = data;
              
-             // Auto-promover a desarrolladora si es la matrícula de Gabriela
+             // Auto-promover a desarrolladora si es la matrcula de Gabriela
              if (currentUser.matricula === '20230105' && currentUser.rol !== 'desarrolladora') {
                currentUser.rol = 'desarrolladora';
                supabase.from('profiles').update({ rol: 'desarrolladora' }).eq('id', user.id).then();
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 // ============================================
-// GESTIÓN DE SESIÓN
+// GESTIN DE SESIN
 // ============================================
 function checkSession() {
   try {
@@ -125,7 +125,7 @@ async function logout() {
 }
 
 // ============================================
-// INICIALIZACIÃ“N DE PÃGINAS
+// INICIALIZACIN DE PGINAS
 // ============================================
 function initPage(page) {
   switch(page) {
@@ -157,7 +157,7 @@ function initPage(page) {
 }
 
 // ============================================
-// PÃGINA INDEX (LOGIN/REGISTRO)
+// PGINA INDEX (LOGIN/REGISTRO)
 // ============================================
 function initIndexPage() {
   refreshIcons();
@@ -220,7 +220,7 @@ function initIndexPage() {
 
       let userDataLocal = null;
       
-      // Buscar por matrÃ­cula o telÃ©fono
+      // Buscar por matrcula o telfono
       const { data: userByMat, error: errMat } = await supabase
         .from('profiles')
         .select('*')
@@ -272,7 +272,7 @@ function initIndexPage() {
         .single();
 
       if (userData) {
-        // Auto-promover a administradora/desarrolladora (ejemplo del cÃ³digo original)
+        // Auto-promover a administradora/desarrolladora (ejemplo del cdigo original)
         if (userData.matricula === '0000' && userData.rol !== 'administrador') {
           userData.rol = 'administrador';
           await supabase.from('profiles').update({ rol: 'administrador' }).eq('id', user.id);
@@ -280,7 +280,7 @@ function initIndexPage() {
         
         if (userData.matricula === '20230105' && userData.rol !== 'desarrolladora') {
           userData.rol = 'desarrolladora';
-          // ActualizaciÃ³n silenciosa (si el RLS lo bloquea, aÃºn retendrÃ¡ el rol en su sesiÃ³n actual)
+          // Actualizacin silenciosa (si el RLS lo bloquea, an retendr el rol en su sesin actual)
           supabase.from('profiles').update({ rol: 'desarrolladora' }).eq('id', user.id).then();
         }
         
@@ -292,7 +292,7 @@ function initIndexPage() {
       
     } catch (error) {
       console.error('Error:', error);
-      showError('Error al iniciar sesiÃ³n. Verifica tu matrÃ­cula o contraseÃ±a.');
+      showError('Error al iniciar sesin. Verifica tu matrcula o contrasea.');
     }
     btn.disabled = false;
     btn.textContent = 'Entrar';
@@ -310,17 +310,17 @@ function initIndexPage() {
     const universidad = document.getElementById('universidad').value;
     
     if (matricula.length < 3) {
-      showError('MatrÃ­cula muy corta.');
+      showError('Matrcula muy corta.');
       return;
     }
     
     if (pass.length < 6) {
-      showError('La contraseÃ±a debe tener al menos 6 caracteres.');
+      showError('La contrasea debe tener al menos 6 caracteres.');
       return;
     }
     
     if (!validateEmail(email)) {
-      showError('Correo invÃ¡lido.');
+      showError('Correo invlido.');
       return;
     }
     
@@ -329,7 +329,7 @@ function initIndexPage() {
     btn.textContent = 'Registrando...';
 
     try {
-      // Verificar si la matrÃ­cula ya existe
+      // Verificar si la matrcula ya existe
       const { data: existingUser } = await supabase
         .from('profiles')
         .select('id')
@@ -337,7 +337,7 @@ function initIndexPage() {
         .maybeSingle();
       
       if (existingUser) {
-        showError('Esta matrÃ­cula ya estÃ¡ registrada. Usa "Iniciar sesiÃ³n".');
+        showError('Esta matrcula ya est registrada. Usa "Iniciar sesin".');
         btn.disabled = false;
         btn.textContent = 'Registrar';
         return;
@@ -391,7 +391,7 @@ function initIndexPage() {
 }
 
 // ============================================
-// PÃGINA VOTAR
+// PGINA VOTAR
 // ============================================
 function initVotarPage() {
   if (!currentUser) {
@@ -403,11 +403,11 @@ function initVotarPage() {
   if (staffMenu && currentUser) {
     staffMenu.innerHTML = ''; // Limpiar para evitar duplicados en recargas de SPA
     if (currentUser.rol === 'administrador' || currentUser.rol === 'desarrolladora') {
-      staffMenu.innerHTML += `<a href="admin.html" class="btn p-3 mb-2" style="background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); color: #c4b5fd; text-shadow: 0 0 10px rgba(196,181,253,0.5); box-shadow: 0 0 15px rgba(139, 92, 246, 0.15); display: inline-block; width: 100%; border-radius: 12px; font-weight: bold; margin-bottom: 0.75rem;">ðŸ› ï¸ Entrar al Panel de AdministraciÃ³n</a>`;
+      staffMenu.innerHTML += `<a href="admin.html" class="btn p-3 mb-2" style="background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); color: #c4b5fd; text-shadow: 0 0 10px rgba(196,181,253,0.5); box-shadow: 0 0 15px rgba(139, 92, 246, 0.15); display: inline-block; width: 100%; border-radius: 12px; font-weight: bold; margin-bottom: 0.75rem;"> Entrar al Panel de Administracin</a>`;
       staffMenu.classList.remove('hidden');
     }
     if (currentUser.rol === 'voluntario' || currentUser.rol === 'desarrolladora') {
-      staffMenu.innerHTML += `<a href="voluntario.html" class="btn p-3" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7; text-shadow: 0 0 10px rgba(110,231,183,0.5); box-shadow: 0 0 15px rgba(16, 185, 129, 0.15); display: inline-block; width: 100%; border-radius: 12px; font-weight: bold;">ðŸ“‹ Entrar al Panel de Voluntario</a>`;
+      staffMenu.innerHTML += `<a href="voluntario.html" class="btn p-3" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7; text-shadow: 0 0 10px rgba(110,231,183,0.5); box-shadow: 0 0 15px rgba(16, 185, 129, 0.15); display: inline-block; width: 100%; border-radius: 12px; font-weight: bold;"> Entrar al Panel de Voluntario</a>`;
       staffMenu.classList.remove('hidden');
     }
   }
@@ -434,11 +434,11 @@ function initVotarPage() {
         initialVotes = snapshot;
         selectedHorarios = snapshot.map(v => v.horario);
         const submitBtn = horarioForm.querySelector('button[type="submit"]');
-        if (submitBtn) submitBtn.textContent = 'Actualizar SelecciÃ³n';
+        if (submitBtn) submitBtn.textContent = 'Actualizar Seleccin';
         
         const msg = document.createElement('p');
         msg.className = 'text-center text-sm text-gray-400 mt-4';
-        msg.innerHTML = `ðŸ“ Tienes ${initialVotes.length} horarios registrados. Puedes cambiarlos si deseas.`;
+        msg.innerHTML = ` Tienes ${initialVotes.length} horarios registrados. Puedes cambiarlos si deseas.`;
         const statusMsgEl = document.getElementById('status-message');
         if (statusMsgEl) statusMsgEl.parentNode.insertBefore(msg, statusMsgEl);
         else horarioForm.appendChild(msg);
@@ -448,7 +448,7 @@ function initVotarPage() {
       
     } catch (error) {
       console.error('Error al verificar voto:', error);
-      statusMsg.textContent = 'Error al cargar. Intenta recargar la pÃ¡gina.';
+      statusMsg.textContent = 'Error al cargar. Intenta recargar la pgina.';
       statusMsg.className = 'text-center text-sm font-medium text-red-600 mt-4';
       renderHorarios();
     }
@@ -457,19 +457,19 @@ function initVotarPage() {
   function renderHorarios() {
     scheduleGrid.innerHTML = '';
     
-    // Nueva lÃ³gica de visibilidad por grupos
+    // Nueva lgica de visibilidad por grupos
     const ahora = new Date();
     const hora = ahora.getHours();
     
-    // Grupo MaÃ±ana: 10 PM a 9:59 AM
+    // Grupo Maana: 10 PM a 9:59 AM
     // Grupo Tarde: 10 AM a 9:59 PM
-    const currentGroup = (hora >= 22 || hora < 10) ? 'maÃ±ana' : 'tarde';
+    const currentGroup = (hora >= 22 || hora < 10) ? 'maana' : 'tarde';
     
     const visibleSchedules = transportSchedules.filter(s => s.group === currentGroup);
     
     visibleSchedules.forEach(schedule => {
-      const direction = schedule.route.includes('Jarabacoa â†’ La Vega') ? 'ida' : 'vuelta';
-      const icon = direction === 'ida' ? 'ðŸšŒâž¡ï¸' : 'â¬…ï¸ðŸšŒ';
+      const direction = schedule.route.includes('Jarabacoa  La Vega') ? 'ida' : 'vuelta';
+      const icon = direction === 'ida' ? '' : '';
       const isSelected = selectedHorarios.includes(schedule.fullText);
       
       const slot = document.createElement('div');
@@ -480,7 +480,7 @@ function initVotarPage() {
         <div class="time-icon">${icon}</div>
         <div class="time-text">${schedule.time}</div>
         <div class="time-route">${schedule.route}</div>
-        <div class="checkmark ${isSelected ? '' : 'hidden'}">âœ…</div>
+        <div class="checkmark ${isSelected ? '' : 'hidden'}"></div>
       `;
       
       slot.addEventListener('click', () => toggleSlot(slot, schedule.fullText, direction));
@@ -491,7 +491,7 @@ function initVotarPage() {
   function toggleSlot(el, fullText, direction) {
     const prevSelectedList = document.querySelectorAll(`.time-slot.selected[data-direction="${direction}"]`);
     
-    // Si el usuario hizo clic en el que ya estaba seleccionado (y es el Ãºnico), se deselecciona.
+    // Si el usuario hizo clic en el que ya estaba seleccionado (y es el nico), se deselecciona.
     // Si hay varios seleccionados por estado residual, los limpiamos todos primero de la vista.
     const isCurrentlySelected = el.classList.contains('selected');
     
@@ -501,11 +501,11 @@ function initVotarPage() {
     });
     
     selectedHorarios = selectedHorarios.filter(h => {
-      const hDirection = h.includes('Jarabacoa â†’ La Vega') ? 'ida' : 'vuelta';
+      const hDirection = h.includes('Jarabacoa  La Vega') ? 'ida' : 'vuelta';
       return hDirection !== direction;
     });
     
-    // Si ya estaba seleccionado, simplemente querÃ­amos apagarlo, asÃ­ que salimos.
+    // Si ya estaba seleccionado, simplemente queramos apagarlo, as que salimos.
     if (isCurrentlySelected && prevSelectedList.length === 1) {
       return;
     }
@@ -515,7 +515,7 @@ function initVotarPage() {
     el.querySelector('.checkmark').classList.remove('hidden');
     selectedHorarios.push(fullText);
     
-    statusMsg.textContent = `âœ… Viaje de ${direction === 'ida' ? 'ida' : 'vuelta'} seleccionado (${selectedHorarios.length}/2)`;
+    statusMsg.textContent = ` Viaje de ${direction === 'ida' ? 'ida' : 'vuelta'} seleccionado (${selectedHorarios.length}/2)`;
     statusMsg.className = 'text-center text-sm font-medium text-green-600 mt-4';
   }
   
@@ -532,7 +532,7 @@ function initVotarPage() {
     btn.textContent = 'Guardando...';
     
     try {
-      // 1. Identificar quÃ© cambiÃ³
+      // 1. Identificar qu cambi
       const currentHorarios = selectedHorarios;
       const hViejos = initialVotes.map(v => v.horario);
       
@@ -596,12 +596,12 @@ function initVotarPage() {
       console.error('ERROR:', error);
       alert('Error al guardar: ' + error.message);
       btn.disabled = false;
-      btn.textContent = 'Confirmar SelecciÃ³n';
+      btn.textContent = 'Confirmar Seleccin';
     }
   });
 }
 
-// LÃ³gica de visualizaciÃ³n de contraseÃ±a
+// Lgica de visualizacin de contrasea
 function initPasswordToggle() {
   const setupToggle = (btnId, inputId) => {
     const toggleBtn = document.getElementById(btnId);
@@ -625,7 +625,7 @@ function initPasswordToggle() {
 }
 
 // ============================================
-// PÃGINA LISTA
+// PGINA LISTA
 // ============================================
 async function initListaPage() {
   const listContainer = document.getElementById('listContainer');
@@ -715,9 +715,9 @@ async function initListaPage() {
       
       personas.forEach((p, i) => {
         let statusIcon = '';
-        if (p.seMonto === 1) statusIcon = ' âœ…';
-        else if (p.seMonto === 2) statusIcon = ' â°';
-        else if (p.seMonto === 0) statusIcon = ' âŒ';
+        if (p.seMonto === 1) statusIcon = ' ';
+        else if (p.seMonto === 2) statusIcon = ' ';
+        else if (p.seMonto === 0) statusIcon = ' ';
         
         html += `
           <div class="passenger-item">
@@ -739,7 +739,7 @@ async function initListaPage() {
       if (espera.length > 0) {
         html += `
           <div class="waiting-list">
-            <h3 class="waiting-title">â³ Lista de Espera</h3>
+            <h3 class="waiting-title"> Lista de Espera</h3>
             <div class="passenger-list">
         `;
         
@@ -815,7 +815,7 @@ async function initListaPage() {
 }
 
 // ============================================
-// PÃGINA ADMIN
+// PGINA ADMIN
 // ============================================
 function initAdminPage() {
   const adminPanel = document.getElementById('adminPanel');
@@ -859,7 +859,7 @@ function initAdminPage() {
       const email = emailInput || `${matricula}@aeudj.com`;
 
       try {
-        // Crear cliente aislado para no cerrar la sesiÃ³n del admin
+        // Crear cliente aislado para no cerrar la sesin del admin
         const tempClient = createClient(SUPABASE_URL, SUPABASE_KEY, {
           auth: { persistSession: false }
         });
@@ -886,17 +886,17 @@ function initAdminPage() {
         }]);
 
         if (profErr) {
-            // Si fallÃ³ el perfil pero la cuenta se creÃ³, al menos avisamos
+            // Si fall el perfil pero la cuenta se cre, al menos avisamos
             console.error('Error perfil:', profErr);
         }
 
-        status.textContent = 'âœ… Usuario creado exitosamente.';
+        status.textContent = ' Usuario creado exitosamente.';
         status.className = 'text-center text-sm mt-2 text-green-400';
         form.reset();
         loadVoluntariosMng(); // Recargar lista
       } catch (err) {
         console.error(err);
-        status.textContent = 'âŒ Error: ' + err.message;
+        status.textContent = ' Error: ' + err.message;
         status.className = 'text-center text-sm mt-2 text-red-400';
       }
     });
@@ -919,7 +919,7 @@ function initAdminPage() {
            <th class="p-2 border" style="border-color:#cbd5e1;">Usuario</th>
            <th class="p-2 border" style="border-color:#cbd5e1;">Rol</th>
            <th class="p-2 border" style="border-color:#cbd5e1;">Horario Asignado (Vol)</th>
-           <th class="p-2 border" style="border-color:#cbd5e1;">AcciÃ³n</th>
+           <th class="p-2 border" style="border-color:#cbd5e1;">Accin</th>
          </tr></thead><tbody>`;
          
        users.forEach(u => {
@@ -993,7 +993,7 @@ function initAdminPage() {
       const listado = {};
       const listaEspera = [];
       
-      // EstadÃ­sticas para el Dashboard
+      // Estadsticas para el Dashboard
       const stats = {
         totalPasajeros: 0,
         enEspera: 0,
@@ -1017,7 +1017,7 @@ function initAdminPage() {
         const precio = getPrecio(voto.horario);
         const horData = stats.porHorario[voto.horario];
         
-        if (!horData) return; // Por si acaso hay un horario huÃ©rfano
+        if (!horData) return; // Por si acaso hay un horario hurfano
 
         if (voto.en_espera) {
           horData.enEspera.push(voto);
@@ -1072,7 +1072,7 @@ function initAdminPage() {
 
     currentAdminStats = stats; // Guardar para el modal
 
-    // Preparar datos para el grÃ¡fico
+    // Preparar datos para el grfico
     const labels = transportSchedules.map(s => s.time);
     const dataOcupacion = transportSchedules.map(s => stats.porHorario[s.fullText].count);
     const backgroundColors = dataOcupacion.map(count => {
@@ -1160,7 +1160,7 @@ function initAdminPage() {
 
       let html = `
         <div class="horario-header">
-          <h2 class="text-xl font-bold text-blue-400 mb-1">ðŸšŒ Pasajeros ${horario}</h2>
+          <h2 class="text-xl font-bold text-blue-400 mb-1"> Pasajeros ${horario}</h2>
           <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">
             ${data.confirmados.length} Confirmados | <span class="text-emerald-400">RD$ ${recaudado.toLocaleString()}</span>
           </p>
@@ -1189,7 +1189,7 @@ function initAdminPage() {
   
   function renderAdminItem(p, isEspera = false, isCompact = false) {
     if (isCompact) {
-      // VersiÃ³n compacta para la cuadrÃ­cula
+      // Versin compacta para la cuadrcula
       const statusClass = p.se_monto === 1 ? 'border-emerald-500/30' : (p.se_monto === 0 ? 'border-rose-500/30' : '');
       const bgClass = p.se_monto === 1 ? 'bg-emerald-500/10' : (p.se_monto === 0 ? 'bg-rose-500/10' : 'bg-slate-800/40');
       
@@ -1197,23 +1197,23 @@ function initAdminPage() {
       if (!isEspera && p.se_monto === null) {
         actions = `
           <div class="flex gap-1">
-            <button onclick="marcarVoto(${p.id}, 1)" class="p-1.5 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/40 rounded-md transition-colors" title="SÃ­ subiÃ³">
-              <span style="font-size:0.8rem;">âœ…</span>
+            <button onclick="marcarVoto(${p.id}, 1)" class="p-1.5 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/40 rounded-md transition-colors" title="S subi">
+              <span style="font-size:0.8rem;"></span>
             </button>
-            <button onclick="marcarVoto(${p.id}, 0)" class="p-1.5 bg-rose-500/20 text-rose-400 hover:bg-rose-500/40 rounded-md transition-colors" title="No subiÃ³">
-              <span style="font-size:0.8rem;">âŒ</span>
+            <button onclick="marcarVoto(${p.id}, 0)" class="p-1.5 bg-rose-500/20 text-rose-400 hover:bg-rose-500/40 rounded-md transition-colors" title="No subi">
+              <span style="font-size:0.8rem;"></span>
             </button>
           </div>
         `;
       } else if (p.se_monto !== null) {
-        actions = `<span class="text-xs font-bold uppercase ${p.se_monto === 1 ? 'text-emerald-400' : 'text-rose-400'}">${p.se_monto === 1 ? 'SUBIÃ“' : 'NO SUBIÃ“'}</span>`;
+        actions = `<span class="text-xs font-bold uppercase ${p.se_monto === 1 ? 'text-emerald-400' : 'text-rose-400'}">${p.se_monto === 1 ? 'SUBI' : 'NO SUBI'}</span>`;
       }
 
       return `
         <div class="compact-passenger-item border ${statusClass} ${bgClass}">
           <div class="flex flex-col flex-1 min-w-0 pr-2">
             <span class="compact-name truncate">${escapeHtml(p.nombre)}</span>
-            <span class="compact-meta truncate">${escapeHtml(p.universidad || 'S/U')} â€¢ ${escapeHtml(p.matricula)}</span>
+            <span class="compact-meta truncate">${escapeHtml(p.universidad || 'S/U')}  ${escapeHtml(p.matricula)}</span>
           </div>
           <div class="flex items-center shrink-0">
             ${actions}
@@ -1222,29 +1222,29 @@ function initAdminPage() {
       `;
     }
 
-    // VersiÃ³n original (fallback o para listas largas si se requiere)
+    // Versin original (fallback o para listas largas si se requiere)
     let statusHtml = '';
     if (p.se_monto === null) {
       statusHtml = `
         <div class="action-btns">
           <button onclick="marcarVoto(${p.id}, 1)" class="btn btn-success btn-small">Confirmar</button>
-          <button onclick="marcarVoto(${p.id}, 0)" class="btn btn-danger btn-small">No subiÃ³</button>
+          <button onclick="marcarVoto(${p.id}, 0)" class="btn btn-danger btn-small">No subi</button>
         </div>
       `;
     } else if (p.se_monto === 2) {
       statusHtml = `
         <div class="action-btns">
-          <span class="status-badge status-warning">â° LlegÃ³ tarde (SubiÃ³)</span>
+          <span class="status-badge status-warning"> Lleg tarde (Subi)</span>
           <button onclick="marcarVoto('${p.id}', 1)" class="btn btn-success btn-small">Marcar puntual</button>
-          <button onclick="marcarVoto('${p.id}', 0)" class="btn btn-danger btn-small">No subiÃ³</button>
+          <button onclick="marcarVoto('${p.id}', 0)" class="btn btn-danger btn-small">No subi</button>
         </div>
       `;
     } else {
       statusHtml = `
         <div class="action-btns">
-          <span class="status-badge status-danger">âŒ No subiÃ³</span>
-          <button onclick="marcarVoto('${p.id}', 1)" class="btn btn-success btn-small">SubiÃ³</button>
-          <button onclick="marcarVoto('${p.id}', 2)" class="btn btn-warning btn-small">LlegÃ³ tarde</button>
+          <span class="status-badge status-danger"> No subi</span>
+          <button onclick="marcarVoto('${p.id}', 1)" class="btn btn-success btn-small">Subi</button>
+          <button onclick="marcarVoto('${p.id}', 2)" class="btn btn-warning btn-small">Lleg tarde</button>
         </div>
       `;
     }
@@ -1252,12 +1252,12 @@ function initAdminPage() {
     return `
       <div class="passenger-item ${isEspera ? 'waiting-item' : ''}">
         <div class="flex items-center" style="gap: 1rem;">
-          <span class="passenger-number" style="${isEspera ? 'background: #f59e0b;' : ''}">ðŸ‘¤</span>
+          <span class="passenger-number" style="${isEspera ? 'background: #f59e0b;' : ''}"></span>
           <div class="passenger-info">
             <p class="passenger-name">${escapeHtml(p.nombre)}
               ${isEspera ? '<span class="waiting-badge">En espera</span>' : ''}
             </p>
-            <p class="passenger-meta">${p.matricula} Â· ${p.telefono || 'N/A'} Â· ${p.email || 'N/A'}</p>
+            <p class="passenger-meta">${p.matricula}  ${p.telefono || 'N/A'}  ${p.email || 'N/A'}</p>
           </div>
         </div>
         ${statusHtml}
@@ -1287,7 +1287,7 @@ function initAdminPage() {
   };
   
   async function moverDeEspera(votoId) {
-    // Obtener datos del voto que se cancelÃ³
+    // Obtener datos del voto que se cancel
     const { data: voto, error: fetchErr } = await supabase
       .from('votos')
       .select('*')
@@ -1317,7 +1317,7 @@ function initAdminPage() {
 }
 
 // ============================================
-// PÃGINA VOLUNTARIO
+// PGINA VOLUNTARIO
 // ============================================
 function initVoluntarioPage() {
   if (!currentUser || (currentUser.rol !== 'voluntario' && currentUser.rol !== 'desarrolladora')) {
@@ -1332,7 +1332,7 @@ function initVoluntarioPage() {
   const misHorarios = currentUser.rol === 'desarrolladora' ? transportSchedules.map(s => s.fullText) : (currentUser.horarios_asignados || []);
   
   if (misHorarios.length === 0) {
-     if(horariosText) horariosText.textContent = "No tienes ningÃºn horario asignado.";
+     if(horariosText) horariosText.textContent = "No tienes ningn horario asignado.";
      if(container) container.innerHTML = '<p class="text-center text-gray-600 mt-4">Contacta al administrador para que te asigne una ruta.</p>';
      return;
   }
@@ -1354,7 +1354,7 @@ function initVoluntarioPage() {
       
       if (!container) return;
       container.innerHTML = '';
-      container.className = 'admin-passenger-grid'; // Reutilizar la cuadrÃ­cula del admin
+      container.className = 'admin-passenger-grid'; // Reutilizar la cuadrcula del admin
       
       const listadoPorHorario = {};
       votos.forEach(v => {
@@ -1370,8 +1370,8 @@ function initVoluntarioPage() {
       if (horariosActivos.length === 0) {
         container.innerHTML = `
           <div class="col-span-full text-center p-8 bg-slate-800/50 rounded-2xl border border-dashed border-slate-700">
-            <p class="text-xl text-slate-300 font-medium mb-2">AÃºn no es hora de pasar lista.</p>
-            <p class="text-slate-500 text-sm">Las listas aparecen automÃ¡ticamente 10 minutos antes de la hora de salida.</p>
+            <p class="text-xl text-slate-300 font-medium mb-2">An no es hora de pasar lista.</p>
+            <p class="text-slate-500 text-sm">Las listas aparecen automticamente 10 minutos antes de la hora de salida.</p>
           </div>
         `;
         return;
@@ -1387,7 +1387,7 @@ function initVoluntarioPage() {
 
         let html = `
           <div class="horario-header">
-            <h2 class="text-xl font-bold text-blue-400 mb-1">ðŸšŒ Pasajeros ${horario}</h2>
+            <h2 class="text-xl font-bold text-blue-400 mb-1"> Pasajeros ${horario}</h2>
             <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">
               ${data.confirmados.length} Estudiantes | <span class="text-emerald-400">RD$ ${recaudado.toLocaleString()}</span>
             </p>
@@ -1418,7 +1418,7 @@ function initVoluntarioPage() {
   }
 
   // Sobrescribir marcarVoto para que funcione en el contexto de voluntario si es necesario
-  // o simplemente usar marcarVoto global si ya estÃ¡ definido.
+  // o simplemente usar marcarVoto global si ya est definido.
 }
 
 function horarioAMinutos(horarioStr) {
@@ -1443,14 +1443,14 @@ function isHorarioActivo(horarioStr, ignoraTiempo = false) {
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
   // El horario se activa 10 minutos antes (ej: 12:50 para las 1:00)
-  // Y se mantiene visible hasta 1 hora despuÃ©s (ej: 2:00)
+  // Y se mantiene visible hasta 1 hora despus (ej: 2:00)
   return (currentMinutes >= hMinutes - 10) && (currentMinutes <= hMinutes + 60);
 }
 
 }
 
 // ============================================
-// PÃGINA CAMBIOS
+// PGINA CAMBIOS
 // ============================================
 function initCambiosPage() {
   if (!currentUser) {
@@ -1489,10 +1489,10 @@ function initCambiosPage() {
       }
       
       if (votos.length > 1) {
-        // Mostrar selecciÃ³n de cuÃ¡l voto quiere cambiar
+        // Mostrar seleccin de cul voto quiere cambiar
         let html = `
           <div class="card p-6">
-            <h2 class="text-xl font-bold mb-4 text-center">Â¿QuÃ© viaje deseas cambiar?</h2>
+            <h2 class="text-xl font-bold mb-4 text-center">Qu viaje deseas cambiar?</h2>
             <div class="space-y-3">
         `;
         
@@ -1528,7 +1528,7 @@ function initCambiosPage() {
   async function procesarCambioParaVoto(voto) {
     if (tipo === 'otros' || tipo === 'antes') {
       try {
-        container.innerHTML = '<div class="text-center"><p>Procesando cancelaciÃ³n...</p></div>';
+        container.innerHTML = '<div class="text-center"><p>Procesando cancelacin...</p></div>';
         const { error: delErr } = await supabase.from('votos').delete().eq('id', voto.id);
         if (delErr) throw delErr;
         
@@ -1572,8 +1572,8 @@ function initCambiosPage() {
     const minutosAhora = ahora.getHours() * 60 + ahora.getMinutes();
     
     // IMPORTANTE: Filtrar solo horarios de la MISMA RUTA (ida o vuelta)
-    const isIda = horarioActual.includes('Jarabacoa â†’ La Vega');
-    const ruta = isIda ? 'Jarabacoa â†’ La Vega' : 'La Vega â†’ Jarabacoa';
+    const isIda = horarioActual.includes('Jarabacoa  La Vega');
+    const ruta = isIda ? 'Jarabacoa  La Vega' : 'La Vega  Jarabacoa';
 
     const disponibles = [];
     
@@ -1581,7 +1581,7 @@ function initCambiosPage() {
       if (!s.route.includes(ruta)) return;
       const min = parseHorario(s.fullText);
       
-      // Regla de negocio: "Me irÃ© despuÃ©s" => todos los posteriores
+      // Regla de negocio: "Me ir despus" => todos los posteriores
       if (tipo === 'despues') {
         if (min > minutosActual) disponibles.push(s.fullText);
       }
@@ -1622,7 +1622,7 @@ function initCambiosPage() {
         btn.textContent = 'Procesando...';
         
         try {
-          // LÃ³gica de capacidad (mÃ¡ximo 30) para el nuevo puesto
+          // Lgica de capacidad (mximo 30) para el nuevo puesto
           const { count, error: countErr } = await supabase
             .from('votos')
             .select('*', { count: 'exact', head: true })
@@ -1634,7 +1634,7 @@ function initCambiosPage() {
           
           const enEspera = count >= 30;
 
-          // Primero borramos el viejo para liberar el puesto (dispara trigger de promociÃ³n si aplica)
+          // Primero borramos el viejo para liberar el puesto (dispara trigger de promocin si aplica)
           const { error: delErr } = await supabase.from('votos').delete().eq('id', voto.id);
           if (delErr) {
             console.error('Del Error:', delErr);
@@ -1685,7 +1685,7 @@ function initCambiosPage() {
 }
 
 // ============================================
-// PÃGINA NO SUBIERON
+// PGINA NO SUBIERON
 // ============================================
 function initNoSubieronPage() {
   const adminSession = localStorage.getItem('aeudj_admin_session');
@@ -1713,7 +1713,7 @@ function initNoSubieronPage() {
       personas.sort((a, b) => horarioAMinutos(a.horario) - horarioAMinutos(b.horario));
       
       if (personas.length === 0) {
-        container.innerHTML = `<div class="text-center"><p class="text-green-700 text-lg">Â¡Todos subieron! ðŸŽ‰</p></div>`;
+        container.innerHTML = `<div class="text-center"><p class="text-green-700 text-lg">Todos subieron! </p></div>`;
         return;
       }
       
@@ -1725,9 +1725,9 @@ function initNoSubieronPage() {
           <div class="passenger-item" style="background: #fef2f2; border: 1px solid #fecaca; margin-bottom: 0.5rem; padding: 1rem; border-radius: 0.5rem;">
             <div style="flex: 1;">
               <p class="passenger-name" style="font-weight: 600;">${escapeHtml(p.nombre)}</p>
-              <p class="passenger-meta">ðŸ“ž ${p.telefono || 'N/A'} Â· ðŸšŒ ${p.horario}</p>
+              <p class="passenger-meta"> ${p.telefono || 'N/A'}   ${p.horario}</p>
             </div>
-            <button onclick="marcarComoSubio('${p.id}')" class="btn btn-success btn-small">SubiÃ³</button>
+            <button onclick="marcarComoSubio('${p.id}')" class="btn btn-success btn-small">Subi</button>
           </div>
         `;
       });
@@ -1799,7 +1799,7 @@ function hashString(str) {
 window.logout = logout;
 window.notificarAccion = async function(tipo) {
   if (!currentUser || currentUser.rol !== 'administrador') return;
-  if (!confirm(`Â¿EstÃ¡s seguro/a de enviar la notificaciÃ³n?`)) return;
+  if (!confirm(`Ests seguro/a de enviar la notificacin?`)) return;
 
   try {
     const btn = event.target;
@@ -1821,8 +1821,8 @@ window.notificarAccion = async function(tipo) {
     }
 
     const templateParams = {
-      titulo: tipo === 'apertura' ? "Â¡Lista Abierta!" : (tipo === 'llegada' ? "ðŸšŒ El autobÃºs ha llegado" : "ðŸ’¨ El autobÃºs estÃ¡ saliendo"),
-      mensaje: "Mensaje de notificaciÃ³n de transporte AEUDJ.",
+      titulo: tipo === 'apertura' ? "Lista Abierta!" : (tipo === 'llegada' ? " El autobs ha llegado" : " El autobs est saliendo"),
+      mensaje: "Mensaje de notificacin de transporte AEUDJ.",
       destinatarios: correos.join(',')
     };
 
@@ -1878,7 +1878,7 @@ window.abrirModalEspera = function() {
       html += `
         <div class="waitlist-modal-group">
           <div class="waitlist-modal-title">
-            <span>ðŸšŒ ${h}</span>
+            <span> ${h}</span>
             <span style="background:rgba(245, 158, 11, 0.2); color:#f59e0b; padding: 2px 8px; border-radius: 999px; font-size: 0.7rem;">
               ${horData.enEspera.length} esperando
             </span>
@@ -1892,7 +1892,7 @@ window.abrirModalEspera = function() {
           <div class="waitlist-modal-item">
             <div>
               <div class="font-semibold text-slate-100">${escapeHtml(p.nombre)}</div>
-              <div class="text-xs text-slate-400">${p.universidad || 'N/A'} Â· ${p.matricula}</div>
+              <div class="text-xs text-slate-400">${p.universidad || 'N/A'}  ${p.matricula}</div>
             </div>
             <div class="text-right">
               <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Registrado</div>
@@ -1909,7 +1909,7 @@ window.abrirModalEspera = function() {
   if (!hayEsperaTotal) {
     html = `
       <div class="text-center py-10">
-        <div class="text-5xl mb-4">âœ¨</div>
+        <div class="text-5xl mb-4"></div>
         <p class="text-slate-300 font-medium">No hay nadie en espera en este momento.</p>
         <p class="text-slate-500 text-sm">Todos los estudiantes tienen cupo asegurado.</p>
       </div>
