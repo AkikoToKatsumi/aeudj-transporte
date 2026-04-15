@@ -1286,7 +1286,7 @@ function initCambiosPage() {
         container.innerHTML = html;
         
         window.seleccionarVotoParaCambio = (id) => {
-          const v = votos.find(x => x.id === id);
+          const v = votos.find(x => String(x.id) === String(id));
           procesarCambioParaVoto(v);
         };
       } else {
