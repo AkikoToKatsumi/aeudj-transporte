@@ -1,4 +1,4 @@
-// supabase-config.js - Configuración de Supabase
+// supabase-config.js - Configuracion de Supabase
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
 const SUPABASE_URL = 'https://irjwxegepkznqrisbrys.supabase.co';
