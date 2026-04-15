@@ -13,7 +13,7 @@
           publicKey: "nFSfa8vIE5hozX8Ok",
         });
     })();
-  </script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body data-page="admin">
   <!-- ELIMINADO LOG DE ADMIN ANTIGUO; ahora todo pasa por index.html -->
@@ -27,6 +27,49 @@
         </div>
         <h1 class="page-title">Panel Comité AEUDJ</h1>
         <p class="page-subtitle">Gestión de pasajeros - <span id="fechaAdmin"></span></p>
+      </div>
+
+      <!-- DASHBOARD GRÁFICO -->
+      <div id="adminDashboard" class="mb-8 hidden">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <!-- Card 1: Total Pasajeros -->
+          <div class="card stat-card" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1)); border-left: 5px solid #3b82f6;">
+            <div class="stat-header">
+              <span class="stat-icon">👥</span>
+              <span class="stat-label">Pasajeros Hoy</span>
+            </div>
+            <div class="stat-value" id="statTotalPasajeros">0</div>
+            <div class="stat-sub" id="statEsperaPasajeros">0 en lista de espera</div>
+          </div>
+          <!-- Card 2: Ingresos Reales -->
+          <div class="card stat-card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.1)); border-left: 5px solid #10b981;">
+            <div class="stat-header">
+              <span class="stat-icon">💰</span>
+              <span class="stat-label">Ingresos Reales</span>
+            </div>
+            <div class="stat-value" id="statIngresosReales">RD$ 0</div>
+            <div class="stat-sub" id="statIngresosEstimados">Estimado: RD$ 0</div>
+          </div>
+          <!-- Card 3: Capacidad -->
+          <div class="card stat-card" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.1)); border-left: 5px solid #f59e0b;">
+            <div class="stat-header">
+              <span class="stat-icon">🚌</span>
+              <span class="stat-label">Ocupación Prom.</span>
+            </div>
+            <div class="stat-value" id="statOcupacionProm">0%</div>
+            <div class="stat-sub">Capacidad base: 30/bus</div>
+          </div>
+        </div>
+
+        <!-- Gráfico de Ocupación por Horario -->
+        <div class="card p-6" style="margin-bottom: 2rem;">
+          <h2 class="text-xl font-bold mb-6 text-center flex items-center justify-center gap-2">
+            📊 Ocupación y Contabilidad por Horario
+          </h2>
+          <div style="position: relative; height: 350px; width: 100%;">
+            <canvas id="occupancyChart"></canvas>
+          </div>
+        </div>
       </div>
 
       <!-- Centro de Notificaciones -->

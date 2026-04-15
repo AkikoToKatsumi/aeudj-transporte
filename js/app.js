@@ -956,21 +956,137 @@ function initAdminPage() {
       const listado = {};
       const listaEspera = [];
       
+      // Estadísticas para el Dashboard
+      const stats = {
+        totalPasajeros: 0,
+        enEspera: 0,
+        ingresosReales: 0,
+        ingresosEstimados: 0,
+        cuposTotales: transportSchedules.length * 30,
+        porHorario: {}
+      };
+
+      // Inicializar porHorario con 0
+      transportSchedules.forEach(s => {
+        stats.porHorario[s.fullText] = { count: 0, precio: getPrecio(s.fullText) };
+      });
+      
       votos.forEach(voto => {
+        const precio = getPrecio(voto.horario);
+        
         if (voto.en_espera) {
           listaEspera.push(voto);
+          stats.enEspera++;
         } else {
           if (!listado[voto.horario]) listado[voto.horario] = [];
           listado[voto.horario].push(voto);
+          
+          stats.totalPasajeros++;
+          if (stats.porHorario[voto.horario]) {
+            stats.porHorario[voto.horario].count++;
+          }
+          
+          // Contabilidad
+          stats.ingresosEstimados += precio;
+          if (voto.se_monto === 1) {
+            stats.ingresosReales += precio;
+          }
         }
       });
       
+      renderDashboard(stats);
       renderAdminList(listado, listaEspera);
       
     } catch (error) {
       console.error('Error:', error);
       container.innerHTML = '<p class="text-center text-gray-600">Error al cargar datos.</p>';
     }
+  }
+
+  function getPrecio(horarioText) {
+    // Regla: 1, 2, 5, 8, 10 PM -> 125. Otros -> 100.
+    const h = horarioText.toLowerCase();
+    if (h.includes('1:00 pm') || h.includes('2:15 pm') || h.includes('5:00 pm') || h.includes('8:00 pm') || h.includes('10:00 pm')) {
+      return 125;
+    }
+    return 100;
+  }
+
+  let occupancyChartInstance = null;
+
+  function renderDashboard(stats) {
+    const dashboard = document.getElementById('adminDashboard');
+    if (!dashboard) return;
+    dashboard.classList.remove('hidden');
+
+    // Actualizar Tarjetas
+    document.getElementById('statTotalPasajeros').textContent = stats.totalPasajeros;
+    document.getElementById('statEsperaPasajeros').textContent = `${stats.enEspera} en lista de espera`;
+    document.getElementById('statIngresosReales').textContent = `RD$ ${stats.ingresosReales.toLocaleString()}`;
+    document.getElementById('statIngresosEstimados').textContent = `Estimado: RD$ ${stats.ingresosEstimados.toLocaleString()}`;
+    
+    const ocupacionTotal = stats.cuposTotales > 0 ? Math.round((stats.totalPasajeros / stats.cuposTotales) * 100) : 0;
+    document.getElementById('statOcupacionProm').textContent = `${ocupacionTotal}%`;
+
+    // Preparar datos para el gráfico
+    const labels = transportSchedules.map(s => s.time);
+    const dataOcupacion = transportSchedules.map(s => stats.porHorario[s.fullText].count);
+    const backgroundColors = dataOcupacion.map(count => {
+       if (count >= 28) return 'rgba(239, 68, 68, 0.7)'; // Peligro (Rojo)
+       if (count >= 20) return 'rgba(245, 158, 11, 0.7)'; // Medio (Naranja)
+       return 'rgba(59, 130, 246, 0.7)'; // Bajo (Azul)
+    });
+
+    const ctx = document.getElementById('occupancyChart').getContext('2d');
+    
+    if (occupancyChartInstance) {
+      occupancyChartInstance.destroy();
+    }
+
+    occupancyChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Estudiantes',
+          data: dataOcupacion,
+          backgroundColor: backgroundColors,
+          borderRadius: 8,
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              footer: (items) => {
+                const label = items[0].label;
+                const schedule = transportSchedules.find(s => s.time === label);
+                if (schedule) {
+                  const sData = stats.porHorario[schedule.fullText];
+                  return `Precio: RD$ ${sData.precio}\nTotal: RD$ ${(sData.count * sData.precio).toLocaleString()}`;
+                }
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 35,
+            grid: { color: 'rgba(255,255,255,0.05)' },
+            ticks: { color: '#94a3b8' }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { color: '#94a3b8' }
+          }
+        }
+      }
+    });
   }
 
   function renderAdminList(listado, listaEspera) {
