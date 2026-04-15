@@ -1,6 +1,7 @@
-﻿// ============================================
-// AEUDJ TRANSPORTE - APLICACIÃ“N PRINCIPAL (SUPABASE VERSION)
 // ============================================
+// AEUDJ TRANSPORTE - APLICACIÓN PRINCIPAL (SUPABASE VERSION)
+// ============================================
+console.log('🚀 AEUDJ App Iniciada');
 
 import { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY } from './supabase-config.js';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
@@ -23,18 +24,19 @@ function refreshIcons() {
 }
 
 // ============================================
-// INICIALIZACIÃ“N
+// INICIALIZACIÓN
 // ============================================
 document.addEventListener('DOMContentLoaded', async function() {
   // Inicializar Iconos Lucide
   refreshIcons();
 
-  // Verificar sesiÃ³n con localStorage y verificar luego con Supabase Auth
+  // Verificar sesión con localStorage y verificar luego con Supabase Auth
   checkSession();
   
   const page = document.body.dataset.page;
+  console.log('Página detectada:', page);
   
-  // Escuchar cambios de autenticaciÃ³n
+  // Escuchar cambios de autenticación
   supabase.auth.onAuthStateChange(async (event, session) => {
     if (session) {
       const user = session.user;

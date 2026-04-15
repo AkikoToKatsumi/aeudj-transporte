@@ -1,4 +1,4 @@
-// supabase-config.js - Configuración de Supabase
+﻿// supabase-config.js - Configuración de Supabase
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
 // REEMPLAZA ESTOS VALORES CON LOS DE TU PANEL DE SUPABASE (Project Settings > API)
