@@ -1348,12 +1348,8 @@ function initCambiosPage() {
       if (tipo === 'despues') {
         if (min > minutosActual) disponibles.push(s.fullText);
       } else if (tipo === 'antes') {
-        // Regla de negocio: "Me fui antes" => todos los anteriores que no hayan pasado
-        let yaPaso = false;
-        const hoy = new Date().toISOString().split('T')[0];
-        if (hoy === cycleDate) yaPaso = min < minutosAhora;
-        
-        if (min < minutosActual && !yaPaso) disponibles.push(s.fullText);
+        // Regla de negocio: "Me fui antes" => todos los anteriores (incluso si ya pasaron, para liberar su cupo original informando en qué bus se fue)
+        if (min < minutosActual) disponibles.push(s.fullText);
       }
     });
     
