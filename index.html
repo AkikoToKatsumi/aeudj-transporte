@@ -6,12 +6,11 @@
   <title>AEUDJ - Registro / Inicio</title>
   <link rel="icon" href="img/comite.jpg" type="image/jpg">
   <link rel="stylesheet" href="css/styles.css">
-  <script src="https://unpkg.com/lucide@latest" onload="lucide.createIcons()"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body data-page="index">
   <main class="login-container">
     <div class="card glass-card">
-      <!-- Logo circular solapado -->
       <div class="mockup-logo">
         <img src="img/comite.jpg" alt="Logo AEUDJ">
       </div>
@@ -40,7 +39,7 @@
           </button>
         </div>
 
-        <button type="submit" class="btn-premium btn-block">
+        <button type="submit" id="submitLogin" class="btn-premium btn-block">
           Entrar 
           <i data-lucide="arrow-right" class="btn-arrow"></i>
         </button>
@@ -59,10 +58,9 @@
           Ver lista publica de pasajeros
           <i data-lucide="chevron-right" class="icon-right"></i>
         </a>
-        <p class="text-gray-400 text-sm mt-8">Consulta rutas y pasajeros de forma publica</p>
       </form>
 
-      <!-- REGISTRO NUEVO -->
+      <!-- REGISTRO -->
       <form id="registerForm" class="space-y-4 hidden">
         <h3 class="text-lg font-semibold text-white mb-2">Crear nueva cuenta</h3>
         <div class="input-wrapper">
@@ -71,7 +69,7 @@
         </div>
         <div class="input-wrapper">
           <i data-lucide="hash" class="input-icon"></i>
-          <input type="text" id="matricula" class="premium-input" placeholder="Matricula (sin guiones)" required>
+          <input type="text" id="matricula" class="premium-input" placeholder="Matricula" required>
         </div>
         <div class="input-wrapper">
           <i data-lucide="phone" class="input-icon"></i>
@@ -83,10 +81,7 @@
         </div>
         <div class="input-wrapper">
           <i data-lucide="lock" class="input-icon"></i>
-          <input type="password" id="password" class="premium-input" placeholder="Contrasena (min. 6)" required>
-          <button type="button" id="togglePasswordReg" class="toggle-password">
-            <i data-lucide="eye"></i>
-          </button>
+          <input type="password" id="password" class="premium-input" placeholder="Contrasena" required>
         </div>
         <div class="input-wrapper">
           <i data-lucide="school" class="input-icon"></i>
@@ -99,25 +94,89 @@
           </select>
         </div>
         <button type="submit" class="btn-premium btn-success btn-block">Registrar cuenta</button>
-        
         <div class="text-center mt-4">
           <a href="#" id="showLoginBtn" class="text-blue-400 font-medium hover:underline">Ya tienes cuenta? Inicia sesion</a>
         </div>
       </form>
     </div>
 
-    <!-- FOOTER -->
     <footer class="login-footer">
-      <p class="footer-location">
-        Jarabacoa, La Ciudad de la Eterna Primavera
-      </p>
-      <p class="footer-tagline">Conectamos personas, unimos caminos</p>
-      <div class="footer-dot-indicator"></div>
-      <p style="font-size: 10px; color: rgba(255,255,255,0.2); margin-top: 10px;">RECONSTRUCTION v1.0</p>
+      <p style="font-size: 10px; color: rgba(255,255,255,0.2);">ULTIMATE EMERGENCY RESCUE v2.0</p>
     </footer>
   </main>
 
-  <!-- Scripts -->
-  <script type="module" src="js/app.js?v=102"></script>
+  <!-- Lógica Unificada (Sin archivos externos) -->
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+    const SUPABASE_URL = 'https://irjwxegepkznqrisbrys.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyand4ZWdlcGt6bnFyaXNicnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNjk0NDIsImV4cCI6MjA5MTc0NTQ0Mn0.TZOhsy0ghfmjK8rd4GWcgbtOLpERKRJ62mjqc5gaYOM';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    console.log('--- RESCATE TOTAL ACTIVADO ---');
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) window.lucide.createIcons();
+      
+      const loginForm = document.getElementById('loginForm');
+      const registerForm = document.getElementById('registerForm');
+      const errorDiv = document.getElementById('errorMsg');
+
+      // Toggles
+      document.getElementById('showRegisterBtn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        loginForm.classList.add('hidden');
+        registerForm.classList.remove('hidden');
+      });
+
+      document.getElementById('showLoginBtn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        registerForm.classList.add('hidden');
+        loginForm.classList.remove('hidden');
+      });
+
+      // Login Logic
+      loginForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const userInput = document.getElementById('userInput').value.trim();
+        const pass = document.getElementById('passwordLogin').value;
+        const btn = document.getElementById('submitLogin');
+        
+        btn.disabled = true;
+        btn.textContent = 'Verificando...';
+        errorDiv.classList.add('hidden');
+
+        try {
+          // 1. Buscar perfil
+          const { data: profile } = await supabase.from('profiles')
+            .select('*').or(`matricula.eq.${userInput},telefono.eq.${userInput}`).maybeSingle();
+
+          const matricula = profile ? profile.matricula : userInput;
+          const pseudoEmail = `${matricula}@aeudj.com`;
+
+          // 2. Auth
+          const { data: auth, error: authErr } = await supabase.auth.signInWithPassword({
+            email: pseudoEmail, password: pass
+          });
+
+          if (authErr) throw authErr;
+
+          // 3. Obtener perfil completo
+          const { data: fullProfile } = await supabase.from('profiles')
+            .select('*').eq('id', auth.user.id).single();
+
+          localStorage.setItem('aeudj_user', JSON.stringify(fullProfile));
+          window.location.href = 'votar.html';
+
+        } catch (err) {
+          console.error(err);
+          errorDiv.textContent = 'Error al entrar. Revisa tus datos.';
+          errorDiv.classList.remove('hidden');
+          btn.disabled = false;
+          btn.textContent = 'Entrar';
+        }
+      });
+    });
+  </script>
 </body>
 </html>
