@@ -90,45 +90,56 @@
       }
 
       // Render Horarios
-      grid.innerHTML = '';
-      const ahora = new Date();
-      const hora = ahora.getHours();
-      const currentGroup = (hora >= 22 || hora < 10) ? 'manana' : 'tarde';
+      try {
+        grid.innerHTML = '';
+        const ahora = new Date();
+        const hora = ahora.getHours();
+        const currentGroup = (hora >= 22 || hora < 10) ? 'manana' : 'tarde';
 
-      transportSchedules.filter(s => s.group === currentGroup).forEach(s => {
-        const direction = s.route.includes('Jarabacoa -> La Vega') ? 'ida' : 'vuelta';
-        const slot = document.createElement('div');
-        slot.className = 'time-slot glass-card p-4 mb-3 rounded-xl border border-white/10 cursor-pointer transition-all hover:bg-white/10';
-        slot.innerHTML = `
-          <div class="flex justify-between items-center">
-            <div>
-              <div class="font-bold text-white text-lg">${s.time}</div>
-              <div class="text-sm text-gray-400">${s.route}</div>
+        console.log('Filtrando grupo:', currentGroup);
+        const visibleSchedules = transportSchedules.filter(s => s.group === currentGroup);
+        
+        if (visibleSchedules.length === 0) {
+          grid.innerHTML = '<div class="text-center w-full py-10 text-orange-400">No hay mas viajes disponibles por hoy.</div>';
+        }
+
+        visibleSchedules.forEach(s => {
+          const direction = s.route.includes('Jarabacoa -> La Vega') ? 'ida' : 'vuelta';
+          const slot = document.createElement('div');
+          slot.className = 'time-slot glass-card p-4 mb-3 rounded-xl border border-white/10 cursor-pointer transition-all hover:bg-white/10';
+          slot.innerHTML = `
+            <div class="flex justify-between items-center">
+              <div>
+                <div class="font-bold text-white text-lg">${s.time}</div>
+                <div class="text-sm text-gray-400">${s.route}</div>
+              </div>
+              <i data-lucide="${direction === 'ida' ? 'arrow-right' : 'arrow-left'}" class="text-blue-400"></i>
             </div>
-            <i data-lucide="${direction === 'ida' ? 'arrow-right' : 'arrow-left'}" class="text-blue-400"></i>
-          </div>
-        `;
-        slot.addEventListener('click', () => {
-          const isSelected = slot.classList.contains('selected-slot');
-          
-          // Limpiar otros del mismo sentido
-          document.querySelectorAll('.time-slot').forEach(node => {
-            if (node.innerHTML.includes(direction === 'ida' ? 'arrow-right' : 'arrow-left')) {
-               node.classList.remove('selected-slot', 'border-blue-500', 'bg-blue-500/20');
-            }
-          });
+          `;
+          slot.addEventListener('click', () => {
+            const isSelected = slot.classList.contains('selected-slot');
+            
+            document.querySelectorAll('.time-slot').forEach(node => {
+              if (node.innerHTML.includes(direction === 'ida' ? 'arrow-right' : 'arrow-left')) {
+                 node.classList.remove('selected-slot', 'border-blue-500', 'bg-blue-500/20');
+              }
+            });
 
-          if (!isSelected) {
-            slot.classList.add('selected-slot', 'border-blue-500', 'bg-blue-500/20');
-            selectedHorarios = selectedHorarios.filter(h => !h.includes(direction === 'ida' ? 'Jarabacoa -> La Vega' : 'La Vega -> Jarabacoa'));
-            selectedHorarios.push(s.fullText);
-          } else {
-            selectedHorarios = selectedHorarios.filter(h => h !== s.fullText);
-          }
-          if (window.lucide) window.lucide.createIcons();
+            if (!isSelected) {
+              slot.classList.add('selected-slot', 'border-blue-500', 'bg-blue-500/20');
+              selectedHorarios = selectedHorarios.filter(h => !h.includes(direction === 'ida' ? 'Jarabacoa -> La Vega' : 'La Vega -> Jarabacoa'));
+              selectedHorarios.push(s.fullText);
+            } else {
+              selectedHorarios = selectedHorarios.filter(h => h !== s.fullText);
+            }
+            if (window.lucide) window.lucide.createIcons();
+          });
+          grid.appendChild(slot);
         });
-        grid.appendChild(slot);
-      });
+      } catch (err) {
+        grid.innerHTML = `<div class="text-red-500 p-4">Error cargando lista: ${err.message}</div>`;
+      }
+
       if (window.lucide) window.lucide.createIcons();
 
       // Submit
