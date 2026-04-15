@@ -10,6 +10,7 @@ let currentUser = null;
 let isAdmin = false;
 let selectedHorarios = [];
 const cycleDate = getCycleDate(); // Definida globalmente para todas las funciones
+let currentAdminStats = null; // Para compartir datos con el modal
 
 // ============================================
 // INICIALIZACIÓN
@@ -1036,8 +1037,11 @@ function initAdminPage() {
     document.getElementById('statIngresosReales').textContent = `RD$ ${stats.ingresosReales.toLocaleString()}`;
     document.getElementById('statIngresosEstimados').textContent = `Estimado: RD$ ${stats.ingresosEstimados.toLocaleString()}`;
     
-    const ocupacionTotal = stats.cuposTotales > 0 ? Math.round((stats.totalPasajeros / stats.cuposTotales) * 100) : 0;
-    document.getElementById('statOcupacionProm').textContent = `${ocupacionTotal}%`;
+    // Nueva tarjeta de lista de espera total
+    const statWaitlist = document.getElementById('statWaitlistTotal');
+    if (statWaitlist) statWaitlist.textContent = stats.enEspera;
+
+    currentAdminStats = stats; // Guardar para el modal
 
     // Preparar datos para el gráfico
     const labels = transportSchedules.map(s => s.time);
@@ -1823,3 +1827,80 @@ window.promoverDeEspera = async function(fecha, horario) {
     console.error('Error al promover lista espera:', err);
   }
 };
+
+// ============================================
+// MODAL DE LISTA DE ESPERA
+// ============================================
+window.abrirModalEspera = function() {
+  const modal = document.getElementById('modalEspera');
+  const body = document.getElementById('modalEsperaBody');
+  if (!modal || !body || !currentAdminStats) return;
+
+  let html = '';
+  const data = currentAdminStats.porHorario;
+  
+  const horarios = Object.keys(data).sort((a,b) => horarioAMinutos(a) - horarioAMinutos(b));
+  let hayEsperaTotal = false;
+
+  horarios.forEach(h => {
+    const horData = data[h];
+    if (horData.enEspera.length > 0) {
+      hayEsperaTotal = true;
+      html += `
+        <div class="waitlist-modal-group">
+          <div class="waitlist-modal-title">
+            <span>🚌 ${h}</span>
+            <span style="background:rgba(245, 158, 11, 0.2); color:#f59e0b; padding: 2px 8px; border-radius: 999px; font-size: 0.7rem;">
+              ${horData.enEspera.length} esperando
+            </span>
+          </div>
+          <div class="space-y-2">
+      `;
+      
+      horData.enEspera.forEach(p => {
+        const horaRegistro = new Date(p.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        html += `
+          <div class="waitlist-modal-item">
+            <div>
+              <div class="font-semibold text-slate-100">${escapeHtml(p.nombre)}</div>
+              <div class="text-xs text-slate-400">${p.universidad || 'N/A'} · ${p.matricula}</div>
+            </div>
+            <div class="text-right">
+              <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Registrado</div>
+              <div style="font-size: 0.8rem; font-weight: 600; color: #3b82f6;">${horaRegistro}</div>
+            </div>
+          </div>
+        `;
+      });
+      
+      html += `</div></div>`;
+    }
+  });
+
+  if (!hayEsperaTotal) {
+    html = `
+      <div class="text-center py-10">
+        <div class="text-5xl mb-4">✨</div>
+        <p class="text-slate-300 font-medium">No hay nadie en espera en este momento.</p>
+        <p class="text-slate-500 text-sm">Todos los estudiantes tienen cupo asegurado.</p>
+      </div>
+    `;
+  }
+
+  body.innerHTML = html;
+  modal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+};
+
+window.cerrarModalEspera = function() {
+  const modal = document.getElementById('modalEspera');
+  if (modal) modal.classList.add('hidden');
+  document.body.style.overflow = '';
+};
+
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}

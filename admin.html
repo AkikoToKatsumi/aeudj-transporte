@@ -50,14 +50,14 @@
             <div class="stat-value" id="statIngresosReales">RD$ 0</div>
             <div class="stat-sub" id="statIngresosEstimados">Estimado: RD$ 0</div>
           </div>
-          <!-- Card 3: Capacidad -->
-          <div class="card stat-card" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.1)); border-left: 5px solid #f59e0b;">
+          <!-- Card 3: Lista de Espera Total (Clickable) -->
+          <div class="card stat-card interactive-card" onclick="abrirModalEspera()" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.1)); border-left: 5px solid #f59e0b; cursor: pointer;">
             <div class="stat-header">
-              <span class="stat-icon">🚌</span>
-              <span class="stat-label">Ocupación Prom.</span>
+              <span class="stat-icon">⏳</span>
+              <span class="stat-label">Lista de Espera</span>
             </div>
-            <div class="stat-value" id="statOcupacionProm">0%</div>
-            <div class="stat-sub">Capacidad base: 30/bus</div>
+            <div class="stat-value" id="statWaitlistTotal">0</div>
+            <div class="stat-sub">Ver detalles por horario</div>
           </div>
         </div>
 
@@ -139,7 +139,23 @@
   <script>
     document.getElementById('fechaAdmin').textContent = new Date().toLocaleDateString('es-ES');
   </script>
+  <!-- Modal de Lista de Espera -->
+  <div id="modalEspera" class="modal hidden">
+    <div class="modal-backdrop" onclick="cerrarModalEspera()"></div>
+    <div class="modal-content card">
+      <div class="modal-header">
+        <h2 class="text-2xl font-bold text-yellow-500 flex items-center gap-2">
+          ⏳ Detalle de Lista de Espera
+        </h2>
+        <button onclick="cerrarModalEspera()" class="modal-close">&times;</button>
+      </div>
+      <div id="modalEsperaBody" class="modal-body custom-scroll" style="max-height: 60vh; overflow-y: auto;">
+        <!-- Contenido dinámico -->
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="js/supabase-config.js"></script>
-  <script type="module" src="js/app.js?v=8"></script>
+  <script type="module" src="js/app.js?v=9"></script>
 </body>
 </html>

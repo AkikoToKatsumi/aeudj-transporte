@@ -753,3 +753,108 @@ tr:last-child td { border-bottom: none; }
 .compact-passenger-item.waiting .compact-name {
   color: #fcd34d;
 }
+
+/* Modales y Cartas Interactivas */
+.interactive-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.interactive-card:hover {
+  transform: translateY(-5px);
+  background: var(--glass-bg-hover) !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 10px 40px -10px var(--primary-glow);
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(2, 6, 23, 0.85);
+  backdrop-filter: blur(8px);
+}
+
+.modal-content {
+  position: relative;
+  width: 100%;
+  max-width: 650px;
+  background: var(--glass-bg) !important;
+  border: 1px solid var(--glass-border-light) !important;
+  border-radius: 2rem;
+  overflow: hidden;
+  animation: modalIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(30px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-header {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 2rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.modal-close:hover {
+  color: var(--danger);
+}
+
+.modal-body {
+  padding: 2rem;
+}
+
+.waitlist-modal-group {
+  margin-bottom: 2rem;
+}
+
+.waitlist-modal-title {
+  color: var(--primary);
+  font-weight: 700;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.waitlist-modal-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 0.75rem;
+  margin-bottom: 0.5rem;
+  border-left: 3px solid transparent;
+}
+
+.waitlist-modal-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-left-color: var(--warning);
+}
