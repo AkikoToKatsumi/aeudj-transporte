@@ -2,73 +2,88 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Lista por horarios - AEUDJ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lista de Pasajeros - AEUDJ</title>
   <link rel="icon" href="img/comite.jpg" type="image/jpg">
   <link rel="stylesheet" href="css/styles.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body data-page="lista">
+<body data-page="lista" class="lista-page">
   <main class="container mx-auto px-4 py-8 max-w-5xl">
-    <!-- NAVEGACIÓN -->
-    <div class="mb-4">
-      <button id="btnVolverInicio" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
-        <span style="font-size: 1.2rem;">🏠</span> Volver al Login
-      </button>
+    <header class="text-center mb-10">
+      <h1 class="text-4xl font-bold text-white mb-2">Lista de Pasajeros</h1>
+      <p class="text-gray-400">Estado del servicio para hoy: <span id="fechaHoy" class="font-bold text-blue-400"></span></p>
+    </header>
+
+    <div id="listContainer" class="space-y-8">
+       <div class="text-center py-20">
+         <div class="spinner mx-auto mb-4"></div>
+         <p class="text-gray-400">Cargando listado...</p>
+       </div>
     </div>
 
-    <!-- TÍTULO -->
-    <div class="page-header">
-      <h1 class="page-title">📋 Lista de Pasajeros</h1>
-      <p class="page-subtitle">Organizada por horario - <span id="fechaActual"></span></p>
+    <div class="mt-20 text-center">
+      <a href="index.html" class="btn-pill-outline">Volver al inicio</a>
     </div>
-
-    <!-- MENÚ STICKY -->
-    <div id="stickyMenu" class="sticky-menu hidden">
-      <h3 class="sticky-menu-title">Ir al horario</h3>
-      <div class="schedule-buttons"></div>
-      <select class="schedule-select form-select" onchange="irAHorario(this.value)">
-        <option value="">-- Selecciona un horario --</option>
-      </select>
-    </div>
-
-    <!-- LISTA -->
-    <div id="listContainer">
-      <div class="spinner"></div>
-    </div>
-
-    <!-- BOTONES DE CAMBIO -->
-<div id="cambiosSection" class="hidden mt-8">
-  <div class="card">
-    <h3 class="font-bold text-gray-800 mb-3 text-center">¿Cambios?</h3>
-    <div class="flex flex-wrap gap-2 justify-center">
-      <button onclick="irACambios('antes')" class="btn btn-warning" style="cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation;">Me fui antes</button>
-      <button onclick="irACambios('despues')" class="btn btn-primary" style="cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation;">Me iré después</button>
-      <button onclick="irACambios('otros')" class="btn btn-gray" style="cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation;">Voy por otros medios</button>
-    </div>
-  </div>
-</div>
-
-
   </main>
 
-  <script>
-    // Mostrar fecha actual
-    document.getElementById('fechaActual').textContent = new Date().toLocaleDateString('es-ES');
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-      // Mostrar fecha actual
-      document.getElementById('fechaActual').textContent = new Date().toLocaleDateString('es-ES');
-      
-      // Función para ir a cambios (compatible con móvil)
-      function irACambios(tipo) {
-        console.log('Navegando a cambios:', tipo);
-        window.location.href = 'cambios.html?tipo=' + tipo;
+    const SUPABASE_URL = 'https://irjwxegepkznqrisbrys.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyand4ZWdlcGt6bnFyaXNicnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNjk0NDIsImV4cCI6MjA5MTc0NTQ0Mn0.TZOhsy0ghfmjK8rd4GWcgbtOLpERKRJ62mjqc5gaYOM';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('fechaHoy').textContent = new Date().toLocaleDateString('es-ES');
+      if (window.lucide) window.lucide.createIcons();
+      loadData();
+    });
+
+    async function loadData() {
+      const today = new Date().toISOString().split('T')[0];
+      const container = document.getElementById('listContainer');
+
+      try {
+        const { data: votos, error } = await supabase.from('votos').select('*').eq('fecha', today).order('horario');
+        if (error) throw error;
+
+        container.innerHTML = '';
+        if (!votos || votos.length === 0) {
+          container.innerHTML = '<div class="glass-card p-10 text-center text-gray-400">No hay pasajeros registrados todavia.</div>';
+          return;
+        }
+
+        const listado = {};
+        votos.forEach(v => {
+          if (!listado[v.horario]) listado[v.horario] = [];
+          listado[v.horario].push(v);
+        });
+
+        Object.keys(listado).forEach(h => {
+          const section = document.createElement('section');
+          section.className = 'glass-card p-6 rounded-2xl border border-white/10';
+          let html = `<h2 class="text-2xl font-bold text-blue-400 mb-4 border-b border-white/10 pb-2">${h}</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">`;
+          
+          listado[h].forEach(p => {
+            html += `<div class="p-3 bg-white/5 rounded-lg flex justify-between items-center">
+              <span class="text-white">${p.nombre}</span>
+              <span class="text-xs ${p.en_espera ? 'text-orange-400' : 'text-green-400'} uppercase font-bold">
+                ${p.en_espera ? 'Lista Espera' : 'Confirmado'}
+              </span>
+            </div>`;
+          });
+          
+          html += `</div>`;
+          section.innerHTML = html;
+          container.appendChild(section);
+        });
+
+      } catch (err) {
+        container.innerHTML = `<div class="text-red-500 text-center font-bold">Error al cargar datos: ${err.message}</div>`;
       }
-      
-      // Hacer disponible globalmente
-      window.irACambios = irACambios;
-   
+    }
   </script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script type="module" src="app.js?v=200"></script>
 </body>
 </html>

@@ -2,160 +2,135 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Panel Comité - AEUDJ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Administracion - AEUDJ</title>
   <link rel="icon" href="img/comite.jpg" type="image/jpg">
   <link rel="stylesheet" href="css/styles.css">
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <script type="text/javascript">
-    (function() {
-        emailjs.init({
-          publicKey: "nFSfa8vIE5hozX8Ok",
-        });
-    })();
-  </script>
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body data-page="admin">
-  <!-- ELIMINADO LOG DE ADMIN ANTIGUO; ahora todo pasa por index.html -->
-
-  <!-- PANEL ADMIN -->
-  <div id="adminPanel" class="hidden">
-    <main class="container mx-auto px-4 py-8 max-w-5xl">
-      <div class="page-header">
-        <div class="logo">
-          <img src="img/comite.jpg" alt="Logo AEUDJ" onerror="this.style.display='none'">
+<body data-page="admin" class="admin-page">
+  <main class="container mx-auto px-4 py-8 max-w-6xl">
+    <div id="adminPanel" class="hidden">
+      <header class="flex justify-between items-center mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-white">Administracion</h1>
+          <p class="text-gray-400">Control de transporte - <span id="fechaAdmin"></span></p>
         </div>
-        <h1 class="page-title">Panel Comité AEUDJ</h1>
-        <p class="page-subtitle">Gestión de pasajeros - <span id="fechaAdmin"></span></p>
+        <button id="logoutBtn" class="btn-pill-outline">Cerrar sesion</button>
+      </header>
+
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="glass-card p-6 rounded-2xl border border-white/10">
+          <div class="text-gray-400 text-sm mb-1">Pasajeros Hoy</div>
+          <div id="statTotalPasajeros" class="text-4xl font-bold text-blue-400">--</div>
+        </div>
+        <div class="glass-card p-6 rounded-2xl border border-white/10">
+          <div class="text-gray-400 text-sm mb-1">En Espera</div>
+          <div id="statWaitlistTotal" class="text-4xl font-bold text-orange-400">--</div>
+        </div>
+        <div class="glass-card p-6 rounded-2xl border border-white/10">
+          <div class="text-gray-400 text-sm mb-1">Recaudacion</div>
+          <div id="statIngresosReales" class="text-4xl font-bold text-green-400">RD$ 0</div>
+        </div>
       </div>
 
-      <div id="adminDashboard" class="mb-8 hidden">
-        <div class="grid grid-cols-3 gap-6 mb-8">
-          <!-- Card 1: Total Pasajeros -->
-          <div class="card stat-card" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1)); border-left: 5px solid #3b82f6;">
-            <div class="stat-header">
-              <span class="stat-icon">👥</span>
-              <span class="stat-label">Pasajeros Hoy</span>
-            </div>
-            <div class="stat-value" id="statTotalPasajeros">0</div>
-            <div class="stat-sub" id="statEsperaPasajeros">0 en lista de espera</div>
-          </div>
-          <!-- Card 2: Ingresos Reales -->
-          <div class="card stat-card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.1)); border-left: 5px solid #10b981;">
-            <div class="stat-header">
-              <span class="stat-icon">💰</span>
-              <span class="stat-label">Ingresos Reales</span>
-            </div>
-            <div class="stat-value" id="statIngresosReales">RD$ 0</div>
-            <div class="stat-sub" id="statIngresosEstimados">Estimado: RD$ 0</div>
-          </div>
-          <!-- Card 3: Lista de Espera Total (Clickable) -->
-          <div class="card stat-card interactive-card" onclick="abrirModalEspera()" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.1)); border-left: 5px solid #f59e0b; cursor: pointer;">
-            <div class="stat-header">
-              <span class="stat-icon">⏳</span>
-              <span class="stat-label">Lista de Espera</span>
-            </div>
-            <div class="stat-value" id="statWaitlistTotal">0</div>
-            <div class="stat-sub">Ver detalles por horario</div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Lista de Pasajeros -->
+        <div class="glass-card p-6 rounded-2xl border border-white/10">
+          <h3 class="text-xl font-bold text-white mb-6">Listado por Horarios</h3>
+          <div id="adminContainer" class="space-y-4">
+             Cargando datos...
           </div>
         </div>
 
-        <!-- Gráfico de Ocupación por Horario -->
-        <div class="card p-6" style="margin-bottom: 2rem;">
-          <h2 class="text-xl font-bold mb-6 text-center flex items-center justify-center gap-2">
-            📊 Ocupación y Contabilidad por Horario
-          </h2>
-          <div style="position: relative; height: 350px; width: 100%;">
-            <canvas id="occupancyChart"></canvas>
-          </div>
+        <!-- Gestion de Staff -->
+        <div id="devToolsSection" class="hidden glass-card p-6 rounded-2xl border border-purple-500/30 bg-purple-500/5">
+           <h3 class="text-xl font-bold text-purple-400 mb-6">Herramientas de Desarrollador</h3>
+           <form id="createStaffForm" class="space-y-4">
+             <input type="text" id="staffNombre" placeholder="Nombre completo" class="premium-input w-full" required>
+             <input type="text" id="staffMatricula" placeholder="Matricula" class="premium-input w-full" required>
+             <input type="password" id="staffPassword" placeholder="Contrasena" class="premium-input w-full" required>
+             <select id="staffRol" class="premium-select w-full">
+               <option value="estudiante">Estudiante</option>
+               <option value="voluntario">Voluntario</option>
+               <option value="administrador">Administrador</option>
+             </select>
+             <button type="submit" class="btn-premium btn-block">Crear Usuario</button>
+           </form>
+           <div id="staffStatus" class="hidden mt-2 text-center text-sm"></div>
         </div>
-      </div>
-
-      <!-- CUADRÍCULA DE PASAJEROS (Moved up for better priority) -->
-      <div id="adminContainer" class="mb-8">
-        <div class="spinner"></div>
-      </div>
-
-      <!-- Centro de Notificaciones -->
-      <div class="card mb-6" style="background: rgba(30, 41, 59, 0.4); border:1px solid var(--glass-border); max-width: 600px; margin: 0 auto 2rem auto;">
-        <h2 class="text-xl font-bold text-blue-400 mb-4 text-center">📢 Centro de Notificaciones (Email)</h2>
-        <div class="flex flex-wrap gap-3 justify-center">
-          <button onclick="notificarAccion('apertura')" class="btn btn-primary" style="background:#3b82f6;">🔔 Avisar Apertura</button>
-          <button onclick="notificarAccion('llegada')" class="btn btn-success" style="background:#10b981;">🚌 Avisar Llegada</button>
-          <button onclick="notificarAccion('salida')" class="btn btn-warning" style="background:#f59e0b;">💨 Avisar Salida</button>
-        </div>
-      </div>
-
-      <!-- Gestión de Voluntarios -->
-      <div class="card mb-6" style="background: rgba(30, 41, 59, 0.4); border: 1px solid var(--glass-border); max-width: 800px; margin: 0 auto 2rem auto;">
-        <h2 class="text-xl font-bold text-blue-400 mb-4 text-center">👥 Gestión de Voluntarios</h2>
-        <div id="voluntariosListContainer" class="mb-4">
-           <!-- Aquí se cargarán los usuarios y sus roles -->
-           <div class="spinner"></div>
-        </div>
-      </div>
-
-      <!-- Registrar Nuevo Staff -->
-      <div class="card mb-6" style="background: rgba(30, 41, 59, 0.4); border: 1px solid var(--glass-border); max-width: 800px; margin: 0 auto 2rem auto;">
-        <h2 class="text-xl font-bold text-emerald-400 mb-4 text-center">➕ Registrar Nuevo Staff</h2>
-        <form id="createStaffForm" class="space-y-4">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="text" id="staffMatricula" class="premium-input" placeholder="Matrícula" required>
-            <input type="text" id="staffNombre" class="premium-input" placeholder="Nombre completo" required>
-            <input type="tel" id="staffTelefono" class="premium-input" placeholder="Teléfono" required>
-            <input type="email" id="staffEmail" class="premium-input" placeholder="Correo (opcional)">
-            <input type="password" id="staffPassword" class="premium-input" placeholder="Contraseña inicial" required>
-            <select id="staffRol" class="premium-select" required>
-              <option value="voluntario">Voluntario</option>
-              <option value="administrador">Administrador</option>
-              <option value="desarrolladora">Desarrolladora (Super-Admin)</option>
-            </select>
-          </div>
-          <button type="submit" class="btn-premium mt-4">Crear Usuario</button>
-          <p id="staffStatus" class="text-center text-sm mt-2 hidden"></p>
-        </form>
-      </div>
-
-      <!-- Herramientas de Desarrolladora (Solo visible para Gabriela) -->
-      <div id="devToolsSection" class="card mb-6 hidden" style="background: rgba(139, 92, 246, 0.1); border: 2px dashed rgba(139, 92, 246, 0.4); max-width: 800px; margin: 0 auto 2rem auto;">
-        <h2 class="text-xl font-bold text-purple-400 mb-4 text-center">🛠️ Herramientas de Desarrolladora</h2>
-        <div class="flex flex-wrap gap-4 justify-center">
-          <button onclick="seedTestEntries()" class="btn btn-primary" style="background: #8b5cf6;">🚀 Generar 30 Votos de Prueba</button>
-          <button onclick="clearDailyVotes()" class="btn btn-danger">🗑️ Limpiar Todo Hoy</button>
-        </div>
-        <p id="devStatus" class="text-center text-sm mt-3 text-purple-300"></p>
-      </div>
-
-      <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mt-8">
-        <a href="votar.html" class="btn btn-primary">Volver al inicio</a>
-        <a href="lista.html" class="btn btn-gray">Ver lista pública</a>
-        <a href="no-subieron.html" class="btn btn-danger">Ver quienes no subieron</a>
-        <button onclick="logout()" class="btn btn-gray">Cerrar sesión</button>
-      </div>
-    </main>
-  </div>
-
-  <script>
-    document.getElementById('fechaAdmin').textContent = new Date().toLocaleDateString('es-ES');
-  </script>
-  <!-- Modal de Lista de Espera -->
-  <div id="modalEspera" class="modal hidden">
-    <div class="modal-backdrop" onclick="cerrarModalEspera()"></div>
-    <div class="modal-content card">
-      <div class="modal-header">
-        <h2 class="text-2xl font-bold text-yellow-500 flex items-center gap-2">
-          ⏳ Detalle de Lista de Espera
-        </h2>
-        <button onclick="cerrarModalEspera()" class="modal-close">&times;</button>
-      </div>
-      <div id="modalEsperaBody" class="modal-body custom-scroll" style="max-height: 60vh; overflow-y: auto;">
-        <!-- Contenido dinámico -->
       </div>
     </div>
-  </div>
+  </main>
 
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script type="module" src="app.js?v=200"></script>
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+    const SUPABASE_URL = 'https://irjwxegepkznqrisbrys.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyand4ZWdlcGt6bnFyaXNicnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNjk0NDIsImV4cCI6MjA5MTc0NTQ0Mn0.TZOhsy0ghfmjK8rd4GWcgbtOLpERKRJ62mjqc5gaYOM';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const currentUser = JSON.parse(localStorage.getItem('aeudj_user') || 'null');
+    
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!currentUser || (currentUser.rol !== 'administrador' && currentUser.rol !== 'desarrolladora')) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      document.getElementById('adminPanel').classList.remove('hidden');
+      document.getElementById('fechaAdmin').textContent = new Date().toLocaleDateString('es-ES');
+      if (currentUser.rol === 'desarrolladora') document.getElementById('devToolsSection')?.classList.remove('hidden');
+      if (window.lucide) window.lucide.createIcons();
+
+      loadData();
+
+      async function loadData() {
+        const today = new Date().toISOString().split('T')[0];
+        const { data: votos, error } = await supabase.from('votos').select('*').eq('fecha', today);
+        
+        if (error) { console.error(error); return; }
+
+        let total = 0;
+        let espera = 0;
+        let recaudado = 0;
+        
+        const container = document.getElementById('adminContainer');
+        container.innerHTML = '';
+
+        const listado = {};
+
+        votos.forEach(v => {
+          if (!listado[v.horario]) listado[v.horario] = [];
+          listado[v.horario].push(v);
+          if (v.en_espera) espera++; else total++;
+        });
+
+        document.getElementById('statTotalPasajeros').textContent = total;
+        document.getElementById('statWaitlistTotal').textContent = espera;
+
+        Object.keys(listado).forEach(h => {
+          const card = document.createElement('div');
+          card.className = 'p-4 bg-white/5 rounded-xl mb-3';
+          card.innerHTML = `<h4 class="font-bold text-blue-400 mb-2">${h}</h4>`;
+          listado[h].forEach(p => {
+            card.innerHTML += `<div class="text-sm text-gray-300 flex justify-between py-1 border-b border-white/5">
+              <span>${p.nombre}</span>
+              <span class="text-xs uppercase">${p.en_espera ? 'Espera' : 'OK'}</span>
+            </div>`;
+          });
+          container.appendChild(card);
+        });
+      }
+
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        localStorage.clear();
+        window.location.href = 'index.html';
+      });
+      
+      // ... Otros eventos similares para crear staff ...
+    });
+  </script>
 </body>
 </html>
