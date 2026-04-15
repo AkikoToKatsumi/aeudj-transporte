@@ -1300,11 +1300,11 @@ function initVoluntarioPage() {
   
   if (misHorarios.length === 0) {
      if(horariosText) horariosText.textContent = "No tienes ningún horario asignado.";
-     container.innerHTML = '<p class="text-center text-gray-600 mt-4">Contacta al administrador para que te asigne una ruta.</p>';
+     if(container) container.innerHTML = '<p class="text-center text-gray-600 mt-4">Contacta al administrador para que te asigne una ruta.</p>';
      return;
   }
   
-  if(horariosText) horariosText.textContent = `Tu horario: ${misHorarios.join(', ')}`;
+  if(horariosText) horariosText.textContent = `Tus horarios asignados: ${misHorarios.join(', ')}`;
   
   loadVoluntarioData();
   
@@ -1319,87 +1319,101 @@ function initVoluntarioPage() {
       
       if (error) throw error;
       
-      if (votos.length === 0) {
-        container.innerHTML = '<p class="text-center text-gray-600">No hay pasajeros anotados para tu horario hoy.</p>';
+      if (!container) return;
+      container.innerHTML = '';
+      container.className = 'admin-passenger-grid'; // Reutilizar la cuadrícula del admin
+      
+      const listadoPorHorario = {};
+      votos.forEach(v => {
+        if (!listadoPorHorario[v.horario]) {
+          listadoPorHorario[v.horario] = { confirmados: [], enEspera: [], precio: getPrecio(v.horario) };
+        }
+        if (v.en_espera) listadoPorHorario[v.horario].enEspera.push(v);
+        else listadoPorHorario[v.horario].confirmados.push(v);
+      });
+
+      const horariosActivos = misHorarios.filter(h => isHorarioActivo(h, currentUser.rol === 'desarrolladora'));
+
+      if (horariosActivos.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full text-center p-8 bg-slate-800/50 rounded-2xl border border-dashed border-slate-700">
+            <p class="text-xl text-slate-300 font-medium mb-2">Aún no es hora de pasar lista.</p>
+            <p class="text-slate-500 text-sm">Las listas aparecen automáticamente 10 minutos antes de la hora de salida.</p>
+          </div>
+        `;
         return;
       }
 
-      container.innerHTML = '';
-      
-      const card = document.createElement('div');
-      card.className = 'card-horario';
-      let html = `<h2 class="text-2xl font-bold text-blue-800 mb-6 text-center">Pasajeros (${votos.length})</h2><div class="passenger-list">`;
-      
-      votos.forEach((p, i) => {
-        let statusHtml = '';
-        if (p.se_monto === null) {
-          statusHtml = `
-            <div class="action-btns">
-              <button onclick="marcarVotoVoluntario('${p.id}', 1)" class="btn btn-success btn-small">Subió</button>
-              <button onclick="marcarVotoVoluntario('${p.id}', 0)" class="btn btn-danger btn-small">No subió</button>
-            </div>
-          `;
-        } else if (p.se_monto === 1) {
-          statusHtml = `
-            <div class="action-btns">
-              <span class="status-badge status-success">✅ Subió</span>
-              <button onclick="marcarVotoVoluntario('${p.id}', 2)" class="btn btn-warning btn-small">Llegó tarde</button>
-            </div>
-          `;
-        } else if (p.se_monto === 2) {
-          statusHtml = `
-            <div class="action-btns">
-              <span class="status-badge status-warning">⏰ Llegó tarde</span>
-              <button onclick="marcarVotoVoluntario('${p.id}', 1)" class="btn btn-success btn-small">Puntual</button>
-              <button onclick="marcarVotoVoluntario('${p.id}', 0)" class="btn btn-danger btn-small">No subió</button>
-            </div>
-          `;
-        } else {
-          statusHtml = `
-            <div class="action-btns">
-              <span class="status-badge status-danger">❌ No subió</span>
-              <button onclick="marcarVotoVoluntario('${p.id}', 1)" class="btn btn-success btn-small">Subió</button>
-            </div>
-          `;
-        }
+      horariosActivos.forEach(horario => {
+        const data = listadoPorHorario[horario] || { confirmados: [], enEspera: [], precio: getPrecio(horario) };
+        
+        const card = document.createElement('div');
+        card.className = 'card-horario-compact';
+        
+        const recaudado = data.confirmados.filter(p => p.se_monto === 1).length * data.precio;
 
-        html += `
-          <div class="passenger-item">
-            <div class="flex items-center" style="gap: 1rem;">
-              <span class="passenger-number">${i+1}</span>
-              <div class="passenger-info">
-                <p class="passenger-name">${escapeHtml(p.nombre)}</p>
-                <p class="passenger-meta">${p.matricula} · ${p.telefono || 'N/A'}</p>
-              </div>
-            </div>
-            ${statusHtml}
+        let html = `
+          <div class="horario-header">
+            <h2 class="text-xl font-bold text-blue-400 mb-1">🚌 Pasajeros ${horario}</h2>
+            <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">
+              ${data.confirmados.length} Estudiantes | <span class="text-emerald-400">RD$ ${recaudado.toLocaleString()}</span>
+            </p>
           </div>
+          <div class="compact-passenger-list custom-scroll">
         `;
+        
+        data.confirmados.forEach(p => {
+          html += renderAdminItem(p, false, true); // Reutilizar item del admin
+        });
+
+        if (data.enEspera.length > 0) {
+          html += `<div class="waitlist-divider">Lista de Espera (${data.enEspera.length})</div>`;
+          data.enEspera.forEach(p => {
+            html += renderAdminItem(p, true, true);
+          });
+        }
+        
+        html += '</div>';
+        card.innerHTML = html;
+        container.appendChild(card);
       });
-      html += '</div>';
-      card.innerHTML = html;
-      container.appendChild(card);
       
     } catch (error) {
       console.error('Error:', error);
-      container.innerHTML = '<p class="text-center text-gray-600">Error al cargar datos.</p>';
+      if(container) container.innerHTML = '<p class="text-center text-gray-600">Error al cargar datos.</p>';
     }
   }
 
-  window.marcarVotoVoluntario = async function(id, val) {
-    try {
-      const { error } = await supabase
-        .from('votos')
-        .update({ se_monto: val })
-        .eq('id', id);
-      
-      if (error) throw error;
-      loadVoluntarioData();
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Error al actualizar');
-    }
-  };
+  // Sobrescribir marcarVoto para que funcione en el contexto de voluntario si es necesario
+  // o simplemente usar marcarVoto global si ya está definido.
+}
+
+function horarioAMinutos(horarioStr) {
+  if (!horarioStr) return 0;
+  try {
+    const mainPart = horarioStr.split(' ')[0]; // E.g., "1:00"
+    const period = horarioStr.includes('PM') ? 'PM' : 'AM';
+    let [horas, minutos] = mainPart.split(':').map(Number);
+    
+    if (period === 'PM' && horas !== 12) horas += 12;
+    if (period === 'AM' && horas === 12) horas = 0;
+    
+    return horas * 60 + minutos;
+  } catch(e) { return 0; }
+}
+
+function isHorarioActivo(horarioStr, ignoraTiempo = false) {
+  if (ignoraTiempo) return true;
+  
+  const hMinutes = horarioAMinutos(horarioStr);
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  // El horario se activa 10 minutos antes (ej: 12:50 para las 1:00)
+  // Y se mantiene visible hasta 1 hora después (ej: 2:00)
+  return (currentMinutes >= hMinutes - 10) && (currentMinutes <= hMinutes + 60);
+}
+
 }
 
 // ============================================
