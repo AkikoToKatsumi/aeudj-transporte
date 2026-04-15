@@ -9,6 +9,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 let currentUser = null;
 let isAdmin = false;
 let selectedHorarios = [];
+const cycleDate = getCycleDate(); // Definida globalmente para todas las funciones
 
 // ============================================
 // INICIALIZACIÓN
@@ -737,69 +738,8 @@ async function initListaPage() {
     });
   }
 
-  // ============================================
-  // FUNCIONES DE DESARROLLO (SEED/RESET)
-  // ============================================
-  window.seedTestEntries = async function() {
-    const status = document.getElementById('devStatus');
-    if (!status) return;
-    status.textContent = '🚀 Generando votos de prueba...';
-    
-    const universidades = ['UCATECI', 'UAPA', 'UTESA', 'UNPHU', 'UNEV', 'ISA'];
-    const nombres = ['Gabriela', 'Marcos', 'Luis', 'Carla', 'Roberto', 'Elena', 'Fernando', 'Patricia', 'Ricardo', 'Monica'];
-    const ape = ['Garcia', 'Rodriguez', 'Martinez', 'Lopez', 'Perez', 'Sanchez', 'Ramirez', 'Torres', 'Castro', 'Santos'];
-
-    const fakeVotes = [];
-    const cycleDate = getCycleDate();
-    
-    for (let i = 0; i < 30; i++) {
-        const horario = transportSchedules[Math.floor(Math.random() * transportSchedules.length)].fullText;
-        const nombreFake = `${nombres[Math.floor(Math.random() * nombres.length)]} ${ape[Math.floor(Math.random() * ape.length)]} (Test)`;
-        const matriculaFake = `2024-${Math.floor(1000 + Math.random() * 9000)}`;
-        
-        fakeVotes.push({
-            usuario_id: currentUser.id, // Tu ID para el RLS
-            nombre: nombreFake,
-            matricula: matriculaFake,
-            telefono: '809-555-0101',
-            universidad: universidades[Math.floor(Math.random() * universidades.length)],
-            horario: horario,
-            fecha: cycleDate,
-            en_espera: false,
-            se_monto: Math.random() > 0.4 ? 1 : null
-        });
-    }
-
-    try {
-        const { error } = await supabase.from('votos').insert(fakeVotes);
-        if (error) throw error;
-        status.textContent = '✅ 30 votos de prueba inyectados.';
-        loadAdminData();
-    } catch (e) {
-        console.error('Error seeding:', e);
-        status.textContent = '❌ Error: ' + e.message;
-    }
-  };
-
-  window.clearDailyVotes = async function() {
-    if (!confirm('¿Segura? Borrarás todos los votos de HOY.')) return;
-    const status = document.getElementById('devStatus');
-    if (!status) return;
-    status.textContent = '🧹 Limpiando todo...';
-    
-    const cycleDate = getCycleDate();
-    try {
-        const { error } = await supabase.from('votos').delete().eq('fecha', cycleDate);
-        if (error) throw error;
-        status.textContent = '✅ Sistema reseteado.';
-        loadAdminData();
-    } catch (e) {
-        console.error('Error clearing:', e);
-        status.textContent = '❌ Error: ' + e.message;
-    }
-  };
-
   // Fin de funciones de desarrollo
+
   
   function renderStickyMenu(horarios) {
     if (horarios.length === 0) {
