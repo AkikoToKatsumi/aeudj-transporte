@@ -586,12 +586,8 @@ async function initListaPage() {
   const btnVolverInicio = document.getElementById('btnVolverInicio');
 
   if (btnVolverInicio) {
-    btnVolverInicio.addEventListener('click', async () => {
-      if (currentUser) {
-        window.location.href = 'votar.html';
-      } else {
-        window.location.href = 'index.html';
-      }
+    btnVolverInicio.addEventListener('click', () => {
+      window.logout();
     });
   }
   const cycleDate = getCycleDate();
