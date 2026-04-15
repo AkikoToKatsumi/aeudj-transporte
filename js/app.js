@@ -1004,9 +1004,9 @@ function initAdminPage() {
   }
 
   function getPrecio(horarioText) {
-    // Regla: 1, 2, 5, 8, 10 PM -> 125. Otros -> 100.
+    // Regla: 1, 2, 5, 6, 8, 10 PM -> 125. Otros -> 100.
     const h = horarioText.toLowerCase();
-    if (h.includes('1:00 pm') || h.includes('2:15 pm') || h.includes('5:00 pm') || h.includes('8:00 pm') || h.includes('10:00 pm')) {
+    if (h.includes('1:00 pm') || h.includes('2:15 pm') || h.includes('5:00 pm') || h.includes('6:00 pm') || h.includes('8:00 pm') || h.includes('10:00 pm')) {
       return 125;
     }
     return 100;
