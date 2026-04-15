@@ -13,6 +13,7 @@
           publicKey: "nFSfa8vIE5hozX8Ok",
         });
     })();
+  </script>
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body data-page="admin">
@@ -71,9 +72,14 @@
         </div>
       </div>
 
+      <!-- CUADRÍCULA DE PASAJEROS (Moved up for better priority) -->
+      <div id="adminContainer" class="mb-8">
+        <div class="spinner"></div>
+      </div>
+
       <!-- Centro de Notificaciones -->
-      <div class="card mb-6" style="background:#f0f9ff; border:1px solid #bae6fd; max-width: 600px; margin: 0 auto 2rem auto;">
-        <h2 class="text-xl font-bold text-blue-800 mb-4 text-center">📢 Centro de Notificaciones (Email)</h2>
+      <div class="card mb-6" style="background: rgba(30, 41, 59, 0.4); border:1px solid var(--glass-border); max-width: 600px; margin: 0 auto 2rem auto;">
+        <h2 class="text-xl font-bold text-blue-400 mb-4 text-center">📢 Centro de Notificaciones (Email)</h2>
         <div class="flex flex-wrap gap-3 justify-center">
           <button onclick="notificarAccion('apertura')" class="btn btn-primary" style="background:#3b82f6;">🔔 Avisar Apertura</button>
           <button onclick="notificarAccion('llegada')" class="btn btn-success" style="background:#10b981;">🚌 Avisar Llegada</button>
@@ -81,38 +87,34 @@
         </div>
       </div>
 
-      <!-- Crear Nuevo Staff -->
-      <div class="card mb-6" style="background:#f0fdf4; border:1px solid #bbf7d0; max-width: 800px; margin: 0 auto 2rem auto;">
-        <h2 class="text-xl font-bold text-green-800 mb-4 text-center">➕ Registrar Nuevo Staff/Voluntario</h2>
-        <form id="createStaffForm" class="space-y-4">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="text" id="staffMatricula" class="form-input" placeholder="Matrícula" required>
-            <input type="text" id="staffNombre" class="form-input" placeholder="Nombre completo" required>
-            <input type="tel" id="staffTelefono" class="form-input" placeholder="Teléfono" required>
-            <input type="email" id="staffEmail" class="form-input" placeholder="Correo (opcional)">
-            <input type="password" id="staffPassword" class="form-input" placeholder="Contraseña inicial" required>
-            <select id="staffRol" class="form-select" required>
-              <option value="voluntario">Voluntario</option>
-              <option value="administrador">Administrador</option>
-              <option value="desarrolladora">Desarrolladora (Super-Admin)</option>
-            </select>
-          </div>
-          <button type="submit" class="btn btn-success btn-block mt-4">Crear Usuario</button>
-          <p id="staffStatus" class="text-center text-sm mt-2 hidden"></p>
-        </form>
-      </div>
-
       <!-- Gestión de Voluntarios -->
-      <div class="card mb-6" style="background:#f8fafc; border:1px solid #e2e8f0; max-width: 800px; margin: 0 auto 2rem auto;">
-        <h2 class="text-xl font-bold text-blue-800 mb-4 text-center">👥 Gestión de Voluntarios</h2>
+      <div class="card mb-6" style="background: rgba(30, 41, 59, 0.4); border: 1px solid var(--glass-border); max-width: 800px; margin: 0 auto 2rem auto;">
+        <h2 class="text-xl font-bold text-blue-400 mb-4 text-center">👥 Gestión de Voluntarios</h2>
         <div id="voluntariosListContainer" class="mb-4">
            <!-- Aquí se cargarán los usuarios y sus roles -->
            <div class="spinner"></div>
         </div>
       </div>
 
-      <div id="adminContainer">
-        <div class="spinner"></div>
+      <!-- Registrar Nuevo Staff -->
+      <div class="card mb-6" style="background: rgba(30, 41, 59, 0.4); border: 1px solid var(--glass-border); max-width: 800px; margin: 0 auto 2rem auto;">
+        <h2 class="text-xl font-bold text-emerald-400 mb-4 text-center">➕ Registrar Nuevo Staff</h2>
+        <form id="createStaffForm" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="text" id="staffMatricula" class="premium-input" placeholder="Matrícula" required>
+            <input type="text" id="staffNombre" class="premium-input" placeholder="Nombre completo" required>
+            <input type="tel" id="staffTelefono" class="premium-input" placeholder="Teléfono" required>
+            <input type="email" id="staffEmail" class="premium-input" placeholder="Correo (opcional)">
+            <input type="password" id="staffPassword" class="premium-input" placeholder="Contraseña inicial" required>
+            <select id="staffRol" class="premium-select" required>
+              <option value="voluntario">Voluntario</option>
+              <option value="administrador">Administrador</option>
+              <option value="desarrolladora">Desarrolladora (Super-Admin)</option>
+            </select>
+          </div>
+          <button type="submit" class="btn-premium mt-4">Crear Usuario</button>
+          <p id="staffStatus" class="text-center text-sm mt-2 hidden"></p>
+        </form>
       </div>
 
       <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mt-8">
