@@ -1,4 +1,4 @@
-﻿// ============================================
+ // ============================================
 // AEUDJ TRANSPORTE - APLICACIN PRINCIPAL (SUPABASE VERSION)
 // ============================================
 console.log(' AEUDJ App Iniciada');
