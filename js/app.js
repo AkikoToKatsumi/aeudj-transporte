@@ -743,67 +743,63 @@ async function initListaPage() {
   window.seedTestEntries = async function() {
     const status = document.getElementById('devStatus');
     if (!status) return;
-    status.textContent = 'Inyectando datos de prueba...';
+    status.textContent = '🚀 Generando votos de prueba...';
     
-    const universidades = ['UCATECI', 'UAPA', 'UTESA', 'UNPHU', 'UNEV'];
-    const nombres = ['Juan Pérez', 'María García', 'Carlos Rodríguez', 'Ana Martínez', 'Pedro Sánchez', 'Laura López', 'Diego Ramírez', 'Elena Torres', 'Miguel Ángel', 'Sofía Castro'];
-    const ape = ['Santana', 'Moreno', 'Rosario', 'Bautista', 'Pérez', 'Guzmán', 'Cruz', 'Santos', 'Reyes', 'Díaz'];
+    const universidades = ['UCATECI', 'UAPA', 'UTESA', 'UNPHU', 'UNEV', 'ISA'];
+    const nombres = ['Gabriela', 'Marcos', 'Luis', 'Carla', 'Roberto', 'Elena', 'Fernando', 'Patricia', 'Ricardo', 'Monica'];
+    const ape = ['Garcia', 'Rodriguez', 'Martinez', 'Lopez', 'Perez', 'Sanchez', 'Ramirez', 'Torres', 'Castro', 'Santos'];
 
     const fakeVotes = [];
     const cycleDate = getCycleDate();
     
     for (let i = 0; i < 30; i++) {
         const horario = transportSchedules[Math.floor(Math.random() * transportSchedules.length)].fullText;
-        const nombreFake = `${nombres[Math.floor(Math.random() * nombres.length)]} ${ape[Math.floor(Math.random() * ape.length)]} (Prueba)`;
-        const matriculaFake = `TEST-${Math.floor(1000 + Math.random() * 9000)}`;
+        const nombreFake = `${nombres[Math.floor(Math.random() * nombres.length)]} ${ape[Math.floor(Math.random() * ape.length)]} (Test)`;
+        const matriculaFake = `2024-${Math.floor(1000 + Math.random() * 9000)}`;
         
         fakeVotes.push({
-            usuario_id: currentUser.id, // Reusamos tu ID para permisos RLS
+            usuario_id: currentUser.id, // Tu ID para el RLS
             nombre: nombreFake,
             matricula: matriculaFake,
-            telefono: '809-000-0000',
+            telefono: '809-555-0101',
             universidad: universidades[Math.floor(Math.random() * universidades.length)],
             horario: horario,
             fecha: cycleDate,
             en_espera: false,
-            se_monto: Math.random() > 0.3 ? 1 : (Math.random() > 0.5 ? 0 : null)
+            se_monto: Math.random() > 0.4 ? 1 : null
         });
     }
 
     try {
         const { error } = await supabase.from('votos').insert(fakeVotes);
         if (error) throw error;
-        status.textContent = '✅ 30 votos de prueba inyectados correctamente.';
+        status.textContent = '✅ 30 votos de prueba inyectados.';
         loadAdminData();
     } catch (e) {
-        console.error(e);
-        status.textContent = '❌ Error al inyectar datos: ' + e.message;
+        console.error('Error seeding:', e);
+        status.textContent = '❌ Error: ' + e.message;
     }
   };
 
   window.clearDailyVotes = async function() {
-    if (!confirm('¿Estás segura? Esto borrará TODOS los registros de hoy permanentemente.')) return;
-    
+    if (!confirm('¿Segura? Borrarás todos los votos de HOY.')) return;
     const status = document.getElementById('devStatus');
     if (!status) return;
-    status.textContent = 'Limpiando base de datos...';
+    status.textContent = '🧹 Limpiando todo...';
     
     const cycleDate = getCycleDate();
-    
     try {
-        const { error } = await supabase
-            .from('votos')
-            .delete()
-            .eq('fecha', cycleDate);
-            
+        const { error } = await supabase.from('votos').delete().eq('fecha', cycleDate);
         if (error) throw error;
-        status.textContent = '✅ Base de datos de hoy limpiada con éxito.';
+        status.textContent = '✅ Sistema reseteado.';
         loadAdminData();
     } catch (e) {
-        console.error(e);
-        status.textContent = '❌ Error al limpiar: ' + e.message;
+        console.error('Error clearing:', e);
+        status.textContent = '❌ Error: ' + e.message;
     }
   };
+
+  // Fin de funciones de desarrollo
   
   function renderStickyMenu(horarios) {
     if (horarios.length === 0) {
