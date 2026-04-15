@@ -1,7 +1,5 @@
- // ============================================
-// AEUDJ TRANSPORTE - APLICACIN PRINCIPAL (SUPABASE VERSION)
-// ============================================
-console.log(' AEUDJ App Iniciada');
+alert('JavaScript Conectado ✅');
+console.log('🚀 AEUDJ App Iniciada');
 
 import { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY } from './supabase-config.js';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
