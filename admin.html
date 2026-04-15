@@ -29,9 +29,8 @@
         <p class="page-subtitle">Gestión de pasajeros - <span id="fechaAdmin"></span></p>
       </div>
 
-      <!-- DASHBOARD GRÁFICO -->
       <div id="adminDashboard" class="mb-8 hidden">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-3 gap-6 mb-8">
           <!-- Card 1: Total Pasajeros -->
           <div class="card stat-card" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1)); border-left: 5px solid #3b82f6;">
             <div class="stat-header">
@@ -129,6 +128,6 @@
     document.getElementById('fechaAdmin').textContent = new Date().toLocaleDateString('es-ES');
   </script>
   <script type="module" src="js/supabase-config.js"></script>
-  <script type="module" src="js/app.js?v=3"></script>
+  <script type="module" src="js/app.js?v=4"></script>
 </body>
 </html>
