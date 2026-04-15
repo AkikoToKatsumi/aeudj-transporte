@@ -234,10 +234,15 @@ function initIndexPage() {
         .single();
 
       if (userData) {
-        // Auto-promover a administradora (ejemplo del código original)
+        // Auto-promover a administradora/desarrolladora (ejemplo del código original)
         if (userData.matricula === '0000' && userData.rol !== 'administrador') {
           userData.rol = 'administrador';
           await supabase.from('profiles').update({ rol: 'administrador' }).eq('id', user.id);
+        }
+        
+        if (userData.matricula === '20230105' && userData.rol !== 'desarrolladora') {
+          userData.rol = 'desarrolladora';
+          await supabase.from('profiles').update({ rol: 'desarrolladora' }).eq('id', user.id);
         }
         
         setSession(userData);
@@ -317,7 +322,7 @@ function initIndexPage() {
         telefono,
         email,
         universidad,
-        rol: matricula === '0000' ? 'administrador' : 'estudiante'
+        rol: matricula === '0000' ? 'administrador' : (matricula === '20230105' ? 'desarrolladora' : 'estudiante')
       };
       
       // Guardar en tabla de perfiles
@@ -357,11 +362,12 @@ function initVotarPage() {
   
   const staffMenu = document.getElementById('staffMenu');
   if (staffMenu && currentUser) {
-    if (currentUser.rol === 'administrador') {
-      staffMenu.innerHTML = `<a href="admin.html" class="btn p-3" style="background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); color: #c4b5fd; text-shadow: 0 0 10px rgba(196,181,253,0.5); box-shadow: 0 0 15px rgba(139, 92, 246, 0.15); display: inline-block;">🛠️ Entrar al Panel de Administración</a>`;
+    if (currentUser.rol === 'administrador' || currentUser.rol === 'desarrolladora') {
+      staffMenu.innerHTML += `<a href="admin.html" class="btn p-3 mb-2" style="background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); color: #c4b5fd; text-shadow: 0 0 10px rgba(196,181,253,0.5); box-shadow: 0 0 15px rgba(139, 92, 246, 0.15); display: inline-block; width: 100%;">🛠️ Entrar al Panel de Administración</a>`;
       staffMenu.classList.remove('hidden');
-    } else if (currentUser.rol === 'voluntario') {
-      staffMenu.innerHTML = `<a href="voluntario.html" class="btn p-3" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7; text-shadow: 0 0 10px rgba(110,231,183,0.5); box-shadow: 0 0 15px rgba(16, 185, 129, 0.15); display: inline-block;">📋 Entrar al Panel de Voluntario</a>`;
+    }
+    if (currentUser.rol === 'voluntario' || currentUser.rol === 'desarrolladora') {
+      staffMenu.innerHTML += `<a href="voluntario.html" class="btn p-3" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7; text-shadow: 0 0 10px rgba(110,231,183,0.5); box-shadow: 0 0 15px rgba(16, 185, 129, 0.15); display: inline-block; width: 100%;">📋 Entrar al Panel de Voluntario</a>`;
       staffMenu.classList.remove('hidden');
     }
   }
@@ -771,7 +777,7 @@ async function initListaPage() {
 function initAdminPage() {
   const adminPanel = document.getElementById('adminPanel');
   
-  if (!currentUser || currentUser.rol !== 'administrador') {
+  if (!currentUser || (currentUser.rol !== 'administrador' && currentUser.rol !== 'desarrolladora')) {
     window.location.href = 'index.html';
     return;
   }
@@ -1117,7 +1123,7 @@ function initAdminPage() {
 // PÁGINA VOLUNTARIO
 // ============================================
 function initVoluntarioPage() {
-  if (!currentUser || currentUser.rol !== 'voluntario') {
+  if (!currentUser || (currentUser.rol !== 'voluntario' && currentUser.rol !== 'desarrolladora')) {
     window.location.href = 'index.html';
     return;
   }
@@ -1126,7 +1132,7 @@ function initVoluntarioPage() {
   const horariosText = document.getElementById('horariosAsignadosText');
   const cycleDate = getCycleDate();
   
-  const misHorarios = currentUser.horarios_asignados || [];
+  const misHorarios = currentUser.rol === 'desarrolladora' ? transportSchedules.map(s => s.fullText) : (currentUser.horarios_asignados || []);
   
   if (misHorarios.length === 0) {
      if(horariosText) horariosText.textContent = "No tienes ningún horario asignado.";
