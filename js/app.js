@@ -486,7 +486,11 @@ function initVotarPage() {
 
       // 2. Borrar SOLO los horarios que el usuario ya NO quiere
       if (toDeleteIds.length > 0) {
-        await supabase.from('votos').delete().in('id', toDeleteIds);
+        const { error: delErrFull } = await supabase.from('votos').delete().in('id', toDeleteIds);
+        if (delErrFull) {
+          console.error("Error al borrar:", delErrFull);
+          throw new Error('Fallo al borrar horarios anteriores: ' + delErrFull.message);
+        }
         
         const horariosEliminados = initialVotes.filter(v => toDeleteIds.includes(v.id));
         for (const v of horariosEliminados) {
@@ -1409,7 +1413,12 @@ function initCambiosPage() {
           const enEspera = count >= 30;
 
           // Primero borramos el viejo para liberar el puesto (dispara trigger de promoción si aplica)
-          await supabase.from('votos').delete().eq('id', voto.id);
+          const { error: delErr } = await supabase.from('votos').delete().eq('id', voto.id);
+          if (delErr) {
+            console.error('Del Error:', delErr);
+            throw new Error('Fallo al borrar el voto original: ' + delErr.message);
+          }
+          
           if (window.promoverDeEspera) {
             await window.promoverDeEspera(voto.fecha, voto.horario);
           }
