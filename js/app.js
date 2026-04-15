@@ -736,6 +736,74 @@ async function initListaPage() {
       container.appendChild(card);
     });
   }
+
+  // ============================================
+  // FUNCIONES DE DESARROLLO (SEED/RESET)
+  // ============================================
+  window.seedTestEntries = async function() {
+    const status = document.getElementById('devStatus');
+    if (!status) return;
+    status.textContent = 'Inyectando datos de prueba...';
+    
+    const universidades = ['UCATECI', 'UAPA', 'UTESA', 'UNPHU', 'UNEV'];
+    const nombres = ['Juan Pérez', 'María García', 'Carlos Rodríguez', 'Ana Martínez', 'Pedro Sánchez', 'Laura López', 'Diego Ramírez', 'Elena Torres', 'Miguel Ángel', 'Sofía Castro'];
+    const ape = ['Santana', 'Moreno', 'Rosario', 'Bautista', 'Pérez', 'Guzmán', 'Cruz', 'Santos', 'Reyes', 'Díaz'];
+
+    const fakeVotes = [];
+    const cycleDate = getCycleDate();
+    
+    for (let i = 0; i < 30; i++) {
+        const horario = transportSchedules[Math.floor(Math.random() * transportSchedules.length)].fullText;
+        const nombreFake = `${nombres[Math.floor(Math.random() * nombres.length)]} ${ape[Math.floor(Math.random() * ape.length)]} (Prueba)`;
+        const matriculaFake = `TEST-${Math.floor(1000 + Math.random() * 9000)}`;
+        
+        fakeVotes.push({
+            usuario_id: currentUser.id, // Reusamos tu ID para permisos RLS
+            nombre: nombreFake,
+            matricula: matriculaFake,
+            telefono: '809-000-0000',
+            universidad: universidades[Math.floor(Math.random() * universidades.length)],
+            horario: horario,
+            fecha: cycleDate,
+            en_espera: false,
+            se_monto: Math.random() > 0.3 ? 1 : (Math.random() > 0.5 ? 0 : null)
+        });
+    }
+
+    try {
+        const { error } = await supabase.from('votos').insert(fakeVotes);
+        if (error) throw error;
+        status.textContent = '✅ 30 votos de prueba inyectados correctamente.';
+        loadAdminData();
+    } catch (e) {
+        console.error(e);
+        status.textContent = '❌ Error al inyectar datos: ' + e.message;
+    }
+  };
+
+  window.clearDailyVotes = async function() {
+    if (!confirm('¿Estás segura? Esto borrará TODOS los registros de hoy permanentemente.')) return;
+    
+    const status = document.getElementById('devStatus');
+    if (!status) return;
+    status.textContent = 'Limpiando base de datos...';
+    
+    const cycleDate = getCycleDate();
+    
+    try {
+        const { error } = await supabase
+            .from('votos')
+            .delete()
+            .eq('fecha', cycleDate);
+            
+        if (error) throw error;
+        status.textContent = '✅ Base de datos de hoy limpiada con éxito.';
+        loadAdminData();
+    } catch (e) {
+        console.error(e);
+        status.textContent = '❌ Error al limpiar: ' + e.message;
+    }
+  };
   
   function renderStickyMenu(horarios) {
     if (horarios.length === 0) {
@@ -792,9 +860,12 @@ function initAdminPage() {
   }
   
   if (adminPanel) adminPanel.classList.remove('hidden');
-  
-  const cycleDate = getCycleDate();
-  const container = document.getElementById('adminContainer');
+
+  // Mostrar herramientas de desarrolladora si aplica (Solo Gabriela)
+  const devTools = document.getElementById('devToolsSection');
+  if (devTools && currentUser && currentUser.rol === 'desarrolladora') {
+    devTools.classList.remove('hidden');
+  }
   
   loadAdminData();
   loadVoluntariosMng();
@@ -1194,9 +1265,8 @@ function initAdminPage() {
     if (p.se_monto === null) {
       statusHtml = `
         <div class="action-btns">
-        <div class="action-btns">
-          <span class="status-badge status-success">✅ Subió</span>
-          <button onclick="marcarVoto('${p.id}', 2)" class="btn btn-warning btn-small">Llegó tarde</button>
+          <button onclick="marcarVoto(${p.id}, 1)" class="btn btn-success btn-small">Confirmar</button>
+          <button onclick="marcarVoto(${p.id}, 0)" class="btn btn-danger btn-small">No subió</button>
         </div>
       `;
     } else if (p.se_monto === 2) {

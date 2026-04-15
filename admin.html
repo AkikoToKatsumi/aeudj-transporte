@@ -117,6 +117,16 @@
         </form>
       </div>
 
+      <!-- Herramientas de Desarrolladora (Solo visible para Gabriela) -->
+      <div id="devToolsSection" class="card mb-6 hidden" style="background: rgba(139, 92, 246, 0.1); border: 2px dashed rgba(139, 92, 246, 0.4); max-width: 800px; margin: 0 auto 2rem auto;">
+        <h2 class="text-xl font-bold text-purple-400 mb-4 text-center">🛠️ Herramientas de Desarrolladora</h2>
+        <div class="flex flex-wrap gap-4 justify-center">
+          <button onclick="seedTestEntries()" class="btn btn-primary" style="background: #8b5cf6;">🚀 Generar 30 Votos de Prueba</button>
+          <button onclick="clearDailyVotes()" class="btn btn-danger">🗑️ Limpiar Todo Hoy</button>
+        </div>
+        <p id="devStatus" class="text-center text-sm mt-3 text-purple-300"></p>
+      </div>
+
       <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mt-8">
         <a href="votar.html" class="btn btn-primary">Volver al inicio</a>
         <a href="lista.html" class="btn btn-gray">Ver lista pública</a>
