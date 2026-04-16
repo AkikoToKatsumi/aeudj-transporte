@@ -150,6 +150,26 @@
         e.preventDefault();
         if (selectedHorarios.length < 2) { alert('Selecciona 1 de ida y 1 de vuelta'); return; }
         
+        // Validación lógica: la vuelta no puede ser a la misma hora o antes que la ida
+        const ida = selectedHorarios.find(h => h.includes('Jarabacoa -> La Vega'));
+        const vuelta = selectedHorarios.find(h => h.includes('La Vega -> Jarabacoa'));
+        
+        if (ida && vuelta) {
+          const parseTime = (timeStr) => {
+            const timePart = timeStr.trim().split(' ')[0]; // "3:00"
+            const modPart = timeStr.trim().split(' ')[1];  // "PM"
+            let [h, m] = timePart.split(':').map(Number);
+            if (h === 12) h = 0;
+            if (modPart === 'PM') h += 12;
+            return h * 60 + m; // Minutos desde medianoche
+          };
+          
+          if (parseTime(vuelta) <= parseTime(ida)) {
+            alert('Error lógico: No puedes seleccionar un viaje de vuelta que sea a la misma hora o antes de tu viaje de ida.');
+            return;
+          }
+        }
+        
         const btn = document.getElementById('submitBtn');
         btn.disabled = true;
         btn.textContent = 'Guardando...';
