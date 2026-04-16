@@ -106,8 +106,9 @@
         visibleSchedules.forEach(s => {
           const direction = s.route.includes('Jarabacoa -> La Vega') ? 'ida' : 'vuelta';
           const slot = document.createElement('div');
-          // Cambiamos a clases que den un aspecto de tarjeta cuadrada
-          slot.className = 'time-slot p-4 cursor-pointer transition-all hover:bg-white/10';
+          // Añadir dataset direction para facilitar limpieza luego, incluso después de cambiar icon a svg
+          slot.dataset.direction = direction;
+          slot.className = 'time-slot p-4 cursor-pointer transition-all hover:bg-white/10 border-white/10';
           slot.innerHTML = `
             <i data-lucide="${direction === 'ida' ? 'arrow-right' : 'arrow-left'}" class="text-blue-400 mb-2 w-8 h-8"></i>
             <div class="font-bold text-white text-xl mb-1">${s.time}</div>
@@ -116,25 +117,21 @@
           slot.addEventListener('click', () => {
             const isSelected = slot.classList.contains('selected-slot');
             
-            // Limpiar selección previa del mismo tipo (ida o vuelta)
+            // Limpiar selección previa del mismo tipo (ida o vuelta) usando el dataset
             document.querySelectorAll('.time-slot').forEach(node => {
-              const nodeIcon = node.querySelector('i');
-              if (nodeIcon) {
-                const nodeDirection = nodeIcon.getAttribute('data-lucide') === 'arrow-right' ? 'ida' : 'vuelta';
-                if (nodeDirection === direction) {
-                   node.classList.remove('selected-slot', 'border-blue-500', 'bg-blue-500/20');
-                   node.classList.add('border-white/10');
-                }
+              if (node.dataset.direction === direction) {
+                 node.classList.remove('selected-slot', 'selected', 'border-blue-500', 'bg-blue-500/20');
+                 node.classList.add('border-white/10');
               }
             });
 
             if (!isSelected) {
-              slot.classList.add('selected-slot', 'border-blue-500', 'bg-blue-500/20');
+              slot.classList.add('selected-slot', 'selected', 'border-blue-500', 'bg-blue-500/20');
               slot.classList.remove('border-white/10');
               selectedHorarios = selectedHorarios.filter(h => !h.includes(direction === 'ida' ? 'Jarabacoa -> La Vega' : 'La Vega -> Jarabacoa'));
               selectedHorarios.push(s.fullText);
             } else {
-              slot.classList.remove('selected-slot', 'border-blue-500', 'bg-blue-500/20');
+              slot.classList.remove('selected-slot', 'selected', 'border-blue-500', 'bg-blue-500/20');
               slot.classList.add('border-white/10');
               selectedHorarios = selectedHorarios.filter(h => h !== s.fullText);
             }
