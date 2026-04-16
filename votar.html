@@ -17,7 +17,7 @@
       <p class="text-lg text-gray-300">Selecciona <strong>un viaje de ida</strong> y <strong>un viaje de vuelta</strong></p>
     </header>
 
-    <form id="horarioForm" class="glass-card card mb-6 p-6">
+    <form id="horarioForm" class="glass-card-wide card mb-6 p-6">
       <div style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; text-align: center; padding: 1.5rem; border-radius: 1rem; margin-bottom: 2rem; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);">
         <i data-lucide="calendar" class="mx-auto mb-2 w-8 h-8"></i>
         <div class="font-bold text-xl">Horarios de Hoy</div>
@@ -107,7 +107,7 @@
           const direction = s.route.includes('Jarabacoa -> La Vega') ? 'ida' : 'vuelta';
           const slot = document.createElement('div');
           // Cambiamos a clases que den un aspecto de tarjeta cuadrada
-          slot.className = 'time-slot glass-card p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:bg-white/10';
+          slot.className = 'time-slot p-4 cursor-pointer transition-all hover:bg-white/10';
           slot.innerHTML = `
             <i data-lucide="${direction === 'ida' ? 'arrow-right' : 'arrow-left'}" class="text-blue-400 mb-2 w-8 h-8"></i>
             <div class="font-bold text-white text-xl mb-1">${s.time}</div>

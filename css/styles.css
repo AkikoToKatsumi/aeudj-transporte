@@ -249,6 +249,11 @@ div.card[style*="background:#f8fafc"] {
   text-align: center;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  aspect-ratio: 1/1;
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .time-slot:hover {
@@ -424,6 +429,28 @@ tr:last-child td { border-bottom: none; }
 .mx-auto { margin-left: auto; margin-right: auto; }
 .px-4 { padding-left: 1rem; padding-right: 1rem; }
 .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
+.px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+.py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+.p-6 { padding: 1.5rem; }
+
+/* Flexbox Utilities */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.text-center { text-align: center; }
+
+/* Spacing */
+.mb-1 { margin-bottom: 0.25rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mt-10 { margin-top: 2.5rem; }
+
+/* Typography */
+.uppercase { text-transform: uppercase; }
+.tracking-widest { letter-spacing: 0.1em; }
+.font-semibold { font-weight: 600; }
+.text-xl { font-size: 1.25rem; }
+.text-\[10px\] { font-size: 10px; }
 
 /* ============================================
    UI REDESIGN - MOCKUP STYLE
@@ -449,6 +476,19 @@ tr:last-child td { border-bottom: none; }
   max-width: 420px;
   overflow: visible !important; /* Esencial para el logo solapado */
   margin: 2rem auto;
+}
+
+.glass-card-wide {
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  margin: 2rem auto;
+  border-radius: 2rem;
 }
 
 /* Logo solapado - Refinado para centrado absoluto */
