@@ -9,21 +9,37 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body data-page="lista" class="lista-page">
-  <main class="container mx-auto px-4 py-8 max-w-5xl">
-    <header class="text-center mb-10">
-      <h1 class="text-4xl font-bold text-white mb-2">Lista de Pasajeros</h1>
-      <p class="text-gray-400">Estado del servicio para hoy: <span id="fechaHoy" class="font-bold text-blue-400"></span></p>
+  <main class="w-full mx-auto px-4 py-8 relative" style="max-width: 56rem;">
+    
+    <!-- Top Left Home Button -->
+    <a href="index.html" class="absolute top-8 left-4 px-4 py-2 font-bold transition-colors flex items-center gap-2 z-10 text-sm" style="background-color: #3b82f6; color: white; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
+      <span>🏠</span> Volver al inicio
+    </a>
+
+    <header class="text-center mb-10 pt-16">
+      <h1 class="text-4xl font-bold text-white mb-3 flex items-center justify-center gap-3">
+        <span>📋</span> Lista de Pasajeros
+      </h1>
+      <p class="text-gray-400 font-medium">Organizada por horario - <span id="fechaHoy"></span></p>
     </header>
 
-    <div id="listContainer" class="space-y-8">
+    <div id="listContainer" class="space-y-6">
        <div class="text-center py-20">
          <div class="spinner mx-auto mb-4"></div>
-         <p class="text-gray-400">Cargando listado...</p>
+         <p class="text-gray-400 font-medium">Cargando listado...</p>
        </div>
     </div>
 
-    <div class="mt-20 text-center">
-      <a href="index.html" class="btn-pill-outline">Volver al inicio</a>
+    <!-- Cambios Section (Hidden by default, shown if logged in) -->
+    <div id="cambiosSection" class="hidden mt-8">
+      <div style="background-color: rgba(30, 41, 59, 0.9); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 1rem; padding: 1.5rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+        <h3 class="text-white text-center font-bold text-lg mb-4">¿Cambios?</h3>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3" style="flex-wrap: wrap;">
+          <a href="cambios.html?action=antes" class="px-6 py-2 transition-all shadow-lg font-bold text-center" style="background-color: #f59e0b; color: white; border-radius: 0.75rem; font-size: 0.875rem;">Me fui antes</a>
+          <a href="cambios.html?action=despues" class="px-6 py-2 transition-all shadow-lg font-bold text-center" style="background-color: #3b82f6; color: white; border-radius: 0.75rem; font-size: 0.875rem;">Me iré después</a>
+          <a href="cambios.html?action=otros" class="px-6 py-2 transition-all shadow-lg font-bold text-center" style="background-color: #334155; color: white; border-radius: 0.75rem; font-size: 0.875rem;">Voy por otros medios</a>
+        </div>
+      </div>
     </div>
   </main>
 
@@ -50,8 +66,13 @@
 
         container.innerHTML = '';
         if (!votos || votos.length === 0) {
-          container.innerHTML = '<div class="glass-card p-10 text-center text-gray-400">No hay pasajeros registrados todavia.</div>';
+          container.innerHTML = '<div style="background-color: rgba(30, 41, 59, 0.8); padding: 2.5rem; border-radius: 1rem; text-align: center; color: #94a3b8; border: 1px solid rgba(255,255,255,0.05);">No hay pasajeros registrados todavía.</div>';
           return;
+        }
+
+        const currentUser = JSON.parse(localStorage.getItem('aeudj_user') || 'null');
+        if(currentUser) {
+          document.getElementById('cambiosSection').classList.remove('hidden');
         }
 
         const listado = {};
@@ -62,64 +83,39 @@
 
         Object.keys(listado).forEach(h => {
           const section = document.createElement('section');
-          section.className = 'glass-card-wide p-8 rounded-3xl border border-white/10 mb-8';
+          section.style = 'background-color: rgba(30, 41, 59, 0.95); padding: 2rem; border-radius: 1.5rem; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 2rem;';
           
           let html = `
-            <div class="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
-              <i data-lucide="clock" class="text-blue-400 w-8 h-8"></i>
-              <h2 class="text-3xl font-bold text-white tracking-wide">${h}</h2>
+            <div class="text-center mb-6">
+              <h2 class="font-bold tracking-wide" style="color: #60a5fa; font-size: 1.5rem;">${h}</h2>
             </div>
+            <div class="space-y-3">
           `;
           
-          const confirmados = listado[h].filter(p => !p.en_espera);
-          const enEspera = listado[h].filter(p => p.en_espera);
-          
-          if (confirmados.length > 0) {
-            html += `<h3 class="text-green-400 font-semibold mb-3 flex items-center gap-2 uppercase tracking-widest text-sm"><i data-lucide="check-circle-2" class="w-4 h-4"></i> Pasajeros Confirmados</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">`;
-            
-            confirmados.forEach((p, idx) => {
-              html += `
-                <div class="p-4 bg-white/5 border border-white/10 rounded-xl flex flex-col justify-between transition-all hover:bg-white/10 hover:-translate-y-1">
-                  <div class="flex justify-between items-start mb-2">
-                    <span class="text-white font-medium break-words pr-2">${p.nombre}</span>
-                    <span class="text-[10px] text-gray-500 font-bold w-6 h-6 rounded-full bg-white/10 flex items-center justify-center shrink-0">${idx + 1}</span>
-                  </div>
-                  <div class="flex items-center justify-between mt-2">
-                    <span class="text-xs text-blue-300 bg-blue-500/20 px-2 py-1 rounded-md">${p.matricula}</span>
-                    <i data-lucide="user" class="text-gray-500 w-4 h-4"></i>
-                  </div>
-                </div>`;
-            });
-            html += `</div>`;
-          }
+          // Render All
+          listado[h].forEach((p, idx) => {
+             const timeObj = new Date(p.created_at);
+             const formattedTime = timeObj.getHours().toString().padStart(2, '0') + ':' + timeObj.getMinutes().toString().padStart(2, '0');
+             const univText = p.universidad ? `<span class="text-gray-400 font-semibold">(${p.universidad})</span>` : '';
+             
+             html += `
+               <div class="flex items-center justify-between transition-colors" style="background-color: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.05); border-radius: 1rem; padding: 1rem; margin-bottom: 0.75rem;">
+                 <div class="flex items-center gap-4">
+                   <div class="font-bold flex items-center justify-center shrink-0" style="background-color: #3b82f6; color: white; width: 2rem; height: 2rem; border-radius: 50%; font-size: 0.875rem;">
+                     ${idx + 1}
+                   </div>
+                   <div class="text-white font-bold" style="font-size: 0.95rem;">
+                     ${p.nombre} ${univText}
+                   </div>
+                 </div>
+                 <div class="text-gray-500 font-medium ml-4" style="font-size: 0.85rem;">
+                   ${formattedTime}
+                 </div>
+               </div>
+             `;
+          });
 
-          if (enEspera.length > 0) {
-            html += `
-            <div class="mt-8 border-t border-white/10 pt-6">
-              <h3 class="text-orange-400 font-semibold mb-3 flex items-center gap-2 uppercase tracking-widest text-sm"><i data-lucide="clock-4" class="w-4 h-4"></i> Lista de Espera</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">`;
-              
-            enEspera.forEach((p, idx) => {
-              html += `
-                <div class="p-4 bg-orange-500/10 border border-orange-500/20 rounded-xl flex flex-col justify-between transition-all hover:bg-orange-500/20 hover:-translate-y-1">
-                  <div class="flex justify-between items-start mb-2">
-                    <span class="text-orange-100 font-medium break-words pr-2 text-opacity-90">${p.nombre}</span>
-                    <span class="text-[10px] text-orange-400 font-bold w-6 h-6 rounded-full bg-orange-500/20 flex items-center justify-center shrink-0">${idx + 1}</span>
-                  </div>
-                  <div class="flex items-center justify-between mt-2">
-                    <span class="text-xs text-orange-300 bg-orange-500/20 px-2 py-1 rounded-md">${p.matricula}</span>
-                    <i data-lucide="user-x" class="text-orange-400/50 w-4 h-4"></i>
-                  </div>
-                </div>`;
-            });
-            html += `</div></div>`;
-          }
-          
-          if (confirmados.length === 0 && enEspera.length === 0) {
-             html += `<div class="text-gray-500 text-center py-4">No hay pasajeros en este horario.</div>`;
-          }
-
+          html += `</div>`;
           section.innerHTML = html;
           container.appendChild(section);
         });
