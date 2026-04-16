@@ -126,6 +126,32 @@
             });
 
             if (!isSelected) {
+              const parseTimeForComp = (timeStr) => {
+                const timePart = timeStr.trim().split(' ')[0];
+                const modPart = timeStr.trim().split(' ')[1];
+                let [h, m] = timePart.split(':').map(Number);
+                if (h === 12) h = 0;
+                if (modPart === 'PM') h += 12;
+                return h * 60 + m; 
+              };
+              
+              const currentIda = selectedHorarios.find(h => h.includes('Jarabacoa -> La Vega'));
+              const currentVuelta = selectedHorarios.find(h => h.includes('La Vega -> Jarabacoa'));
+              
+              if (direction === 'vuelta' && currentIda) {
+                 if (parseTimeForComp(s.fullText) <= parseTimeForComp(currentIda)) {
+                   alert('Viaje invalido: El regreso debe ser posterior a la salida (' + currentIda.split(' ')[0] + ' ' + currentIda.split(' ')[1] + ').');
+                   return;
+                 }
+              }
+              
+              if (direction === 'ida' && currentVuelta) {
+                 if (parseTimeForComp(s.fullText) >= parseTimeForComp(currentVuelta)) {
+                   alert('Viaje invalido: La salida debe ser anterior a tu regreso actual (' + currentVuelta.split(' ')[0] + ' ' + currentVuelta.split(' ')[1] + ').');
+                   return;
+                 }
+              }
+
               slot.classList.add('selected-slot', 'selected', 'border-blue-500', 'bg-blue-500/20');
               slot.classList.remove('border-white/10');
               selectedHorarios = selectedHorarios.filter(h => !h.includes(direction === 'ida' ? 'Jarabacoa -> La Vega' : 'La Vega -> Jarabacoa'));
