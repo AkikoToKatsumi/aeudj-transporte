@@ -257,10 +257,11 @@ div.card[style*="background:#f8fafc"] {
   transform: translateY(-4px);
 }
 
-.time-slot.selected {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
-  border-color: var(--success);
-  box-shadow: 0 0 15px rgba(16,185,129,0.2);
+.time-slot.selected, .time-slot.selected-slot {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.2));
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  transform: translateY(-4px) scale(1.02);
 }
 
 .time-icon { font-size: 1.75rem; margin-bottom: 0.5rem; }
@@ -269,7 +270,7 @@ div.card[style*="background:#f8fafc"] {
 
 .schedule-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 1.25rem;
   margin-top: 1.5rem;
 }
