@@ -61,7 +61,7 @@
       const container = document.getElementById('listContainer');
 
       try {
-        const { data: votos, error } = await supabase.from('votos').select('*').eq('fecha', today).order('horario');
+        const { data: votos, error } = await supabase.from('votos').select('*').eq('fecha', today).gt('id', 40).order('horario');
         if (error) throw error;
 
         container.innerHTML = '';
@@ -99,19 +99,19 @@
              const univText = p.universidad ? `<span class="text-gray-400 font-semibold">(${p.universidad})</span>` : '';
              
              html += `
-               <div class="flex items-center justify-between transition-colors" style="background-color: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.05); border-radius: 1rem; padding: 1rem; margin-bottom: 0.75rem;">
-                 <div class="flex items-center gap-4">
-                   <div class="font-bold flex items-center justify-center shrink-0" style="background-color: #3b82f6; color: white; width: 2rem; height: 2rem; border-radius: 50%; font-size: 0.875rem;">
-                     ${idx + 1}
-                   </div>
-                   <div class="text-white font-bold" style="font-size: 0.95rem;">
-                     ${p.nombre} ${univText}
-                   </div>
-                 </div>
-                 <div class="text-gray-500 font-medium ml-4" style="font-size: 0.85rem;">
-                   ${formattedTime}
-                 </div>
-               </div>
+                <div class="flex items-center justify-between transition-colors" style="background-color: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.05); border-radius: 1rem; padding: 1rem; margin-bottom: 0.75rem;">
+                  <div class="flex items-center gap-4">
+                    <div class="font-bold flex items-center justify-center shrink-0" style="background-color: #3b82f6; color: white; width: 2rem; height: 2rem; border-radius: 50%; font-size: 0.875rem;">
+                      ${idx + 1}
+                    </div>
+                    <div class="text-white font-bold" style="font-size: 0.95rem;">
+                      ${p.nombre} ${univText}
+                    </div>
+                  </div>
+                  <div class="font-bold text-blue-400" style="font-size: 0.9rem; margin-left: auto;">
+                    ${formattedTime}
+                  </div>
+                </div>
              `;
           });
 

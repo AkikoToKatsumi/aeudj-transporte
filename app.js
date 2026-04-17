@@ -1,4 +1,4 @@
-import { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY } from './supabase-config.js?v=310';
+import { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY } from './supabase-config.js?v=315';
 
 
 alert('SISTEMA ACTIVADO ✅');
@@ -416,11 +416,11 @@ function initVotarPage() {
  
   async function checkYaVotado() {
     try {
-      const { data: snapshot, error } = await supabase
         .from('votos')
         .select('*')
         .eq('usuario_id', currentUser.id)
-        .eq('fecha', cycleDate);
+        .eq('fecha', cycleDate)
+        .gt('id', 40);
       
       const confirmedView = document.getElementById('confirmedView');
       

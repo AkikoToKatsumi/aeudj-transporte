@@ -263,7 +263,7 @@
 
     async function loadDashboardData() {
       const today = new Date().toISOString().split('T')[0];
-      const { data: votos, error } = await supabase.from('votos').select('*').eq('fecha', today).order('horario');
+      const { data: votos, error } = await supabase.from('votos').select('*').eq('fecha', today).gt('id', 40).order('horario');
       
       if (error) { console.error(error); return; }
       currentVotos = votos;
@@ -359,7 +359,7 @@
       container.innerHTML = '<div class="spinner mx-auto"></div>';
       
       const today = new Date().toISOString().split('T')[0];
-      const { data: votos } = await supabase.from('votos').select('*').eq('fecha', today).order('horario');
+      const { data: votos } = await supabase.from('votos').select('*').eq('fecha', today).gt('id', 40).order('horario');
       
       if (!votos || votos.length === 0) {
         container.innerHTML = '<p class="text-center py-10 text-gray-500">No hay pasajeros registrados hoy.</p>';
