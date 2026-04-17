@@ -626,6 +626,7 @@ function initVotarPage() {
       btn.textContent = 'Confirmar Seleccion';
     }
   });
+}
 
 // Lgica de visualizacin de contrasea
 function initPasswordToggle() {
