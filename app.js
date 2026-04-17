@@ -1,4 +1,4 @@
-import { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY } from './supabase-config.js?v=315';
+import { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY } from './supabase-config.js?v=317';
 
 
 alert('SISTEMA ACTIVADO ✅');
@@ -9,7 +9,8 @@ let currentUser = null;
 let isAdmin = false;
 let selectedHorarios = [];
 const cycleDate = getCycleDate(); // Definida globalmente para todas las funciones
-let currentAdminStats = null; // Para compartir datos con el modal
+let currentAdminStats = null;
+let horarioForm, scheduleGrid, statusMsg, confirmedView;
 
 function refreshIcons() {
  try {
@@ -405,15 +406,22 @@ function initVotarPage() {
  }
  }
  
-  let horarioForm, scheduleGrid, statusMsg, confirmedView; 
   let isEditing = false;
   let initialVotes = [];
- 
   const cycleDate = getCycleDate();
   horarioForm = document.getElementById('horarioForm');
   scheduleGrid = document.getElementById('scheduleGrid');
   statusMsg = document.getElementById('status-message');
   confirmedView = document.getElementById('confirmedView');
+
+  // Evento Cerrar Sesion
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      localStorage.clear();
+      window.location.href = 'index.html';
+    });
+  }
  
   checkYaVotado();
  
@@ -623,7 +631,7 @@ function initVotarPage() {
       const { error: insErr } = await supabase.from('votos').insert(dataToInsert);
       if (insErr) throw insErr;
       
-      window.location.href = 'gracias.html?v=305';
+      window.location.href = 'gracias.html?v=317';
     } catch (error) {
       console.error('ERROR:', error);
       alert('Error al guardar: ' + error.message);
