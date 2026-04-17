@@ -300,6 +300,40 @@
     /* Hidden utility */
     .hidden { display: none !important; }
 
+    /* Session banner */
+    .session-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.85rem 1.25rem;
+      border-radius: 0.85rem;
+      margin-bottom: 1.25rem;
+      border: 1px solid;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+    .session-banner.manana {
+      background: rgba(245,158,11,0.1);
+      border-color: rgba(245,158,11,0.3);
+      color: #fbbf24;
+    }
+    .session-banner.tarde {
+      background: rgba(99,102,241,0.1);
+      border-color: rgba(99,102,241,0.3);
+      color: #a5b4fc;
+    }
+    .session-banner.override {
+      background: rgba(52,211,153,0.1);
+      border-color: rgba(52,211,153,0.3);
+      color: #34d399;
+    }
+    .session-close-time {
+      font-size: 0.72rem;
+      opacity: 0.75;
+      font-weight: 500;
+    }
+
     @media (max-width: 500px) {
       .schedule-grid { grid-template-columns: repeat(2, 1fr); }
       .action-grid { grid-template-columns: 1fr; }
@@ -317,6 +351,12 @@
       <h1>Selector de Horarios</h1>
       <p class="subtitle">Selecciona <strong>un viaje de ida</strong> y <strong>un viaje de vuelta</strong></p>
     </header>
+
+    <!-- Session banner  -->
+    <div id="sessionBanner" class="session-banner manana" style="display:none;">
+      <span id="sessionLabel">🌙 Encuesta Matutina</span>
+      <span class="session-close-time" id="sessionClose">Cierra a las 10:00 AM</span>
+    </div>
 
     <!-- Formulario de selección -->
     <div id="horarioForm" class="card">
@@ -406,10 +446,11 @@
     const logoutBtn     = document.getElementById('logoutBtn');
 
     // ── HELPERS ─────────────────────────────────────────────
-    function getCycleDate() {
+    function getCycleDate(group) {
       const now  = new Date();
       const hora = now.getHours();
-      if (hora >= 22) {
+      // Matutina: voting at night for next morning → date is tomorrow
+      if (group === 'manana' && hora >= 22) {
         const tomorrow = new Date(now);
         tomorrow.setDate(tomorrow.getDate() + 1);
         return tomorrow.toISOString().split('T')[0];
@@ -417,9 +458,43 @@
       return now.toISOString().split('T')[0];
     }
 
-    function getGroup() {
+    function getGroupFromTime() {
       const h = new Date().getHours();
       return (h >= 22 || h < 10) ? 'manana' : 'tarde';
+    }
+
+    async function getActiveGroup() {
+      try {
+        const { data } = await supabase
+          .from('voting_config')
+          .select('manual_override, active_session')
+          .eq('id', 1)
+          .single();
+        if (data && data.manual_override && data.active_session) {
+          return { group: data.active_session, override: true };
+        }
+      } catch(e) {}
+      return { group: getGroupFromTime(), override: false };
+    }
+
+    function showSessionBanner(group, override) {
+      const banner  = document.getElementById('sessionBanner');
+      const label   = document.getElementById('sessionLabel');
+      const close   = document.getElementById('sessionClose');
+      banner.style.display = 'flex';
+      if (override) {
+        banner.className = 'session-banner override';
+        label.textContent = '🔓 Sesión forzada por administrador';
+        close.textContent = `Horarios de ${group === 'manana' ? 'mañana' : 'tarde/noche'}`;
+      } else if (group === 'manana') {
+        banner.className = 'session-banner manana';
+        label.textContent = '🌙 Encuesta Matutina';
+        close.textContent = 'Cierra a las 10:00 AM';
+      } else {
+        banner.className = 'session-banner tarde';
+        label.textContent = '☀️ Encuesta Vespertina';
+        close.textContent = 'Cierra a las 10:00 PM';
+      }
     }
 
     function setStatus(msg, color = '#60a5fa') {
@@ -465,8 +540,7 @@
     }
 
     // ── RENDER HORARIOS ─────────────────────────────────────
-    function renderHorarios() {
-      const group = getGroup();
+    function renderHorarios(group) {
       const visible = SCHEDULES.filter(s => s.group === group);
 
       scheduleGrid.innerHTML = '';
@@ -542,10 +616,12 @@
       if (window.lucide) window.lucide.createIcons();
     }
 
-    function showForm() {
+    async function showForm() {
+      const { group, override } = await getActiveGroup();
+      showSessionBanner(group, override);
       horarioForm.style.display = 'block';
       confirmedView.classList.remove('visible');
-      renderHorarios();
+      renderHorarios(group);
     }
 
     function showConfirmed(votes) {
@@ -556,7 +632,9 @@
 
     // ── CHECK EXISTING VOTES ────────────────────────────────
     async function checkYaVotado() {
-      const cycleDate = getCycleDate();
+      const { group, override } = await getActiveGroup();
+      const cycleDate = getCycleDate(group);
+      showSessionBanner(group, override);
       try {
         const { data, error } = await supabase
           .from('votos')
@@ -576,7 +654,7 @@
         }
       } catch(err) {
         console.error('Error verificando voto:', err);
-        showForm(); // Fallback: show form
+        showForm();
       }
     }
 
@@ -589,7 +667,8 @@
       }
       submitBtn.disabled = true;
       setStatus('Guardando tu selección...');
-      const cycleDate = getCycleDate();
+      const { group } = await getActiveGroup();
+      const cycleDate = getCycleDate(group);
 
       try {
         // Delete old votes for today
