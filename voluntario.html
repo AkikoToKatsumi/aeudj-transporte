@@ -5,31 +5,501 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel Voluntario - AEUDJ</title>
   <link rel="icon" href="img/comite.jpg" type="image/jpg">
-  <link rel="stylesheet" href="css/styles.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      min-height: 100vh;
+      background-image: url('img/jarabacoa.webp');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: rgba(10,15,30,0.84);
+      z-index: 0;
+    }
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 2rem 1rem 4rem;
+    }
+
+    /* Nav */
+    .top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.75rem;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 0.9rem;
+      border-radius: 0.6rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: 1px solid;
+      cursor: pointer;
+      background: transparent;
+      transition: all 0.2s;
+    }
+    .nav-btn svg { width: 14px; height: 14px; }
+    .nav-btn.blue  { color: #60a5fa; border-color: rgba(59,130,246,0.3); background: rgba(59,130,246,0.08); }
+    .nav-btn.green { color: #34d399; border-color: rgba(52,211,153,0.3); background: rgba(52,211,153,0.08); }
+    .nav-btn.red   { color: #f87171; border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.08); }
+    .nav-btn.slate { color: #94a3b8; border-color: rgba(148,163,184,0.2); background: rgba(148,163,184,0.06); }
+    .nav-btn:hover { filter: brightness(1.2); transform: translateY(-1px); }
+
+    /* Header */
+    header { text-align: center; margin-bottom: 1.75rem; }
+    h1 { font-size: 1.9rem; font-weight: 800; }
+    .subtitle { color: #475569; font-size: 0.85rem; margin-top: 0.35rem; }
+    .date-badge {
+      display: inline-block;
+      margin-top: 0.5rem;
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.25);
+      color: #34d399;
+      padding: 0.2rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    /* Filter bar */
+    .filter-bar {
+      display: flex;
+      gap: 0.6rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-label { font-size: 0.75rem; text-transform: uppercase; color: #475569; font-weight: 700; margin-right: 0.25rem; }
+    .filter-btn {
+      padding: 0.4rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(30,41,59,0.5);
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-btn.active {
+      background: rgba(59,130,246,0.2);
+      border-color: rgba(59,130,246,0.4);
+      color: #60a5fa;
+    }
+    .filter-btn:hover:not(.active) { border-color: rgba(255,255,255,0.15); color: #94a3b8; }
+
+    /* Stats */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .stat-card {
+      background: rgba(15,23,42,0.6);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 0.85rem;
+      padding: 0.85rem 1rem;
+      text-align: center;
+      backdrop-filter: blur(16px);
+    }
+    .stat-num { font-size: 1.7rem; font-weight: 800; }
+    .stat-label { font-size: 0.65rem; text-transform: uppercase; color: #475569; font-weight: 700; }
+    .stat-blue   .stat-num { color: #60a5fa; }
+    .stat-green  .stat-num { color: #34d399; }
+    .stat-purple .stat-num { color: #c4b5fd; }
+
+    /* Horario section */
+    .horario-section {
+      background: rgba(15,23,42,0.6);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 1.1rem;
+      overflow: hidden;
+      margin-bottom: 1rem;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    .horario-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.9rem 1.1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      cursor: pointer;
+      user-select: none;
+    }
+    .horario-header:hover { background: rgba(255,255,255,0.02); }
+    .horario-title { font-size: 0.95rem; font-weight: 700; color: #60a5fa; }
+    .horario-meta { display: flex; gap: 0.5rem; align-items: center; }
+    .dir-badge {
+      font-size: 0.62rem;
+      font-weight: 700;
+      padding: 0.18rem 0.55rem;
+      border-radius: 999px;
+      text-transform: uppercase;
+    }
+    .dir-ida    { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.25); }
+    .dir-vuelta { background: rgba(139,92,246,0.15); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.25); }
+    .count-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: rgba(30,41,59,0.7);
+      color: #64748b;
+      padding: 0.18rem 0.55rem;
+      border-radius: 999px;
+    }
+    .chevron { color: #475569; transition: transform 0.2s; }
+    .chevron.open { transform: rotate(180deg); }
+
+    /* Passenger table */
+    .passenger-table { display: flex; flex-direction: column; }
+    .passenger-row {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1.1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      gap: 0.85rem;
+      transition: background 0.12s;
+    }
+    .passenger-row:last-child { border-bottom: none; }
+    .passenger-row:hover { background: rgba(255,255,255,0.02); }
+    .row-num {
+      width: 26px; height: 26px;
+      background: rgba(59,130,246,0.15);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #60a5fa;
+      flex-shrink: 0;
+    }
+    .row-info { flex: 1; min-width: 0; }
+    .row-name { font-size: 0.88rem; font-weight: 600; color: #f1f5f9; }
+    .row-mat  { font-size: 0.7rem; color: #475569; font-family: monospace; }
+    .row-tel  { font-size: 0.7rem; color: #475569; }
+    .row-time { font-size: 0.78rem; font-weight: 700; color: #60a5fa; font-family: monospace; flex-shrink: 0; }
+
+    /* Checklist mode */
+    .check-circle {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.15);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .check-circle.checked {
+      background: #34d399;
+      border-color: #34d399;
+    }
+    .check-circle.checked::after {
+      content: '✓';
+      font-size: 12px;
+      font-weight: 700;
+      color: white;
+    }
+    .check-circle:hover:not(.checked) { border-color: #34d399; background: rgba(52,211,153,0.1); }
+
+    /* Absent badge */
+    .badge-espera {
+      font-size: 0.6rem;
+      font-weight: 700;
+      background: rgba(245,158,11,0.12);
+      color: #fbbf24;
+      border: 1px solid rgba(245,158,11,0.25);
+      padding: 0.1rem 0.4rem;
+      border-radius: 999px;
+    }
+
+    /* Empty */
+    .empty-state { text-align: center; padding: 3rem 1.5rem; color: #475569; }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid rgba(59,130,246,0.2);
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .reload-fab {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 10;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 20px rgba(59,130,246,0.4);
+      transition: all 0.2s;
+    }
+    .reload-fab:hover { transform: scale(1.1); }
+    .reload-fab svg { width: 20px; height: 20px; }
+
+    @media(max-width:500px) {
+      .stats-bar { grid-template-columns: repeat(3,1fr); }
+      .row-tel { display: none; }
+    }
+  </style>
 </head>
-<body data-page="voluntario">
-  <main class="container mx-auto px-4 py-8 max-w-5xl">
-    <div class="page-header">
-      <div class="logo">
-        <img src="img/comite.jpg" alt="Logo AEUDJ" onerror="this.style.display='none'">
+<body>
+  <main>
+
+    <!-- Nav -->
+    <nav class="top-nav">
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+        <a href="votar.html" class="nav-btn blue">
+          <i data-lucide="home"></i> Inicio
+        </a>
+        <a href="lista.html" class="nav-btn green">
+          <i data-lucide="list"></i> Lista Pública
+        </a>
+        <a href="admin.html" id="adminLink" class="nav-btn slate" style="display:none;">
+          <i data-lucide="shield"></i> Admin
+        </a>
       </div>
-      <h1 class="page-title">Pase de Lista - Voluntario</h1>
-      <p class="page-subtitle">Ruta Actual: <span id="horariosAsignadosText" class="font-bold">Cargando...</span></p>
+      <button class="nav-btn red" id="logoutBtn">
+        <i data-lucide="log-out"></i> Cerrar sesión
+      </button>
+    </nav>
+
+    <!-- Header -->
+    <header>
+      <h1>🟢 Panel de Voluntario</h1>
+      <p class="subtitle">Pase de lista y control de pasajeros</p>
+      <div class="date-badge" id="fechaBadge">Cargando...</div>
+    </header>
+
+    <!-- Stats -->
+    <div class="stats-bar">
+      <div class="stat-card stat-blue">
+        <div class="stat-num" id="statTotal">–</div>
+        <div class="stat-label">Pasajeros</div>
+      </div>
+      <div class="stat-card stat-green">
+        <div class="stat-num" id="statPresentes">0</div>
+        <div class="stat-label">Presentes</div>
+      </div>
+      <div class="stat-card stat-purple">
+        <div class="stat-num" id="statHorarios">–</div>
+        <div class="stat-label">Horarios</div>
+      </div>
     </div>
 
-    <div id="voluntarioContainer">
-      <!-- Loading spinner -->
-      <div class="spinner"></div>
+    <!-- Filters -->
+    <div class="filter-bar">
+      <span class="filter-label">Filtrar:</span>
+      <button class="filter-btn active" data-filter="todos">Todos</button>
+      <button class="filter-btn" data-filter="ida">↗ Ida</button>
+      <button class="filter-btn" data-filter="vuelta">↙ Vuelta</button>
     </div>
 
-    <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mt-8">
-      <a href="votar.html" class="btn btn-primary">Volver al inicio</a>
-      <a href="lista.html" class="btn btn-gray">Ver lista pública (Todos)</a>
-      <button onclick="logout()" class="btn btn-danger">Cerrar sesión</button>
+    <!-- List -->
+    <div id="listContainer">
+      <div class="empty-state">
+        <div class="spinner"></div>
+        <p style="margin-top:1rem;">Cargando datos...</p>
+      </div>
     </div>
+
   </main>
 
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script type="module" src="app.js?v=324"></script>
+  <!-- Reload FAB -->
+  <button class="reload-fab" id="reloadFab" title="Actualizar">
+    <i data-lucide="refresh-cw"></i>
+  </button>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    const SUPABASE_URL = 'https://irjwxegepkznqrisbrys.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyand4ZWdlcGt6bnFyaXNicnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNjk0NDIsImV4cCI6MjA5MTc0NTQ0Mn0.TZOhsy0ghfmjK8rd4GWcgbtOLpERKRJ62mjqc5gaYOM';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const IDA_KEYWORDS = ['Jarabacoa -> La Vega', 'Jarabacoa → La Vega'];
+    function isIda(h) { return IDA_KEYWORDS.some(k => h.includes(k)); }
+    function getCycleDate() {
+      const now = new Date();
+      if (now.getHours() >= 22) {
+        const t = new Date(now); t.setDate(t.getDate()+1);
+        return t.toISOString().split('T')[0];
+      }
+      return now.toISOString().split('T')[0];
+    }
+    function formatDate(d) {
+      const [y,m,day] = d.split('-');
+      const months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+      return `${parseInt(day)} de ${months[parseInt(m)-1]} de ${y}`;
+    }
+
+    let allVotos = [];
+    let activeFilter = 'todos';
+    const checked = new Set();
+
+    // Auth check
+    const logoutBtn = document.getElementById('logoutBtn');
+    logoutBtn.onclick = () => { localStorage.clear(); window.location.href = 'index.html'; };
+
+    let currentUser = null;
+    try {
+      const raw = localStorage.getItem('aeudj_user');
+      if (raw && raw !== 'undefined') currentUser = JSON.parse(raw);
+    } catch(e) {}
+
+    if (!currentUser) {
+      window.location.href = 'index.html';
+    }
+
+    // Show admin link if developer/admin
+    if (currentUser && (currentUser.rol === 'administrador' || currentUser.rol === 'desarrolladora')) {
+      document.getElementById('adminLink').style.display = 'inline-flex';
+    }
+
+    async function loadData() {
+      const cycleDate = getCycleDate();
+      document.getElementById('fechaBadge').textContent = formatDate(cycleDate);
+      const container = document.getElementById('listContainer');
+      container.innerHTML = '<div class="empty-state"><div class="spinner"></div><p style="margin-top:1rem;">Actualizando...</p></div>';
+
+      try {
+        const { data, error } = await supabase
+          .from('votos').select('*')
+          .eq('fecha', cycleDate)
+          .gt('id', 40)
+          .order('horario');
+
+        if (error) throw error;
+        allVotos = data || [];
+        renderList();
+      } catch(err) {
+        container.innerHTML = `<div class="empty-state"><p style="color:#f87171;">Error: ${err.message}</p></div>`;
+      }
+    }
+
+    function renderList() {
+      const container = document.getElementById('listContainer');
+      let filtered = allVotos;
+      if (activeFilter === 'ida')    filtered = allVotos.filter(v => isIda(v.horario));
+      if (activeFilter === 'vuelta') filtered = allVotos.filter(v => !isIda(v.horario));
+
+      document.getElementById('statTotal').textContent    = allVotos.length;
+      document.getElementById('statPresentes').textContent = checked.size;
+      document.getElementById('statHorarios').textContent = new Set(allVotos.map(v=>v.horario)).size;
+
+      container.innerHTML = '';
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>No hay pasajeros en este filtro.</p></div>';
+        return;
+      }
+
+      const groups = {};
+      filtered.forEach(v => {
+        if (!groups[v.horario]) groups[v.horario] = [];
+        groups[v.horario].push(v);
+      });
+
+      Object.entries(groups).forEach(([horario, passengers]) => {
+        const ida = isIda(horario);
+        const section = document.createElement('div');
+        section.className = 'horario-section';
+
+        const header = document.createElement('div');
+        header.className = 'horario-header';
+        header.innerHTML = `
+          <div class="horario-title">${horario}</div>
+          <div class="horario-meta">
+            <span class="dir-badge ${ida ? 'dir-ida' : 'dir-vuelta'}">${ida ? '↗ Ida' : '↙ Vuelta'}</span>
+            <span class="count-badge">${passengers.length} persona${passengers.length!==1?'s':''}</span>
+            <i data-lucide="chevron-down" class="chevron open" style="width:16px;height:16px;"></i>
+          </div>
+        `;
+
+        const table = document.createElement('div');
+        table.className = 'passenger-table';
+
+        passengers.forEach((p, idx) => {
+          const t = new Date(p.created_at);
+          const time = t.getHours().toString().padStart(2,'0') + ':' + t.getMinutes().toString().padStart(2,'0');
+          const isChecked = checked.has(p.id);
+
+          const row = document.createElement('div');
+          row.className = 'passenger-row';
+          row.innerHTML = `
+            <div class="check-circle ${isChecked ? 'checked' : ''}" data-id="${p.id}"></div>
+            <div class="row-num">${idx+1}</div>
+            <div class="row-info">
+              <div class="row-name">${p.nombre || 'Sin nombre'}</div>
+              <div class="row-mat">${p.matricula || ''}</div>
+            </div>
+            ${p.telefono ? `<div class="row-tel">${p.telefono}</div>` : ''}
+            ${p.en_espera ? '<span class="badge-espera">Espera</span>' : ''}
+            <div class="row-time">${time}</div>
+          `;
+
+          row.querySelector('.check-circle').addEventListener('click', function() {
+            if (checked.has(p.id)) { checked.delete(p.id); this.classList.remove('checked'); }
+            else { checked.add(p.id); this.classList.add('checked'); }
+            document.getElementById('statPresentes').textContent = checked.size;
+          });
+
+          table.appendChild(row);
+        });
+
+        // Collapsible
+        header.addEventListener('click', () => {
+          const chevron = header.querySelector('.chevron');
+          const isOpen = chevron.classList.contains('open');
+          table.style.display = isOpen ? 'none' : 'flex';
+          chevron.classList.toggle('open', !isOpen);
+        });
+
+        section.appendChild(header);
+        section.appendChild(table);
+        container.appendChild(section);
+      });
+
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    // Filters
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilter = btn.dataset.filter;
+        renderList();
+      });
+    });
+
+    document.getElementById('reloadFab').onclick = loadData;
+
+    if (window.lucide) window.lucide.createIcons();
+    loadData();
+  </script>
 </body>
 </html>
