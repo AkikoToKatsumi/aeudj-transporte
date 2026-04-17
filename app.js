@@ -475,9 +475,16 @@ function initVotarPage() {
     if (window.lucide) window.lucide.createIcons();
   }
 
-  document.getElementById('btnIreDespues')?.addEventListener('click', () => { window.location.href = 'cambios.html?tipo=despues'; });
+  document.getElementById('btnMeFuiAntes')?.addEventListener('click', () => {
+    window.location.href = 'cambios.html?tipo=antes';
+  });
+
+  document.getElementById('btnIreDespues')?.addEventListener('click', () => {
+    window.location.href = 'cambios.html?tipo=despues';
+  });
+
   document.getElementById('btnOtrosMedios')?.addEventListener('click', () => {
-    if (confirm('¿Confirmas que viajaras por otros medios? Esto liberara tu cupo actual.')) { window.location.href = 'cambios.html?tipo=otros'; }
+    window.location.href = 'cambios.html?tipo=otros';
   });
   document.getElementById('btnCambiarHorario')?.addEventListener('click', () => {
     isEditing = true;
@@ -1488,239 +1495,249 @@ function isHorarioActivo(horarioStr, ignoraTiempo = false) {
 // PGINA CAMBIOS
 // ============================================
 function initCambiosPage() {
- if (!currentUser) {
- window.location.href = 'index.html';
- return;
- }
- 
- const params = new URLSearchParams(window.location.search);
- const tipo = params.get('tipo');
- 
- if (!tipo) {
- window.location.href = 'lista.html';
- return;
- }
- 
- const cycleDate = getCycleDate();
- const container = document.getElementById('cambiosContainer');
- 
- container.innerHTML = '<div class="text-center"><p>Cargando...</p></div>';
- 
- cargarDatos();
- 
- async function cargarDatos() {
- try {
- const { data: votos, error } = await supabase
- .from('votos')
- .select('*')
- .eq('usuario_id', currentUser.id)
- .eq('fecha', cycleDate);
- 
- if (error) throw error;
- 
- if (!votos || votos.length === 0) {
- container.innerHTML = '<div class="card p-6 text-center"><p class="mb-4">No tienes votos registrados para hoy.</p><a href="lista.html" class="btn btn-gray">Volver</a></div>';
- return;
- }
- 
- if (votos.length > 1) {
- // Mostrar seleccin de cul voto quiere cambiar
- let html = `
- <div class="card p-6">
- <h2 class="text-xl font-bold mb-4 text-center">Qu viaje deseas cambiar?</h2>
- <div class="space-y-3">
- `;
- 
- votos.forEach(v => {
- html += `
- <button onclick="seleccionarVotoParaCambio('${v.id}')" class="btn btn-primary btn-block text-left" style="height: auto; padding: 1rem;">
- <span class="block font-bold">${v.horario}</span>
- </button>
- `;
- });
- 
- html += `
- </div>
- <button onclick="window.location.href='lista.html'" class="btn btn-gray btn-block mt-4">Cancelar</button>
- </div>
- `;
- container.innerHTML = html;
- 
- window.seleccionarVotoParaCambio = (id) => {
- const v = votos.find(x => String(x.id) === String(id));
- procesarCambioParaVoto(v);
- };
- } else {
- procesarCambioParaVoto(votos[0]);
- }
- 
- } catch (error) {
- console.error('Error:', error);
- container.innerHTML = '<p class="text-center text-red-600">Error: ' + error.message + '</p>';
- }
- }
+  if (!currentUser) {
+    window.location.href = 'index.html';
+    return;
+  }
+  
+  const params = new URLSearchParams(window.location.search);
+  const tipo = params.get('tipo');
+  
+  if (!tipo) {
+    window.location.href = 'lista.html';
+    return;
+  }
+  
+  const cycleDate = getCycleDate();
+  const container = document.getElementById('cambiosContainer');
+  let userVotes = [];
 
- async function procesarCambioParaVoto(voto) {
- if (tipo === 'otros' || tipo === 'antes') {
- try {
- container.innerHTML = '<div class="text-center"><p>Procesando cancelacin...</p></div>';
- const { error: delErr } = await supabase.from('votos').delete().eq('id', voto.id);
- if (delErr) throw delErr;
- 
- if (window.promoverDeEspera) {
- await window.promoverDeEspera(voto.fecha, voto.horario);
- }
- 
- await supabase.from('cambios_audit').insert({
- usuario_id: currentUser.id,
- matricula: currentUser.matricula,
- tipo: tipo,
- horario_anterior: voto.horario,
- fecha: cycleDate
- });
- window.location.href = 'gracias.html?cambio=1';
- } catch (e) {
- alert('Error: ' + e.message);
- cargarDatos();
- }
- return;
- }
- 
- mostrarSelector(tipo, voto);
- }
- 
- function mostrarSelector(tipo, voto) {
- const horarioActual = voto.horario;
- const parseHorario = (h) => {
- const match = h.match(/(\d+):(\d+)\s*(AM|PM)/i);
- if (!match) return 0;
- let horas = parseInt(match[1]);
- const mins = parseInt(match[2]);
- const ampm = match[3].toUpperCase();
- if (ampm === 'PM' && horas !== 12) horas += 12;
- if (ampm === 'AM' && horas === 12) horas = 0;
- return horas * 60 + mins;
- };
- 
- const minutosActual = parseHorario(horarioActual);
- const ahora = new Date();
- const minutosAhora = ahora.getHours() * 60 + ahora.getMinutes();
- 
- // IMPORTANTE: Filtrar solo horarios de la MISMA RUTA (ida o vuelta)
- const isIda = horarioActual.includes('Jarabacoa La Vega');
- const ruta = isIda ? 'Jarabacoa La Vega' : 'La Vega Jarabacoa';
+  cargarDatos();
+  
+  async function cargarDatos() {
+    try {
+      container.innerHTML = '<div class="text-center py-10"><div class="spinner mx-auto mb-4"></div><p class="text-gray-400">Consultando tus horarios...</p></div>';
+      
+      const { data, error } = await supabase
+        .from('votos')
+        .select('*')
+        .eq('usuario_id', currentUser.id)
+        .eq('fecha', cycleDate);
+      
+      if (error) throw error;
+      userVotes = data;
+      
+      if (!userVotes || userVotes.length === 0) {
+        container.innerHTML = `
+          <div class="glass-card card p-8 text-center">
+            <i data-lucide="info" class="w-12 h-12 text-blue-400 mx-auto mb-4"></i>
+            <h2 class="text-xl font-bold text-white mb-2">No tienes viajes registrados</h2>
+            <p class="text-gray-400 mb-6">Parece que no tienes reservas para el ciclo de hoy.</p>
+            <a href="votar.html" class="btn-premium btn-block">Ir a reservar</a>
+          </div>
+        `;
+        if (window.lucide) window.lucide.createIcons();
+        return;
+      }
+      
+      renderStep1();
+      
+    } catch (error) {
+      console.error('Error:', error);
+      container.innerHTML = '<p class="text-center text-red-400">Error al cargar datos. Intenta recargar la página.</p>';
+    }
+  }
 
- const disponibles = [];
- 
- transportSchedules.forEach(s => {
- if (!s.route.includes(ruta)) return;
- const min = parseHorario(s.fullText);
- 
- // Regla de negocio: "Me ir despus" => todos los posteriores
- if (tipo === 'despues') {
- if (min > minutosActual) disponibles.push(s.fullText);
- }
- });
- 
- let html = `
- <div class="card p-6">
- <h2 class="text-xl font-bold mb-4 text-center">Cambio a horario ${tipo === 'antes' ? 'anterior' : 'posterior'}</h2>
- <p class="text-center text-gray-400 mb-4">Actual: <span class="text-blue-400 font-bold">${horarioActual}</span></p>
- `;
- 
- if (disponibles.length === 0) {
- html += `
- <p class="text-center text-orange-400 mb-4">No hay horarios ${tipo === 'antes' ? 'anteriores' : 'posteriores'} disponibles.</p>
- <button onclick="window.location.href='lista.html'" class="btn btn-gray btn-block">Volver</button>
- `;
- } else {
- html += `
- <select id="nuevoHorario" class="form-select mb-4">
- <option value="">-- Selecciona nuevo horario --</option>
- ${disponibles.map(h => `<option value="${h}">${h}</option>`).join('')}
- </select>
- <button id="btnGuardarCambio" class="btn btn-primary btn-block mb-3">Guardar Cambio</button>
- <button onclick="window.location.href='lista.html'" class="btn btn-gray btn-block">Cancelar</button>
- `;
- }
- 
- html += '</div>';
- container.innerHTML = html;
- 
- if (disponibles.length > 0) {
- document.getElementById('btnGuardarCambio').addEventListener('click', async () => {
- const nuevo = document.getElementById('nuevoHorario').value;
- if (!nuevo) { alert('Selecciona un horario'); return; }
- 
- const btn = document.getElementById('btnGuardarCambio');
- btn.disabled = true;
- btn.textContent = 'Procesando...';
- 
- try {
- // Lgica de capacidad (mximo 30) para el nuevo puesto
- const { count, error: countErr } = await supabase
- .from('votos')
- .select('*', { count: 'exact', head: true })
- .eq('horario', nuevo)
- .eq('fecha', cycleDate)
- .eq('en_espera', false);
- 
- if (countErr) throw countErr;
- 
- const enEspera = count >= 30;
+  function renderStep1() {
+    let title = '';
+    let description = '';
+    let icon = '';
 
- // Primero borramos el viejo para liberar el puesto (dispara trigger de promocin si aplica)
- const { error: delErr } = await supabase.from('votos').delete().eq('id', voto.id);
- if (delErr) {
- console.error('Del Error:', delErr);
- throw new Error('Fallo al borrar el voto original: ' + delErr.message);
- }
- 
- if (window.promoverDeEspera) {
- await window.promoverDeEspera(voto.fecha, voto.horario);
- }
+    if (tipo === 'despues') {
+      title = '¿Qué viaje quieres mover?';
+      description = 'Selecciona el horario que deseas cambiar por uno posterior.';
+      icon = 'clock';
+    } else if (tipo === 'otros') {
+      title = '¿Qué viaje quieres cancelar?';
+      description = 'Selecciona los viajes que NO realizarás hoy por otros medios.';
+      icon = 'car';
+    } else {
+      title = '¿Qué viaje quieres liberar?';
+      description = 'Selecciona los viajes que ya realizaste o que deseas liberar.';
+      icon = 'check-circle';
+    }
 
- // Insertamos el nuevo
- const { error: insErr } = await supabase.from('votos').insert({
- usuario_id: currentUser.id,
- nombre: currentUser.nombre,
- universidad: currentUser.universidad,
- matricula: currentUser.matricula,
- telefono: currentUser.telefono || '',
- email: currentUser.email || '',
- horario: nuevo,
- fecha: cycleDate,
- se_monto: null,
- en_espera: enEspera,
- created_at: new Date().toISOString()
- });
- 
- if (insErr) throw insErr;
- 
- await supabase.from('cambios_audit').insert({
- usuario_id: currentUser.id,
- matricula: currentUser.matricula,
- tipo: tipo,
- horario_anterior: horarioActual,
- nuevo_horario: nuevo,
- fecha: cycleDate
- });
- 
- window.location.href = 'lista.html?cambio=1';
- 
- } catch (err) {
- console.error('Error:', err);
- alert('Error: ' + err.message);
- btn.disabled = false;
- btn.textContent = 'Guardar Cambio';
- }
- });
- }
- }
-}
+    let html = `
+      <div class="glass-card card p-8 animate-fade-in">
+        <div class="text-center mb-8">
+          <div class="p-4 bg-blue-500/10 rounded-full w-fit mx-auto mb-4">
+            <i data-lucide="${icon}" class="w-8 h-8 text-blue-400"></i>
+          </div>
+          <h2 class="text-2xl font-bold text-white mb-2">${title}</h2>
+          <p class="text-gray-400 text-sm">${description}</p>
+        </div>
+
+        <div class="space-y-3 mb-8">
+    `;
+
+    userVotes.forEach(v => {
+      const isIda = v.horario.includes('Jarabacoa -> La Vega');
+      html += `
+        <div class="cambio-item p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all cursor-pointer flex items-center gap-4" onclick="handleChoice('${v.id}')">
+          <div class="p-2 rounded-lg ${isIda ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400'}">
+            <i data-lucide="${isIda ? 'arrow-right' : 'arrow-left'}" class="w-5 h-5"></i>
+          </div>
+          <div class="flex-1">
+            <p class="text-xs uppercase font-bold text-gray-500">${isIda ? 'Salida' : 'Regreso'}</p>
+            <p class="text-lg font-bold text-white">${v.horario.split(' ')[0]} ${v.horario.split(' ')[1]}</p>
+          </div>
+          <i data-lucide="${tipo === 'despues' ? 'chevron-right' : 'trash-2'}" class="w-5 h-5 text-gray-400"></i>
+        </div>
+      `;
+    });
+
+    if (tipo === 'otros' || tipo === 'antes') {
+      html += `
+        <div class="cambio-item p-4 rounded-xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 transition-all cursor-pointer flex items-center gap-4" onclick="handleAllChoice()">
+          <div class="p-2 rounded-lg bg-rose-500/20 text-rose-400">
+            <i data-lucide="x-circle" class="w-5 h-5"></i>
+          </div>
+          <div class="flex-1">
+            <p class="text-xs uppercase font-bold text-gray-500">Global</p>
+            <p class="text-lg font-bold text-white">Todos los viajes</p>
+          </div>
+          <i data-lucide="trash-2" class="w-5 h-5 text-rose-400"></i>
+        </div>
+      `;
+    }
+
+    html += `
+        </div>
+        <button onclick="window.location.href='votar.html'" class="btn-pill-outline btn-block text-gray-400">Cancelar</button>
+      </div>
+    `;
+
+    container.innerHTML = html;
+    if (window.lucide) window.lucide.createIcons();
+
+    window.handleChoice = (id) => {
+      const v = userVotes.find(x => String(x.id) === String(id));
+      if (tipo === 'despues') {
+        renderStep2(v);
+      } else {
+        ejecutarBorrado([id]);
+      }
+    };
+
+    window.handleAllChoice = () => {
+      const ids = userVotes.map(v => v.id);
+      ejecutarBorrado(ids);
+    };
+  }
+
+  function renderStep2(votoOriginal) {
+    const horarioActual = votoOriginal.horario;
+    const isIda = horarioActual.includes('Jarabacoa -> La Vega');
+    const ruta = isIda ? 'Jarabacoa -> La Vega' : 'La Vega -> Jarabacoa';
+    
+    // Filtrar horarios posteriores
+    const actualMinutes = horarioAMinutos(horarioActual);
+    const disponibles = transportSchedules.filter(s => {
+      if (!s.route.includes(ruta)) return false;
+      return horarioAMinutos(s.fullText) > actualMinutes;
+    });
+
+    let html = `
+      <div class="glass-card card p-8 animate-fade-in">
+        <div class="text-center mb-8">
+          <h2 class="text-2xl font-bold text-white mb-2">Nuevo Horario</h2>
+          <p class="text-gray-400 text-sm">Cambiando: <span class="text-blue-400 font-bold">${horarioActual}</span></p>
+        </div>
+
+        <div class="space-y-3 mb-8">
+    `;
+
+    if (disponibles.length === 0) {
+      html += `<p class="text-center text-orange-400 p-4 bg-orange-400/10 rounded-xl">No hay horarios posteriores disponibles hoy.</p>`;
+    } else {
+      disponibles.forEach(s => {
+        html += `
+          <div class="cambio-item p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all cursor-pointer flex items-center justify-between" onclick="confirmarNuevoHorario('${s.fullText}', '${votoOriginal.id}')">
+            <div>
+              <p class="text-lg font-bold text-white">${s.time}</p>
+              <p class="text-xs text-gray-500">${s.route}</p>
+            </div>
+            <i data-lucide="check" class="w-5 h-5 text-green-400"></i>
+          </div>
+        `;
+      });
+    }
+
+    html += `
+        </div>
+        <button onclick="renderStep1()" class="btn-pill-outline btn-block">Atrás</button>
+      </div>
+    `;
+
+    container.innerHTML = html;
+    if (window.lucide) window.lucide.createIcons();
+
+    window.confirmarNuevoHorario = async (nuevoH, oldId) => {
+      try {
+        container.innerHTML = '<div class="text-center py-10"><div class="spinner mx-auto mb-4"></div><p class="text-gray-400">Actualizando tu reserva...</p></div>';
+        
+        // 1. Borrar el anterior
+        const vOld = userVotes.find(x => String(x.id) === String(oldId));
+        await supabase.from('votos').delete().eq('id', oldId);
+        
+        // 2. Liberar cupo
+        if (window.promoverDeEspera) await window.promoverDeEspera(vOld.fecha, vOld.horario);
+        
+        // 3. Insertar el nuevo
+        const { count } = await supabase.from('votos').select('*', { count: 'exact', head: true }).eq('horario', nuevoH).eq('fecha', cycleDate).eq('en_espera', false);
+        const enEspera = count >= 30;
+
+        await supabase.from('votos').insert([{
+          usuario_id: currentUser.id,
+          nombre: currentUser.nombre,
+          universidad: currentUser.universidad,
+          matricula: currentUser.matricula,
+          telefono: currentUser.telefono || '',
+          email: currentUser.email || '',
+          horario: nuevoH,
+          fecha: cycleDate,
+          se_monto: null,
+          en_espera: enEspera,
+          created_at: new Date().toISOString()
+        }]);
+
+        window.location.href = 'gracias.html?cambio=1';
+      } catch (e) {
+        alert('Error al cambiar horario: ' + e.message);
+        renderStep1();
+      }
+    };
+  }
+
+  async function ejecutarBorrado(ids) {
+    if (!confirm('¿Estás seguro de cancelar estos viajes? Esto liberará tus cupos.')) return;
+    
+    try {
+      container.innerHTML = '<div class="text-center py-10"><div class="spinner mx-auto mb-4"></div><p class="text-gray-400">Liberando asientos...</p></div>';
+      
+      for (const id of ids) {
+        const v = userVotes.find(x => String(x.id) === String(id));
+        await supabase.from('votos').delete().eq('id', id);
+        if (window.promoverDeEspera) await window.promoverDeEspera(v.fecha, v.horario);
+      }
+      
+      window.location.href = 'gracias.html?cambio=1';
+    } catch (e) {
+      alert('Error al cancelar: ' + e.message);
+      cargarDatos();
 
 // ============================================
-// PGINA NO SUBIERON
+// PÁGINA NO SUBIERON
 // ============================================
 function initNoSubieronPage() {
  const adminSession = localStorage.getItem('aeudj_admin_session');

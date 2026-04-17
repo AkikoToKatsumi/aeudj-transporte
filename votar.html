@@ -57,18 +57,22 @@
 
       <div class="notification-actions space-y-4">
         <p class="text-sm font-semibold text-gray-500 uppercase tracking-widest text-center mb-4">Notificaciones y Cambios</p>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button id="btnIreDespues" class="btn-action btn-warning">
-            <i data-lucide="clock" class="w-5 h-5 mr-2"></i>
-            Iré Después
+        <div class="confirmed-actions grid grid-cols-2 gap-3">
+          <button id="btnMeFuiAntes" class="btn-action bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+            <i data-lucide="check-circle" class="w-5 h-5"></i>
+            <span>Me fui antes</span>
           </button>
-          <button id="btnOtrosMedios" class="btn-action btn-danger">
-            <i data-lucide="bus" class="w-5 h-5 mr-2"></i>
-            Otros Medios
+          <button id="btnIreDespues" class="btn-action bg-blue-500/10 text-blue-400 border-blue-500/20">
+            <i data-lucide="clock" class="w-5 h-5"></i>
+            <span>Iré después</span>
           </button>
-          <button id="btnCambiarHorario" class="btn-action btn-info">
-            <i data-lucide="edit-3" class="w-5 h-5 mr-2"></i>
-            Cambiar Horario
+          <button id="btnOtrosMedios" class="btn-action bg-rose-500/10 text-rose-400 border-rose-500/20">
+            <i data-lucide="car" class="w-5 h-5"></i>
+            <span>Otros medios</span>
+          </button>
+          <button id="btnCambiarHorario" class="btn-action bg-slate-500/10 text-slate-400 border-slate-500/20">
+            <i data-lucide="edit-3" class="w-5 h-5"></i>
+            <span>Nuevo Plan</span>
           </button>
         </div>
       </div>

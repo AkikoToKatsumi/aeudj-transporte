@@ -936,8 +936,50 @@ tr:last-child td { border-bottom: none; }
 /* ============================================
    CONFIRMED VIEW & ACTION BUTTONS
    ============================================ */
+/* --- NUEVOS ESTILOS PARA CAMBIOS --- */
+.cambio-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.cambio-item::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.cambio-item:hover::after {
+  transform: translateX(100%);
+}
+
+.btn-action span {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.25rem;
+}
+
+.confirmed-actions .btn-action {
+  flex-direction: column;
+  padding: 1.25rem 0.5rem;
+  border-radius: 1.25rem;
+  min-height: 80px;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .animate-fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
+  animation: fade-in 0.4s ease-out forwards;
 }
 
 @keyframes fadeIn {
