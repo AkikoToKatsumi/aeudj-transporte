@@ -1,4 +1,5 @@
-import { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY } from './supabase-config.js?v=200';
+import { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY } from './supabase-config.js?v=305';
+
 
 alert('SISTEMA ACTIVADO ✅');
 console.log('🚀 AEUDJ App Iniciada');
@@ -552,86 +553,79 @@ function initVotarPage() {
  }
  
  horarioForm.addEventListener('submit', async function(e) {
- e.preventDefault();
- 
- if (selectedHorarios.length !== 2) {
- alert('Debes seleccionar exactamente 2 horarios: uno de ida y uno de vuelta.');
- return;
- }
- 
- const btn = horarioForm.querySelector('button[type="submit"]');
- btn.disabled = true;
- btn.textContent = 'Guardando...';
- 
- try {
- // 1. Identificar qu cambi
- const currentHorarios = selectedHorarios;
- const hViejos = initialVotes.map(v => v.horario);
- 
- const toDeleteIds = initialVotes.filter(v => !currentHorarios.includes(v.horario)).map(v => v.id);
- const toInsertHorarios = currentHorarios.filter(h => !hViejos.includes(h));
+    e.preventDefault();
+    
+    if (selectedHorarios.length !== 2) {
+      alert('Debes seleccionar exactamente 2 horarios: uno de ida y uno de vuelta.');
+      return;
+    }
+    
+    // Hard validation: ensure ida is before vuelta
+    const ida = selectedHorarios.find(h => h.includes('Jarabacoa La Vega'));
+    const vuelta = selectedHorarios.find(h => h.includes('La Vega Jarabacoa'));
+    
+    if (ida && vuelta) {
+      const pIda = horarioAMinutos(ida);
+      const pVuelta = horarioAMinutos(vuelta);
+      if (pVuelta <= pIda) {
+        alert('Error: El viaje de regreso debe ser posterior al de ida.');
+        return;
+      }
+    }
 
- // 2. Borrar SOLO los horarios que el usuario ya NO quiere
- if (toDeleteIds.length > 0) {
- const { error: delErrFull } = await supabase.from('votos').delete().in('id', toDeleteIds);
- if (delErrFull) {
- console.error("Error al borrar:", delErrFull);
- throw new Error('Fallo al borrar horarios anteriores: ' + delErrFull.message);
- }
- 
- const horariosEliminados = initialVotes.filter(v => toDeleteIds.includes(v.id));
- for (const v of horariosEliminados) {
- if (window.promoverDeEspera) {
- await window.promoverDeEspera(v.fecha, v.horario);
- }
- }
- }
+    const btn = horarioForm.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.textContent = 'Guardando...';
 
- // 3. Insertar SOLO los nuevos horarios (calculando lista de espera)
- if (toInsertHorarios.length > 0) {
- const dataToInsert = [];
- 
- for (const hor of toInsertHorarios) {
- const { count, error: countErr } = await supabase
- .from('votos')
- .select('*', { count: 'exact', head: true })
- .eq('horario', hor)
- .eq('fecha', cycleDate)
- .eq('en_espera', false);
- 
- if (countErr) throw countErr;
- 
- const enEspera = count >= 30;
- 
- dataToInsert.push({
- usuario_id: currentUser.id,
- nombre: currentUser.nombre,
- universidad: currentUser.universidad,
- matricula: currentUser.matricula,
- telefono: currentUser.telefono || '',
- email: currentUser.email || '',
- horario: hor,
- fecha: cycleDate,
- se_monto: null,
- en_espera: enEspera,
- created_at: new Date().toISOString()
- });
- }
- 
- const { error: insErr } = await supabase.from('votos').insert(dataToInsert);
- if (insErr) throw insErr;
- }
- 
- window.location.href = 'gracias.html';
- 
- } catch (error) {
- console.error('ERROR:', error);
- alert('Error al guardar: ' + error.message);
- btn.disabled = false;
- btn.textContent = 'Confirmar Seleccin';
- }
- });
-}
+    try {
+      // CLEAR ALL EXISTING VOTES for today/cycle for this user to prevent duplicates
+      const { error: clearErr } = await supabase
+        .from('votos')
+        .delete()
+        .eq('usuario_id', currentUser.id)
+        .eq('fecha', cycleDate);
+      
+      if (clearErr) throw clearErr;
+
+      const dataToInsert = [];
+      for (const hor of selectedHorarios) {
+        // Double check capacity
+        const { count, error: countErr } = await supabase
+          .from('votos')
+          .select('*', { count: 'exact', head: true })
+          .eq('horario', hor)
+          .eq('fecha', cycleDate)
+          .eq('en_espera', false);
+        
+        if (countErr) throw countErr;
+        const enEspera = count >= 30;
+
+        dataToInsert.push({
+          usuario_id: currentUser.id,
+          nombre: currentUser.nombre,
+          universidad: currentUser.universidad,
+          matricula: currentUser.matricula,
+          telefono: currentUser.telefono || '',
+          email: currentUser.email || '',
+          horario: hor,
+          fecha: cycleDate,
+          se_monto: null,
+          en_espera: enEspera,
+          created_at: new Date().toISOString()
+        });
+      }
+      
+      const { error: insErr } = await supabase.from('votos').insert(dataToInsert);
+      if (insErr) throw insErr;
+      
+      window.location.href = 'gracias.html?v=305';
+    } catch (error) {
+      console.error('ERROR:', error);
+      alert('Error al guardar: ' + error.message);
+      btn.disabled = false;
+      btn.textContent = 'Confirmar Seleccion';
+    }
+  });
 
 // Lgica de visualizacin de contrasea
 function initPasswordToggle() {
