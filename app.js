@@ -1,4 +1,4 @@
-import { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY } from './supabase-config.js?v=319';
+import { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY } from './supabase-config.js?v=320';
 
 
 alert('SISTEMA ACTIVADO ✅');
@@ -8,11 +8,9 @@ console.log('🚀 AEUDJ App Iniciada');
 let currentUser = null;
 let isAdmin = false;
 let selectedHorarios = [];
-const cycleDate = getCycleDate(); // Definida globalmente para todas las funciones
-let currentAdminStats = null;
-let horarioForm, scheduleGrid, statusMsg, confirmedView;
 let isEditing = false;
 let initialVotes = [];
+let pageInitialized = false;
 
 function refreshIcons() {
  try {
@@ -28,52 +26,6 @@ function refreshIcons() {
 // INICIALIZACIN
 // ============================================
 document.addEventListener('DOMContentLoaded', async function() {
- // Inicializar Iconos Lucide
- refreshIcons();
-
- // Verificar sesin con localStorage y verificar luego con Supabase Auth
- checkSession();
- 
- const page = document.body.dataset.page;
- console.log('Pgina detectada:', page);
- 
- // Escuchar cambios de autenticacin
- supabase.auth.onAuthStateChange(async (event, session) => {
- if (session) {
- const user = session.user;
- if (!currentUser || currentUser.id !== user.id) {
- try {
- const { data, error } = await supabase
- .from('profiles')
- .select('*')
- .eq('id', user.id)
- .single();
- 
- if (data) {
- currentUser = data;
- 
- // Auto-promover a desarrolladora si es la matrcula de Gabriela
- if (currentUser.matricula === '20230105' && currentUser.rol !== 'desarrolladora') {
- currentUser.rol = 'desarrolladora';
- supabase.from('profiles').update({ rol: 'desarrolladora' }).eq('id', user.id).then();
- }
- 
- setSession(currentUser);
- }
- } catch(e) { console.error('Error fetching user config:', e); }
- }
- // Redirigir siempre a votar.html al cargar el home para que elijan su asiento primero
- if (page === 'index' && currentUser) {
- window.location.href = 'votar.html';
- }
- } else {
- clearSession();
- if (page === 'votar' || page === 'cambios' || page === 'admin' || page === 'voluntario') {
- window.location.href = 'index.html';
- }
- }
- });
-
  if (page) {
  initPage(page);
  }
@@ -414,14 +366,7 @@ function initVotarPage() {
   statusMsg = document.getElementById('status-message');
   confirmedView = document.getElementById('confirmedView');
 
-  // Evento Cerrar Sesion
-  const logoutBtn = document.getElementById('logoutBtn');
-  if (logoutBtn) {
-    logoutBtn.onclick = () => {
-      localStorage.clear();
-      window.location.href = 'index.html';
-    };
-  }
+  // El listener de logout ahora se asigna en DOMContentLoaded para rapidez
  
   checkYaVotado();
 
@@ -631,7 +576,7 @@ function initVotarPage() {
       const { error: insErr } = await supabase.from('votos').insert(dataToInsert);
       if (insErr) throw insErr;
       
-      window.location.href = 'gracias.html?v=319';
+      window.location.href = 'gracias.html?v=320';
     } catch (error) {
       console.error('ERROR:', error);
       alert('Error al guardar: ' + error.message);
