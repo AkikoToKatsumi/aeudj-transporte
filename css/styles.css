@@ -692,112 +692,177 @@ tr:last-child td { border-bottom: none; }
   .mockup-logo { width: 80px; height: 80px; }
 }
 /* ============================================
-   ESTILOS DASHBOARD ADMIN
+   ADMIN SIDEBAR & DASHBOARD REDESIGN
    ============================================ */
-.stat-card {
-  display: flex !important;
+
+.admin-wrapper {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg-gradient);
+}
+
+.sidebar-wrapper {
+  width: 280px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 1.5rem !important;
-  border-radius: 1.25rem !important;
+  padding: 2rem 1.5rem;
+  z-index: 50;
+  border-radius: 0 !important;
+  border-left: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 3rem;
+  padding: 0 0.5rem;
+}
+
+.sidebar-logo {
+  width: 45px;
+  height: 45px;
+  background: white;
+  border-radius: 12px;
+  padding: 2px;
+  overflow: hidden;
+}
+
+.sidebar-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 1rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.nav-item i {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.3s ease;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+}
+
+.nav-item:hover i {
+  transform: translateX(3px);
+}
+
+.nav-item.active {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.2));
+  color: #3b82f6;
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logout-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  width: 100%;
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 1rem;
   transition: all 0.3s ease;
 }
 
-.stat-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
+.logout-link:hover {
+  background: rgba(239, 68, 68, 0.1);
 }
 
-.stat-icon {
-  font-size: 1.5rem;
-  filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));
+.content-wrapper {
+  flex: 1;
+  padding: 2rem 3rem;
+  overflow-y: auto;
+  height: 100vh;
+  background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.03), transparent 40%);
 }
 
-.stat-label {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.admin-screen {
+  animation: fadeIn 0.4s ease-out;
 }
 
-.stat-value {
-  font-size: 2.25rem;
-  font-weight: 800;
-  color: #fff;
-  margin-bottom: 0.25rem;
-  line-height: 1;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.stat-sub {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  font-weight: 500;
+.dashboard-main-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
 }
 
-.grid { display: grid; }
-.grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 1200px) {
+  .dashboard-main-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
 @media (max-width: 768px) {
-  .grid-cols-3 { grid-template-columns: 1fr; }
+  .admin-wrapper {
+    flex-direction: column;
+  }
+  .sidebar-wrapper {
+    width: 100%;
+    height: auto;
+    position: relative;
+    padding: 1rem;
+  }
+  .sidebar-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+  .nav-item span { display: none; }
+  .content-wrapper { padding: 1.5rem; }
 }
 
-/* Scrollbar para listas de pasajeros en el dashboard */
-.custom-scroll::-webkit-scrollbar { width: 5px; }
-.custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-
-/* ============================================
-   GRID DE PASAJEROS ADMIN
-   ============================================ */
-.admin-passenger-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
-  align-items: start;
+.spinner-small {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(255,255,255,0.1);
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
-
-.card-horario-compact {
-  padding: 1.5rem !important;
-  border-radius: 1.5rem !important;
-  background: rgba(30, 41, 59, 0.4) !important;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.1);
-}
-
-.horario-header {
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-  padding-bottom: 1rem;
-  margin-bottom: 1rem;
-}
-
-.compact-passenger-list {
-  max-height: 300px;
-  overflow-y: auto;
-  padding-right: 0.5rem;
-}
-
-.compact-passenger-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
-  background: rgba(0,0,0,0.2);
-  border-radius: 1rem;
-  margin-bottom: 0.6rem;
-  font-size: 0.95rem;
-  border: 1px solid transparent;
-  transition: all 0.2s ease;
-}
-
-.compact-passenger-item:hover {
-  border-color: rgba(255,255,255,0.15);
-  background: rgba(255,255,255,0.05);
-}
-
-.compact-name { font-weight: 600; color: #fff; }
-.compact-meta { font-size: 0.8rem; color: #94a3b8; }
 
 /* Sub-lista de espera dentro del cuadro */
 .waitlist-divider {
