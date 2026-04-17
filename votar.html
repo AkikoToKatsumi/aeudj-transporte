@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Selector de Horarios - AEUDJ</title>
   <link rel="icon" href="img/comite.jpg" type="image/jpg">
-  <link rel="stylesheet" href="css/styles.css?v=318">
+  <link rel="stylesheet" href="css/styles.css?v=319">
 
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -26,7 +26,6 @@
       </div>
 
       <div id="scheduleGrid" class="schedule-grid">
-        <!-- Cargando dinámicamente -->
         <div class="text-center w-full py-10 text-gray-400">
            Cargando horarios...
         </div>
@@ -41,7 +40,6 @@
       <div id="status-message" class="text-center text-sm font-medium mt-4 text-blue-400"></div>
     </form>
 
-    <!-- VISTA CONFIRMADA (SUMMARY & ACTIONS) -->
     <div id="confirmedView" class="glass-card-wide card mb-6 p-8 hidden animate-fade-in">
       <div class="text-center mb-8">
         <div class="confirm-badge mx-auto mb-4">
@@ -51,9 +49,7 @@
         <p class="text-gray-400">Ya has reservado tus horarios para el ciclo actual.</p>
       </div>
 
-      <div class="confirmed-schedules-list space-y-4 mb-10">
-        <!-- Renderizado dinámico -->
-      </div>
+      <div class="confirmed-schedules-list space-y-4 mb-10"></div>
 
       <div class="notification-actions space-y-4">
         <p class="text-sm font-semibold text-gray-500 uppercase tracking-widest text-center mb-4">Notificaciones y Cambios</p>
@@ -80,11 +76,9 @@
 
     <div class="text-center mt-12">
       <button id="logoutBtn" class="btn-pill-outline">Cerrar sesion</button>
-
     </div>
   </main>
 
-  <!-- LOGICA UNIFICADA -->
-  <script type="module" src="app.js?v=318"></script>
+  <script type="module" src="app.js?v=319"></script>
 </body>
 </html>
