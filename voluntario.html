@@ -220,16 +220,78 @@
     }
     .check-circle:hover:not(.checked) { border-color: #34d399; background: rgba(52,211,153,0.1); }
 
-    /* Absent badge */
-    .badge-espera {
+    /* Attendance buttons */
+    .attendance-btns {
+      display: flex;
+      gap: 0.35rem;
+      flex-shrink: 0;
+    }
+    .att-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.3rem 0.7rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      border: 1px solid;
+      cursor: pointer;
+      background: transparent;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .att-btn.subio {
+      color: #34d399;
+      border-color: rgba(52,211,153,0.3);
+    }
+    .att-btn.subio:hover, .att-btn.subio.active {
+      background: rgba(52,211,153,0.18);
+      border-color: #34d399;
+    }
+    .att-btn.no-subio {
+      color: #f87171;
+      border-color: rgba(248,113,113,0.3);
+    }
+    .att-btn.no-subio:hover, .att-btn.no-subio.active {
+      background: rgba(248,113,113,0.18);
+      border-color: #f87171;
+    }
+    .att-btn.active { opacity: 1; }
+    .att-btn:not(.active) { opacity: 0.6; }
+
+    /* Penalty badge on row */
+    .penalizado-badge {
       font-size: 0.6rem;
       font-weight: 700;
-      background: rgba(245,158,11,0.12);
-      color: #fbbf24;
-      border: 1px solid rgba(245,158,11,0.25);
-      padding: 0.1rem 0.4rem;
+      background: rgba(239,68,68,0.15);
+      color: #f87171;
+      border: 1px solid rgba(239,68,68,0.3);
+      padding: 0.1rem 0.5rem;
       border-radius: 999px;
+      flex-shrink: 0;
     }
+
+    .toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #f8fafc;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.75rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      z-index: 100;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+    .toast.success { border-color: rgba(52,211,153,0.4); color: #34d399; }
+    .toast.error   { border-color: rgba(248,113,113,0.4); color: #f87171; }
+    .toast.warning { border-color: rgba(251,191,36,0.4); color: #fbbf24; }
 
     /* Empty */
     .empty-state { text-align: center; padding: 3rem 1.5rem; color: #475569; }
@@ -329,12 +391,23 @@
 
   </main>
 
+  <!-- Toast notification -->
+  <div class="toast" id="toast"></div>
+
   <!-- Reload FAB -->
   <button class="reload-fab" id="reloadFab" title="Actualizar">
     <i data-lucide="refresh-cw"></i>
   </button>
 
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script type="module">
+    // ── EmailJS CONFIG (reemplaza con tus credenciales) ──
+    const EMAILJS_SERVICE  = 'service_aeudj';    // Tu Service ID de EmailJS
+    const EMAILJS_TEMPLATE = 'template_falta';   // Tu Template ID de EmailJS
+    const EMAILJS_PUBLIC   = 'TU_PUBLIC_KEY';    // Tu Public Key de EmailJS
+    // Inicializar EmailJS
+    if (window.emailjs) emailjs.init(EMAILJS_PUBLIC);
+
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
     const SUPABASE_URL = 'https://irjwxegepkznqrisbrys.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyand4ZWdlcGt6bnFyaXNicnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNjk0NDIsImV4cCI6MjA5MTc0NTQ0Mn0.TZOhsy0ghfmjK8rd4GWcgbtOLpERKRJ62mjqc5gaYOM';
@@ -358,7 +431,16 @@
 
     let allVotos = [];
     let activeFilter = 'todos';
-    const checked = new Set();
+    // attendance: { votoId -> 'subio' | 'no-subio' }
+    const attendanceState = {};
+
+    // Toast helper
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `toast show ${type}`;
+      setTimeout(() => t.classList.remove('show'), 3200);
+    }
 
     // Auth check
     const logoutBtn = document.getElementById('logoutBtn');
@@ -446,26 +528,45 @@
         passengers.forEach((p, idx) => {
           const t = new Date(p.created_at);
           const time = t.getHours().toString().padStart(2,'0') + ':' + t.getMinutes().toString().padStart(2,'0');
-          const isChecked = checked.has(p.id);
+          const isSubio   = attendanceState[p.id] === 'subio';
+          const isNoSubio = attendanceState[p.id] === 'no-subio';
 
           const row = document.createElement('div');
           row.className = 'passenger-row';
           row.innerHTML = `
-            <div class="check-circle ${isChecked ? 'checked' : ''}" data-id="${p.id}"></div>
             <div class="row-num">${idx+1}</div>
             <div class="row-info">
               <div class="row-name">${p.nombre || 'Sin nombre'}</div>
               <div class="row-mat">${p.matricula || ''}</div>
             </div>
-            ${p.telefono ? `<div class="row-tel">${p.telefono}</div>` : ''}
             ${p.en_espera ? '<span class="badge-espera">Espera</span>' : ''}
             <div class="row-time">${time}</div>
+            <div class="attendance-btns">
+              <button class="att-btn subio ${isSubio ? 'active' : ''}" data-id="${p.id}" data-action="subio">✅ Subió</button>
+              <button class="att-btn no-subio ${isNoSubio ? 'active' : ''}" data-id="${p.id}" data-action="no-subio">❌ No subió</button>
+            </div>
           `;
 
-          row.querySelector('.check-circle').addEventListener('click', function() {
-            if (checked.has(p.id)) { checked.delete(p.id); this.classList.remove('checked'); }
-            else { checked.add(p.id); this.classList.add('checked'); }
-            document.getElementById('statPresentes').textContent = checked.size;
+          // Attendance events
+          row.querySelectorAll('.att-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+              const action = btn.dataset.action;
+              const prev   = attendanceState[p.id];
+              if (prev === action) return; // already marked
+
+              // Update local state immediately
+              attendanceState[p.id] = action;
+              row.querySelectorAll('.att-btn').forEach(b => b.classList.remove('active'));
+              btn.classList.add('active');
+              btn.textContent = btn.textContent; // force repaint
+
+              // Update stats
+              const presentes = Object.values(attendanceState).filter(v => v === 'subio').length;
+              document.getElementById('statPresentes').textContent = presentes;
+
+              // Save to Supabase
+              await marcarAsistencia(p, action);
+            });
           });
 
           table.appendChild(row);
@@ -501,6 +602,79 @@
 
     if (window.lucide) window.lucide.createIcons();
     loadData();
+
+    // ── MARCAR ASISTENCIA ──────────────────────────────────
+    async function marcarAsistencia(p, action) {
+      const subio = (action === 'subio');
+      try {
+        // 1. Update votos.subio
+        await supabase.from('votos').update({ subio }).eq('id', p.id);
+
+        if (!subio) {
+          // 2. Register falta
+          await supabase.from('faltas').insert({
+            usuario_id: p.usuario_id,
+            voto_id:    p.id,
+            nombre:     p.nombre,
+            matricula:  p.matricula,
+            email:      p.email || '',
+            horario:    p.horario,
+            fecha:      p.fecha,
+          });
+
+          // 3. Count total faltas for this user
+          const { count } = await supabase
+            .from('faltas')
+            .select('id', { count: 'exact', head: true })
+            .eq('usuario_id', p.usuario_id);
+
+          // 4. Upsert in penalidades
+          const penalizado = count >= 3;
+          await supabase.from('penalidades').upsert({
+            usuario_id:      p.usuario_id,
+            nombre:          p.nombre,
+            matricula:       p.matricula,
+            email:           p.email || '',
+            total_faltas:    count,
+            penalizado,
+            fecha_penalidad: penalizado ? new Date().toISOString().split('T')[0] : null,
+            updated_at:      new Date().toISOString(),
+          }, { onConflict: 'usuario_id' });
+
+          // 5. Send email if just hit 3
+          if (penalizado && count === 3) {
+            await enviarCorreoPenalidad(p, count);
+            showToast(`⚠️ ${p.nombre} penalizado/a con ${count} faltas. Correo enviado.`, 'warning');
+          } else {
+            showToast(`Falta registrada. Total: ${count}/3`, count >= 2 ? 'warning' : 'error');
+          }
+        } else {
+          showToast('✅ Asistencia confirmada', 'success');
+        }
+      } catch(err) {
+        console.error('Error marcando asistencia:', err);
+        showToast('Error al guardar. Intenta de nuevo.', 'error');
+      }
+    }
+
+    // ── ENVIAR CORREO (EmailJS) ────────────────────────────
+    async function enviarCorreoPenalidad(p, totalFaltas) {
+      if (!window.emailjs || EMAILJS_PUBLIC === 'TU_PUBLIC_KEY') {
+        console.warn('EmailJS no configurado. Configura EMAILJS_SERVICE, EMAILJS_TEMPLATE y EMAILJS_PUBLIC.');
+        return;
+      }
+      try {
+        await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+          to_name:      p.nombre,
+          to_email:     p.email,
+          matricula:    p.matricula,
+          total_faltas: totalFaltas,
+          fecha:        new Date().toLocaleDateString('es-ES'),
+        });
+      } catch(e) {
+        console.error('Error enviando email:', e);
+      }
+    }
 
     // ── TIEMPO REAL ────────────────────────
     supabase
