@@ -418,38 +418,73 @@ function initVotarPage() {
  
  checkYaVotado();
  
- async function checkYaVotado() {
- try {
- const { data: snapshot, error } = await supabase
- .from('votos')
- .select('*')
- .eq('usuario_id', currentUser.id)
- .eq('fecha', cycleDate);
- 
- if (snapshot && snapshot.length > 0) {
- isEditing = true;
- initialVotes = snapshot;
- selectedHorarios = snapshot.map(v => v.horario);
- const submitBtn = horarioForm.querySelector('button[type="submit"]');
- if (submitBtn) submitBtn.textContent = 'Actualizar Seleccin';
- 
- const msg = document.createElement('p');
- msg.className = 'text-center text-sm text-gray-400 mt-4';
- msg.innerHTML = ` Tienes ${initialVotes.length} horarios registrados. Puedes cambiarlos si deseas.`;
- const statusMsgEl = document.getElementById('status-message');
- if (statusMsgEl) statusMsgEl.parentNode.insertBefore(msg, statusMsgEl);
- else horarioForm.appendChild(msg);
- }
- 
- renderHorarios();
- 
- } catch (error) {
- console.error('Error al verificar voto:', error);
- statusMsg.textContent = 'Error al cargar. Intenta recargar la pgina.';
- statusMsg.className = 'text-center text-sm font-medium text-red-600 mt-4';
- renderHorarios();
- }
- }
+  async function checkYaVotado() {
+    try {
+      const { data: snapshot, error } = await supabase
+        .from('votos')
+        .select('*')
+        .eq('usuario_id', currentUser.id)
+        .eq('fecha', cycleDate);
+      
+      const confirmedView = document.getElementById('confirmedView');
+      
+      if (snapshot && snapshot.length > 0) {
+        initialVotes = snapshot;
+        selectedHorarios = snapshot.map(v => v.horario);
+        
+        if (horarioForm) horarioForm.classList.add('hidden');
+        if (confirmedView) {
+          confirmedView.classList.remove('hidden');
+          renderConfirmedView(snapshot);
+        }
+        const submitBtn = horarioForm?.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.textContent = 'Actualizar Seleccion';
+      } else {
+        if (horarioForm) horarioForm.classList.remove('hidden');
+        if (confirmedView) confirmedView.classList.add('hidden');
+        renderHorarios();
+      }
+    } catch (error) {
+      console.error('Error al verificar voto:', error);
+      renderHorarios();
+    }
+  }
+
+  function renderConfirmedView(votes) {
+    const container = document.querySelector('.confirmed-schedules-list');
+    if (!container) return;
+    container.innerHTML = '';
+    votes.forEach(v => {
+      const direction = (v.horario && v.horario.includes('Jarabacoa')) ? 'ida' : 'vuelta';
+      const div = document.createElement('div');
+      div.className = 'confirmed-schedule-card';
+      div.innerHTML = `
+        <div class="confirm-icon p-3 rounded-full ${direction === 'ida' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'}">
+          <i data-lucide="${direction === 'ida' ? 'arrow-right' : 'arrow-left'}"></i>
+        </div>
+        <div style="flex:1">
+          <p class="text-xs uppercase tracking-tighter text-gray-500 font-bold">${direction === 'ida' ? 'Salida' : 'Regreso'}</p>
+          <p class="text-xl font-bold text-white">${v.horario.split(' ')[0]} ${v.horario.split(' ')[1]}</p>
+          <p class="text-[10px] text-gray-400 font-mono">${v.horario.split(' ').slice(2).join(' ')}</p>
+        </div>
+        ${v.en_espera ? '<div class="text-orange-400 text-[10px] font-bold border border-orange-400/30 px-2 py-1 rounded bg-orange-400/5">LISTA ESPERA</div>' : '<div class="text-green-400 text-[10px] font-bold border border-green-400/30 px-2 py-1 rounded bg-green-400/5">CONFIRMADO</div>'}
+      `;
+      container.appendChild(div);
+    });
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  document.getElementById('btnIreDespues')?.addEventListener('click', () => { window.location.href = 'cambios.html?tipo=despues'; });
+  document.getElementById('btnOtrosMedios')?.addEventListener('click', () => {
+    if (confirm('¿Confirmas que viajaras por otros medios? Esto liberara tu cupo actual.')) { window.location.href = 'cambios.html?tipo=otros'; }
+  });
+  document.getElementById('btnCambiarHorario')?.addEventListener('click', () => {
+    isEditing = true;
+    if (horarioForm) horarioForm.classList.remove('hidden');
+    document.getElementById('confirmedView')?.classList.add('hidden');
+    renderHorarios();
+  });
+
  
  function renderHorarios() {
  scheduleGrid.innerHTML = '';
@@ -720,14 +755,18 @@ async function initListaPage() {
  <div class="passenger-item">
  <div class="flex items-center" style="gap: 1rem;">
  <span class="passenger-number">${i + 1}</span>
- <div class="passenger-info">
- <p class="passenger-name">${escapeHtml(p.nombre)}${statusIcon}
- ${p.universidad ? `<span class="text-gray-600">(${escapeHtml(p.universidad)})</span>` : ''}
- </p>
- </div>
- </div>
- <span class="passenger-time">${formatTime(p.createdAt)}</span>
- </div>
+          <div class="passenger-info">
+            <div class="flex items-baseline gap-2">
+              <span class="passenger-name">${escapeHtml(p.nombre)}${statusIcon}</span>
+              ${p.universidad ? `<span class="text-[10px] text-gray-500 font-medium">| ${escapeHtml(p.universidad)}</span>` : ''}
+            </div>
+          </div>
+        </div>
+        <div class="passenger-time">
+          <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+          <span>${formatTime(p.createdAt)}</span>
+        </div>
+      </div>
  `;
  });
  
@@ -745,15 +784,19 @@ async function initListaPage() {
  <div class="passenger-item waiting-item">
  <div class="flex items-center" style="gap: 1rem;">
  <span class="passenger-number">${i + 1}</span>
- <div class="passenger-info">
- <p class="passenger-name">${escapeHtml(p.nombre)}
- <span class="waiting-badge">En espera</span>
- ${p.universidad ? `<span class="text-gray-600">(${escapeHtml(p.universidad)})</span>` : ''}
- </p>
- </div>
- </div>
- <span class="passenger-time">${formatTime(p.createdAt)}</span>
- </div>
+          <div class="passenger-info">
+            <div class="flex items-baseline gap-2">
+              <span class="passenger-name">${escapeHtml(p.nombre)}</span>
+              <span class="waiting-badge">En espera</span>
+            </div>
+            ${p.universidad ? `<span class="text-[10px] text-gray-500 font-medium">| ${escapeHtml(p.universidad)}</span>` : ''}
+          </div>
+        </div>
+        <div class="passenger-time">
+          <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+          <span>${formatTime(p.createdAt)}</span>
+        </div>
+      </div>
  `;
  });
  
