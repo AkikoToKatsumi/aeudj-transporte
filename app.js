@@ -750,20 +750,19 @@ async function initListaPage() {
  
  html += `
  <div class="passenger-item">
- <div class="flex items-center" style="gap: 1rem;">
- <span class="passenger-number">${i + 1}</span>
-          <div class="passenger-info">
-            <div class="flex items-baseline gap-2">
-              <span class="passenger-name">${escapeHtml(p.nombre)}${statusIcon}</span>
-              ${p.universidad ? `<span class="text-[10px] text-gray-500 font-medium">| ${escapeHtml(p.universidad)}</span>` : ''}
+            <div class="flex items-center" style="gap: 1rem;">
+              <span class="passenger-number">${i + 1}</span>
+              <div class="passenger-info">
+                <div class="flex items-baseline" style="gap: 0.5rem;">
+                  <span class="passenger-name">${escapeHtml(p.nombre)}${statusIcon}</span>
+                  ${p.universidad ? `<span class="text-[10px] text-gray-500 font-medium">| ${escapeHtml(p.universidad)}</span>` : ''}
+                </div>
+              </div>
+            </div>
+            <div class="passenger-time" style="margin-left: auto; font-weight: 700; color: #3b82f6;">
+              ${formatTime(p.createdAt)}
             </div>
           </div>
-        </div>
-        <div class="passenger-time">
-          <i data-lucide="clock" class="w-3.5 h-3.5"></i>
-          <span>${formatTime(p.createdAt)}</span>
-        </div>
-      </div>
  `;
  });
  
