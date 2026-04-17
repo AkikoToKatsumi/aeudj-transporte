@@ -1,4 +1,4 @@
-import { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY } from './supabase-config.js?v=323';
+import { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY } from './supabase-config.js?v=324';
 
 
 alert('SISTEMA ACTIVADO ✅');
@@ -637,7 +637,7 @@ function initVotarPage() {
       const { error: insErr } = await supabase.from('votos').insert(dataToInsert);
       if (insErr) throw insErr;
       
-      window.location.href = 'gracias.html?v=323';
+      window.location.href = 'gracias.html?v=324';
     } catch (error) {
       console.error('ERROR:', error);
       alert('Error al guardar: ' + error.message);
