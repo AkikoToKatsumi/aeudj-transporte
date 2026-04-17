@@ -557,14 +557,104 @@
                   <p class="text-xs text-gray-500">${u.matricula}</p>
                 </td>
                 <td class="py-4 px-4">
-                  <span class="text-[10px] font-bold px-2 py-1 rounded uppercase ${u.rol === 'administrador' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' : u.rol === 'voluntario' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-gray-500/10 text-gray-400'}">${u.rol}</span>
+                  <div class="flex flex-col gap-1">
+                    <span class="text-[10px] font-bold px-2 py-1 rounded uppercase max-w-fit ${u.rol === 'administrador' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' : u.rol === 'voluntario' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-gray-500/10 text-gray-400'}">${u.rol}</span>
+                    ${u.rol === 'voluntario' ? `
+                      <p class="text-[9px] text-blue-400 font-bold">${u.dia_asignado || 'Sin dÃ­a'} - ${u.horario_asignado || 'Sin hora'}</p>
+                    ` : ''}
+                  </div>
                 </td>
                 <td class="py-4 px-4">
-                  <select onchange="window.updateUserRole('${u.id}', this.value)" class="bg-[#0f172a] border border-white/10 text-[10px] rounded p-1 text-gray-400">
-                    <option value="estudiante" ${u.rol === 'estudiante' ? 'selected' : ''}>Estudiante</option>
-                    <option value="voluntario" ${u.rol === 'voluntario' ? 'selected' : ''}>Voluntario</option>
-                    <option value="administrador" ${u.rol === 'administrador' ? 'selected' : ''}>Admin</option>
-                  </select>
+                  <div class="flex flex-col gap-2">
+                    <select onchange="window.updateUserRole('${u.id}', this.value)" class="bg-[#0f172a] border border-white/10 text-[10px] rounded p-1 text-gray-400">
+                      <option value="estudiante" ${u.rol === 'estudiante' ? 'selected' : ''}>Estudiante</option>
+                      <option value="voluntario" ${u.rol === 'voluntario' ? 'selected' : ''}>Voluntario</option>
+                      <option value="administrador" ${u.rol === 'administrador' ? 'selected' : ''}>Admin</option>
+                    </select>
+
+                <div id="voluntarioFields" class="hidden space-y-4 pt-2 border-t border-white/5">
+                  <p class="text-[10px] text-blue-400 font-bold uppercase tracking-wider">Asignación de Turno</p>
+                  <div class="grid grid-cols-2 gap-3">
+                    <select id="staffDia" class="premium-select text-xs">
+                      <option value="">Seleccionar Día</option>
+                      <option value="Lunes">Lunes</option>
+                      <option value="Martes">Martes</option>
+                      <option value="Miercoles">Miércoles</option>
+                      <option value="Jueves">Jueves</option>
+                      <option value="Viernes">Viernes</option>
+                      <option value="Sabado">Sábado</option>
+                    </select>
+                    <select id="staffHorario" class="premium-select text-xs">
+                      <option value="">Seleccionar Horario</option>
+                      <option value="Mañana (7:00 AM)">Mañana (7:00 AM)</option>
+                      <option value="Tarde (4:00 PM)">Tarde (4:00 PM)</option>
+                      <option value="Noche (9:00 PM)">Noche (9:00 PM)</option>
+                    </select>
+                  </div>
+                </div>
+                    
+                    ${u.rol === 'voluntario' ? `
+                      <div class="flex gap-1">
+                        <select onchange="window.updateUserAssignment('${u.id}', 'dia', this.value)" class="bg-[#0f172a] border border-white/10 text-[9px] rounded p-1 text-gray-500 w-full">
+                          <option value="">DÃ­a...</option>
+                          <option value="Lunes" ${u.dia_asignado === 'Lunes' ? 'selected' : ''}>Lun</option>
+                          <option value="Martes" ${u.dia_asignado === 'Martes' ? 'selected' : ''}>Mar</option>
+                          <option value="Miercoles" ${u.dia_asignado === 'Miercoles' ? 'selected' : ''}>Mie</option>
+                          <option value="Jueves" ${u.dia_asignado === 'Jueves' ? 'selected' : ''}>Jue</option>
+                          <option value="Viernes" ${u.dia_asignado === 'Viernes' ? 'selected' : ''}>Vie</option>
+                          <option value="Sabado" ${u.dia_asignado === 'Sabado' ? 'selected' : ''}>Sab</option>
+                        </select>
+
+                <div id="voluntarioFields" class="hidden space-y-4 pt-2 border-t border-white/5">
+                  <p class="text-[10px] text-blue-400 font-bold uppercase tracking-wider">Asignación de Turno</p>
+                  <div class="grid grid-cols-2 gap-3">
+                    <select id="staffDia" class="premium-select text-xs">
+                      <option value="">Seleccionar Día</option>
+                      <option value="Lunes">Lunes</option>
+                      <option value="Martes">Martes</option>
+                      <option value="Miercoles">Miércoles</option>
+                      <option value="Jueves">Jueves</option>
+                      <option value="Viernes">Viernes</option>
+                      <option value="Sabado">Sábado</option>
+                    </select>
+                    <select id="staffHorario" class="premium-select text-xs">
+                      <option value="">Seleccionar Horario</option>
+                      <option value="Mañana (7:00 AM)">Mañana (7:00 AM)</option>
+                      <option value="Tarde (4:00 PM)">Tarde (4:00 PM)</option>
+                      <option value="Noche (9:00 PM)">Noche (9:00 PM)</option>
+                    </select>
+                  </div>
+                </div>
+                        <select onchange="window.updateUserAssignment('${u.id}', 'horario', this.value)" class="bg-[#0f172a] border border-white/10 text-[9px] rounded p-1 text-gray-500 w-full">
+                          <option value="">Hora...</option>
+                          <option value="MaÃ±ana (7:00 AM)" ${u.horario_asignado === 'MaÃ±ana (7:00 AM)' ? 'selected' : ''}>7AM</option>
+                          <option value="Tarde (4:00 PM)" ${u.horario_asignado === 'Tarde (4:00 PM)' ? 'selected' : ''}>4PM</option>
+                          <option value="Noche (9:00 PM)" ${u.horario_asignado === 'Noche (9:00 PM)' ? 'selected' : ''}>9PM</option>
+                        </select>
+
+                <div id="voluntarioFields" class="hidden space-y-4 pt-2 border-t border-white/5">
+                  <p class="text-[10px] text-blue-400 font-bold uppercase tracking-wider">Asignación de Turno</p>
+                  <div class="grid grid-cols-2 gap-3">
+                    <select id="staffDia" class="premium-select text-xs">
+                      <option value="">Seleccionar Día</option>
+                      <option value="Lunes">Lunes</option>
+                      <option value="Martes">Martes</option>
+                      <option value="Miercoles">Miércoles</option>
+                      <option value="Jueves">Jueves</option>
+                      <option value="Viernes">Viernes</option>
+                      <option value="Sabado">Sábado</option>
+                    </select>
+                    <select id="staffHorario" class="premium-select text-xs">
+                      <option value="">Seleccionar Horario</option>
+                      <option value="Mañana (7:00 AM)">Mañana (7:00 AM)</option>
+                      <option value="Tarde (4:00 PM)">Tarde (4:00 PM)</option>
+                      <option value="Noche (9:00 PM)">Noche (9:00 PM)</option>
+                    </select>
+                  </div>
+                </div>
+                      </div>
+                    ` : ''}
+                  </div>
                 </td>
               </tr>
             `).join('')}
@@ -580,9 +670,27 @@
       else alert('Error al actualizar rol');
     };
 
+    window.updateUserAssignment = async (userId, field, value) => {
+      const updateObj = {};
+      if (field === 'dia') updateObj.dia_asignado = value;
+      if (field === 'horario') updateObj.horario_asignado = value;
+      
+      const { error } = await supabase.from('profiles').update(updateObj).eq('id', userId);
+      if (error) alert('Error al actualizar asignaciÃ³n');
+      else loadStaffData();
+    };
+
     function initForms() {
       const form = document.getElementById('createStaffForm');
       if (!form) return;
+
+      // Handle Role change to show/hide volunteer fields
+      const roleSelect = document.getElementById('staffRol');
+      const volFields  = document.getElementById('voluntarioFields');
+      roleSelect.onchange = () => {
+        if (roleSelect.value === 'voluntario') volFields.classList.remove('hidden');
+        else volFields.classList.add('hidden');
+      };
 
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -596,6 +704,8 @@
           const matricula = document.getElementById('staffMatricula').value;
           const password = document.getElementById('staffPassword').value;
           const rol = document.getElementById('staffRol').value;
+          const dia = document.getElementById('staffDia').value;
+          const horario = document.getElementById('staffHorario').value;
 
           const pseudoEmail = `${matricula}@aeudj.com`;
           
@@ -610,7 +720,9 @@
             id: auth.user.id,
             nombre,
             matricula,
-            rol
+            rol,
+            dia_asignado: rol === 'voluntario' ? dia : null,
+            horario_asignado: rol === 'voluntario' ? horario : null
           });
 
           if (profileErr) throw profileErr;
