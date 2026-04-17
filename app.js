@@ -405,14 +405,17 @@ function initVotarPage() {
  }
  }
  
- const cycleDate = getCycleDate();
- const horarioForm = document.getElementById('horarioForm');
- const scheduleGrid = document.getElementById('scheduleGrid');
- const statusMsg = document.getElementById('status-message');
- let isEditing = false;
- let initialVotes = []; // Guardar para no borrar lo que no cambia
+  let horarioForm, scheduleGrid, statusMsg, confirmedView; 
+  let isEditing = false;
+  let initialVotes = [];
  
- checkYaVotado();
+  const cycleDate = getCycleDate();
+  horarioForm = document.getElementById('horarioForm');
+  scheduleGrid = document.getElementById('scheduleGrid');
+  statusMsg = document.getElementById('status-message');
+  confirmedView = document.getElementById('confirmedView');
+ 
+  checkYaVotado();
  
   async function checkYaVotado() {
     try {
@@ -422,8 +425,6 @@ function initVotarPage() {
         .eq('usuario_id', currentUser.id)
         .eq('fecha', cycleDate)
         .gt('id', 40);
-      
-      const confirmedView = document.getElementById('confirmedView');
       
       if (snapshot && snapshot.length > 0) {
         initialVotes = snapshot;
@@ -503,26 +504,27 @@ function initVotarPage() {
  
  const visibleSchedules = transportSchedules.filter(s => s.group === currentGroup);
  
- visibleSchedules.forEach(schedule => {
- const direction = schedule.route.includes('Jarabacoa La Vega') ? 'ida' : 'vuelta';
- const icon = direction === 'ida' ? '' : '';
- const isSelected = selectedHorarios.includes(schedule.fullText);
+  visibleSchedules.forEach(schedule => {
+  const direction = schedule.route.includes('Jarabacoa -> La Vega') ? 'ida' : 'vuelta';
+  const iconName = direction === 'ida' ? 'arrow-right' : 'arrow-left';
+  const isSelected = selectedHorarios.includes(schedule.fullText);
  
  const slot = document.createElement('div');
  slot.className = `time-slot ${isSelected ? 'selected' : ''}`;
  slot.dataset.direction = direction;
  slot.dataset.fulltext = schedule.fullText;
- slot.innerHTML = `
- <div class="time-icon">${icon}</div>
- <div class="time-text">${schedule.time}</div>
- <div class="time-route">${schedule.route}</div>
- <div class="checkmark ${isSelected ? '' : 'hidden'}"></div>
- `;
+  slot.innerHTML = `
+  <div class="time-icon"><i data-lucide="${iconName}"></i></div>
+  <div class="time-text">${schedule.time}</div>
+  <div class="time-route">${schedule.route}</div>
+  <div class="checkmark ${isSelected ? '' : 'hidden'}"></div>
+  `;
  
  slot.addEventListener('click', () => toggleSlot(slot, schedule.fullText, direction));
- scheduleGrid.appendChild(slot);
- });
- }
+    scheduleGrid.appendChild(slot);
+  });
+  if (window.lucide) window.lucide.createIcons();
+  }
  
  function toggleSlot(el, fullText, direction) {
  const prevSelectedList = document.querySelectorAll(`.time-slot.selected[data-direction="${direction}"]`);
