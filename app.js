@@ -295,6 +295,9 @@ function initIndexPage() {
  btn.disabled = false;
  btn.textContent = 'Entrar';
  });
+  }
+
+  if (registerForm) {
  
  registerForm.addEventListener('submit', async function(e) {
  e.preventDefault();
@@ -376,6 +379,7 @@ function initIndexPage() {
  btn.disabled = false;
  btn.textContent = 'Registrar';
  });
+  }
 
  function validateEmail(email) {
  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -1487,8 +1491,6 @@ function isHorarioActivo(horarioStr, ignoraTiempo = false) {
  // El horario se activa 10 minutos antes (ej: 12:50 para las 1:00)
  // Y se mantiene visible hasta 1 hora despus (ej: 2:00)
  return (currentMinutes >= hMinutes - 10) && (currentMinutes <= hMinutes + 60);
-}
-
 }
 
 // ============================================
