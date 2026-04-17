@@ -5,80 +5,654 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Selector de Horarios - AEUDJ</title>
   <link rel="icon" href="img/comite.jpg" type="image/jpg">
-  <link rel="stylesheet" href="css/styles.css?v=324">
-
   <script src="https://unpkg.com/lucide@latest"></script>
-</head>
-<body data-page="votar" class="votar-page">
-  <main class="container mx-auto px-4 py-8 max-w-5xl">
-    <div id="staffMenu" class="hidden text-center mb-6"></div>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-    <header class="text-center mb-8">
-      <h1 class="text-4xl font-bold text-white mb-2">Selector de Horarios</h1>
-      <p class="text-lg text-gray-300">Selecciona <strong>un viaje de ida</strong> y <strong>un viaje de vuelta</strong></p>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      min-height: 100vh;
+      background-image: url('img/jarabacoa.webp');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 15, 30, 0.78);
+      z-index: 0;
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 2rem 1rem 4rem;
+    }
+
+    header { text-align: center; margin-bottom: 2rem; }
+    h1 { font-size: 2.2rem; font-weight: 800; }
+    .subtitle { color: #94a3b8; margin-top: 0.4rem; }
+    .subtitle strong { color: #60a5fa; }
+
+    /* Staff menu */
+    #staffMenu {
+      display: none;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      gap: 0.75rem;
+      flex-direction: column;
+    }
+    #staffMenu.visible { display: flex; }
+    #staffMenu a {
+      display: block;
+      padding: 0.85rem 1.5rem;
+      border-radius: 0.85rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-admin {
+      background: rgba(139, 92, 246, 0.18);
+      border: 1px solid rgba(139, 92, 246, 0.4);
+      color: #c4b5fd;
+    }
+    .btn-volunteer {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #6ee7b7;
+    }
+
+    /* Card */
+    .card {
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 1.25rem;
+      padding: 1.75rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      border-radius: 0.85rem;
+      padding: 1.25rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .card-header .card-title { font-size: 1.15rem; font-weight: 700; }
+
+    /* Schedule grid */
+    .schedule-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+      gap: 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .time-slot {
+      background: rgba(30, 41, 59, 0.7);
+      border: 2px solid rgba(255,255,255,0.07);
+      border-radius: 0.85rem;
+      padding: 1.1rem 0.85rem;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.18s ease;
+      position: relative;
+      user-select: none;
+    }
+    .time-slot:hover {
+      background: rgba(59, 130, 246, 0.18);
+      border-color: rgba(59, 130, 246, 0.5);
+      transform: translateY(-2px);
+    }
+    .time-slot.selected {
+      background: rgba(59, 130, 246, 0.28);
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+    }
+    .time-slot .ts-icon {
+      color: #60a5fa;
+      margin-bottom: 0.4rem;
+      display: flex;
+      justify-content: center;
+    }
+    .time-slot .ts-icon svg { width: 22px; height: 22px; }
+    .time-slot .ts-time { font-size: 1.05rem; font-weight: 700; color: #f8fafc; }
+    .time-slot .ts-route { font-size: 0.7rem; color: #64748b; font-family: monospace; margin-top: 0.2rem; }
+    .time-slot .ts-check {
+      position: absolute;
+      top: 0.45rem; right: 0.45rem;
+      width: 18px; height: 18px;
+      background: #3b82f6;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: bold;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .time-slot.selected .ts-check { opacity: 1; }
+
+    .tag-ida {
+      display: inline-block;
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 0.15rem 0.45rem;
+      border-radius: 999px;
+      margin-top: 0.3rem;
+      background: rgba(59,130,246,0.2);
+      color: #93c5fd;
+    }
+    .tag-vuelta {
+      display: inline-block;
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 0.15rem 0.45rem;
+      border-radius: 999px;
+      margin-top: 0.3rem;
+      background: rgba(139,92,246,0.2);
+      color: #c4b5fd;
+    }
+
+    .no-schedules {
+      text-align: center;
+      padding: 2rem;
+      color: #475569;
+      font-size: 0.9rem;
+    }
+
+    /* Submit button */
+    .btn-submit {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+      font-size: 1.05rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 15px rgba(59,130,246,0.35);
+    }
+    .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(59,130,246,0.45); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* Status msg */
+    #statusMsg {
+      text-align: center;
+      font-size: 0.85rem;
+      margin-top: 0.75rem;
+      min-height: 1.2rem;
+      color: #60a5fa;
+      font-weight: 500;
+    }
+
+    /* Confirmed view */
+    #confirmedView { display: none; }
+    #confirmedView.visible { display: block; }
+
+    .confirmed-header { text-align: center; margin-bottom: 1.5rem; }
+    .check-badge {
+      width: 64px; height: 64px;
+      background: rgba(16,185,129,0.15);
+      border: 2px solid rgba(16,185,129,0.4);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1rem;
+    }
+    .check-badge svg { width: 32px; height: 32px; color: #34d399; }
+
+    .confirmed-trips { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem; }
+    .trip-card {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: rgba(30,41,59,0.5);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 0.85rem;
+      padding: 1rem 1.25rem;
+    }
+    .trip-icon {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .trip-icon.ida { background: rgba(59,130,246,0.15); color: #60a5fa; }
+    .trip-icon.vuelta { background: rgba(139,92,246,0.15); color: #c4b5fd; }
+    .trip-icon svg { width: 20px; height: 20px; }
+    .trip-info { flex: 1; }
+    .trip-label { font-size: 0.7rem; text-transform: uppercase; color: #475569; font-weight: 700; }
+    .trip-time { font-size: 1.2rem; font-weight: 700; color: #f8fafc; }
+    .trip-route { font-size: 0.7rem; color: #64748b; font-family: monospace; }
+    .trip-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+    }
+    .badge-confirmed { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+    .badge-espera { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+
+    /* Action buttons */
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.65rem;
+      margin-top: 1rem;
+    }
+    .btn-action {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.85rem 0.65rem;
+      border-radius: 0.75rem;
+      border: 1px solid;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: transparent;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .btn-action svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .btn-action:hover { opacity: 0.85; transform: translateY(-1px); }
+
+    .btn-green  { color: #34d399; border-color: rgba(52,211,153,0.25); background: rgba(52,211,153,0.08); }
+    .btn-blue   { color: #60a5fa; border-color: rgba(96,165,250,0.25); background: rgba(96,165,250,0.08); }
+    .btn-rose   { color: #fb7185; border-color: rgba(251,113,133,0.25); background: rgba(251,113,133,0.08); }
+    .btn-slate  { color: #94a3b8; border-color: rgba(148,163,184,0.25); background: rgba(148,163,184,0.08); }
+
+    /* Logout */
+    .logout-wrap { text-align: center; margin-top: 2rem; }
+    .btn-logout {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #64748b;
+      padding: 0.6rem 1.75rem;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .btn-logout:hover { border-color: rgba(239,68,68,0.4); color: #f87171; }
+
+    /* Loading */
+    .loading-text { text-align: center; color: #475569; padding: 2rem; font-size: 0.9rem; }
+
+    /* Hidden utility */
+    .hidden { display: none !important; }
+
+    @media (max-width: 500px) {
+      .schedule-grid { grid-template-columns: repeat(2, 1fr); }
+      .action-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+
+    <!-- Staff menu (admin/voluntario) -->
+    <div id="staffMenu"></div>
+
+    <!-- Header -->
+    <header>
+      <h1>Selector de Horarios</h1>
+      <p class="subtitle">Selecciona <strong>un viaje de ida</strong> y <strong>un viaje de vuelta</strong></p>
     </header>
 
-    <form id="horarioForm" class="glass-card-wide card mb-6 p-6">
-
-      <div style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; text-align: center; padding: 1.5rem; border-radius: 1rem; margin-bottom: 2rem; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);">
-        <i data-lucide="calendar" class="mx-auto mb-2 w-8 h-8"></i>
-        <div class="font-bold text-xl">Horarios de Hoy</div>
+    <!-- Formulario de selección -->
+    <div id="horarioForm" class="card">
+      <div class="card-header">
+        <i data-lucide="calendar" style="margin-bottom:0.4rem;"></i>
+        <p class="card-title">Horarios de Hoy</p>
       </div>
-
       <div id="scheduleGrid" class="schedule-grid">
-        <div class="text-center w-full py-10 text-gray-400">
-           Cargando horarios...
+        <p class="loading-text">Cargando horarios...</p>
+      </div>
+      <button id="submitBtn" class="btn-submit" disabled>Confirmar Selección</button>
+      <div id="statusMsg"></div>
+    </div>
+
+    <!-- Vista confirmada -->
+    <div id="confirmedView" class="card">
+      <div class="confirmed-header">
+        <div class="check-badge">
+          <i data-lucide="check-circle"></i>
         </div>
+        <h2 style="font-size:1.5rem;font-weight:800;">Voto Confirmado</h2>
+        <p style="color:#475569;font-size:0.9rem;margin-top:0.3rem;">Ya reservaste tus horarios para hoy.</p>
       </div>
 
-      <div class="text-center mt-10">
-        <button type="submit" id="submitBtn" class="btn-premium btn-block py-4 text-xl">
-          Confirmar Seleccion
+      <div id="confirmedTrips" class="confirmed-trips"></div>
+
+      <p style="font-size:0.7rem;text-transform:uppercase;color:#475569;font-weight:700;text-align:center;margin-bottom:0.75rem;">Notificaciones y Cambios</p>
+      <div class="action-grid">
+        <button class="btn-action btn-green" id="btnMeFuiAntes">
+          <i data-lucide="check-circle"></i> Me fui antes
+        </button>
+        <button class="btn-action btn-blue" id="btnIreDespues">
+          <i data-lucide="clock"></i> Iré después
+        </button>
+        <button class="btn-action btn-rose" id="btnOtrosMedios">
+          <i data-lucide="car"></i> Otros medios
+        </button>
+        <button class="btn-action btn-slate" id="btnCambiarHorario">
+          <i data-lucide="edit-3"></i> Cambiar horario
         </button>
       </div>
-
-      <div id="status-message" class="text-center text-sm font-medium mt-4 text-blue-400"></div>
-    </form>
-
-    <div id="confirmedView" class="glass-card-wide card mb-6 p-8 hidden animate-fade-in">
-      <div class="text-center mb-8">
-        <div class="confirm-badge mx-auto mb-4">
-          <i data-lucide="check-circle" class="w-12 h-12 text-green-400"></i>
-        </div>
-        <h2 class="text-3xl font-bold text-white mb-2">Voto Confirmado</h2>
-        <p class="text-gray-400">Ya has reservado tus horarios para el ciclo actual.</p>
-      </div>
-
-      <div class="confirmed-schedules-list space-y-4 mb-10"></div>
-
-      <div class="notification-actions space-y-4">
-        <p class="text-sm font-semibold text-gray-500 uppercase tracking-widest text-center mb-4">Notificaciones y Cambios</p>
-        <div class="confirmed-actions grid grid-cols-2 gap-3">
-          <button id="btnMeFuiAntes" class="btn-action bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
-            <i data-lucide="check-circle" class="w-5 h-5"></i>
-            <span>Me fui antes</span>
-          </button>
-          <button id="btnIreDespues" class="btn-action bg-blue-500/10 text-blue-400 border-blue-500/20">
-            <i data-lucide="clock" class="w-5 h-5"></i>
-            <span>Iré después</span>
-          </button>
-          <button id="btnOtrosMedios" class="btn-action bg-rose-500/10 text-rose-400 border-rose-500/20">
-            <i data-lucide="car" class="w-5 h-5"></i>
-            <span>Otros medios</span>
-          </button>
-          <button id="btnCambiarHorario" class="btn-action bg-slate-500/10 text-slate-400 border-slate-500/20">
-            <i data-lucide="edit-3" class="w-5 h-5"></i>
-            <span>Nuevo Plan</span>
-          </button>
-        </div>
-      </div>
     </div>
 
-    <div class="text-center mt-12">
-      <button id="logoutBtn" class="btn-pill-outline">Cerrar sesion</button>
+    <!-- Cerrar sesión -->
+    <div class="logout-wrap">
+      <button id="logoutBtn" class="btn-logout">Cerrar sesión</button>
     </div>
+
   </main>
 
-  <script type="module" src="app.js?v=324"></script>
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+    // ── CONFIG ──────────────────────────────────────────────
+    const SUPABASE_URL = 'https://irjwxegepkznqrisbrys.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyand4ZWdlcGt6bnFyaXNicnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNjk0NDIsImV4cCI6MjA5MTc0NTQ0Mn0.TZOhsy0ghfmjK8rd4GWcgbtOLpERKRJ62mjqc5gaYOM';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const SCHEDULES = [
+      { time: '7:00 AM',  route: 'Jarabacoa → La Vega',  fullText: '7:00 AM Jarabacoa -> La Vega',  group: 'manana', dir: 'ida'    },
+      { time: '9:00 AM',  route: 'Jarabacoa → La Vega',  fullText: '9:00 AM Jarabacoa -> La Vega',  group: 'manana', dir: 'ida'    },
+      { time: '12:10 PM', route: 'La Vega → Jarabacoa',  fullText: '12:10 PM La Vega -> Jarabacoa', group: 'manana', dir: 'vuelta' },
+      { time: '1:00 PM',  route: 'Jarabacoa → La Vega',  fullText: '1:00 PM Jarabacoa -> La Vega',  group: 'tarde',  dir: 'ida'    },
+      { time: '2:15 PM',  route: 'La Vega → Jarabacoa',  fullText: '2:15 PM La Vega -> Jarabacoa',  group: 'tarde',  dir: 'vuelta' },
+      { time: '3:00 PM',  route: 'Jarabacoa → La Vega',  fullText: '3:00 PM Jarabacoa -> La Vega',  group: 'tarde',  dir: 'ida'    },
+      { time: '4:10 PM',  route: 'La Vega → Jarabacoa',  fullText: '4:10 PM La Vega -> Jarabacoa',  group: 'tarde',  dir: 'vuelta' },
+      { time: '5:00 PM',  route: 'Jarabacoa → La Vega',  fullText: '5:00 PM Jarabacoa -> La Vega',  group: 'tarde',  dir: 'ida'    },
+      { time: '6:00 PM',  route: 'La Vega → Jarabacoa',  fullText: '6:00 PM La Vega -> Jarabacoa',  group: 'tarde',  dir: 'vuelta' },
+      { time: '8:00 PM',  route: 'La Vega → Jarabacoa',  fullText: '8:00 PM La Vega -> Jarabacoa',  group: 'tarde',  dir: 'vuelta' },
+      { time: '10:00 PM', route: 'La Vega → Jarabacoa',  fullText: '10:00 PM La Vega -> Jarabacoa', group: 'tarde',  dir: 'vuelta' },
+    ];
+
+    // ── STATE ───────────────────────────────────────────────
+    let currentUser = null;
+    let selectedHorarios = [];
+    let initialVotes = [];
+    let isEditing = false;
+
+    // ── DOM REFS ────────────────────────────────────────────
+    const horarioForm   = document.getElementById('horarioForm');
+    const scheduleGrid  = document.getElementById('scheduleGrid');
+    const confirmedView = document.getElementById('confirmedView');
+    const confirmedTrips= document.getElementById('confirmedTrips');
+    const submitBtn     = document.getElementById('submitBtn');
+    const statusMsg     = document.getElementById('statusMsg');
+    const staffMenu     = document.getElementById('staffMenu');
+    const logoutBtn     = document.getElementById('logoutBtn');
+
+    // ── HELPERS ─────────────────────────────────────────────
+    function getCycleDate() {
+      const now  = new Date();
+      const hora = now.getHours();
+      if (hora >= 22) {
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        return tomorrow.toISOString().split('T')[0];
+      }
+      return now.toISOString().split('T')[0];
+    }
+
+    function getGroup() {
+      const h = new Date().getHours();
+      return (h >= 22 || h < 10) ? 'manana' : 'tarde';
+    }
+
+    function setStatus(msg, color = '#60a5fa') {
+      statusMsg.style.color = color;
+      statusMsg.textContent = msg;
+    }
+
+    // ── SESSION ─────────────────────────────────────────────
+    logoutBtn.onclick = () => {
+      localStorage.clear();
+      window.location.href = 'index.html';
+    };
+
+    function loadSession() {
+      try {
+        const raw = localStorage.getItem('aeudj_user');
+        if (raw && raw !== 'undefined') return JSON.parse(raw);
+      } catch(e) {}
+      return null;
+    }
+
+    // ── STAFF MENU ──────────────────────────────────────────
+    function buildStaffMenu(user) {
+      if (!user) return;
+      const isAdmin = user.rol === 'administrador' || user.rol === 'desarrolladora';
+      const isVol   = user.rol === 'voluntario'    || user.rol === 'desarrolladora';
+      if (!isAdmin && !isVol) return;
+      staffMenu.classList.add('visible');
+      if (isAdmin) {
+        const a = document.createElement('a');
+        a.href = 'admin.html';
+        a.className = 'btn-admin';
+        a.textContent = '🛡️ Panel de Administración';
+        staffMenu.appendChild(a);
+      }
+      if (isVol) {
+        const a = document.createElement('a');
+        a.href = 'voluntario.html';
+        a.className = 'btn-volunteer';
+        a.textContent = '🟢 Panel de Voluntario';
+        staffMenu.appendChild(a);
+      }
+    }
+
+    // ── RENDER HORARIOS ─────────────────────────────────────
+    function renderHorarios() {
+      const group = getGroup();
+      const visible = SCHEDULES.filter(s => s.group === group);
+
+      scheduleGrid.innerHTML = '';
+
+      if (visible.length === 0) {
+        scheduleGrid.innerHTML = '<p class="loading-text">No hay horarios disponibles en este momento.</p>';
+        return;
+      }
+
+      visible.forEach(s => {
+        const isSelected = selectedHorarios.includes(s.fullText);
+        const slot = document.createElement('div');
+        slot.className = 'time-slot' + (isSelected ? ' selected' : '');
+        slot.dataset.dir      = s.dir;
+        slot.dataset.fulltext = s.fullText;
+        slot.innerHTML = `
+          <div class="ts-icon">
+            <i data-lucide="${s.dir === 'ida' ? 'arrow-right' : 'arrow-left'}"></i>
+          </div>
+          <div class="ts-time">${s.time}</div>
+          <div class="ts-route">${s.route}</div>
+          <span class="${s.dir === 'ida' ? 'tag-ida' : 'tag-vuelta'}">${s.dir === 'ida' ? '↗ Ida' : '↙ Vuelta'}</span>
+          <div class="ts-check">✓</div>
+        `;
+        slot.addEventListener('click', () => toggleSlot(slot, s.fullText, s.dir));
+        scheduleGrid.appendChild(slot);
+      });
+
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function toggleSlot(el, fullText, dir) {
+      // Deselect others of same direction
+      document.querySelectorAll(`.time-slot.selected[data-dir="${dir}"]`).forEach(n => n.classList.remove('selected'));
+      selectedHorarios = selectedHorarios.filter(h => {
+        const s = SCHEDULES.find(x => x.fullText === h);
+        return s && s.dir !== dir;
+      });
+
+      const wasSelected = el.classList.contains('selected');
+      if (!wasSelected) {
+        el.classList.add('selected');
+        selectedHorarios.push(fullText);
+      }
+
+      // Enable submit only if one ida + one vuelta
+      const hasIda    = selectedHorarios.some(h => { const s = SCHEDULES.find(x=>x.fullText===h); return s && s.dir==='ida'; });
+      const hasVuelta = selectedHorarios.some(h => { const s = SCHEDULES.find(x=>x.fullText===h); return s && s.dir==='vuelta'; });
+      submitBtn.disabled = !(hasIda && hasVuelta);
+    }
+
+    // ── CONFIRMED VIEW ──────────────────────────────────────
+    function renderConfirmedView(votes) {
+      confirmedTrips.innerHTML = '';
+      votes.forEach(v => {
+        const s = SCHEDULES.find(x => x.fullText === v.horario);
+        const dir = s ? s.dir : (v.horario.includes('Jarabacoa') ? 'ida' : 'vuelta');
+        const card = document.createElement('div');
+        card.className = 'trip-card';
+        card.innerHTML = `
+          <div class="trip-icon ${dir}">
+            <i data-lucide="${dir === 'ida' ? 'arrow-right' : 'arrow-left'}"></i>
+          </div>
+          <div class="trip-info">
+            <div class="trip-label">${dir === 'ida' ? 'Salida' : 'Regreso'}</div>
+            <div class="trip-time">${v.horario.split(' ').slice(0,2).join(' ')}</div>
+            <div class="trip-route">${v.horario.split(' ').slice(2).join(' ')}</div>
+          </div>
+          <span class="trip-badge ${v.en_espera ? 'badge-espera' : 'badge-confirmed'}">${v.en_espera ? 'En espera' : 'Confirmado'}</span>
+        `;
+        confirmedTrips.appendChild(card);
+      });
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function showForm() {
+      horarioForm.style.display = 'block';
+      confirmedView.classList.remove('visible');
+      renderHorarios();
+    }
+
+    function showConfirmed(votes) {
+      horarioForm.style.display = 'none';
+      confirmedView.classList.add('visible');
+      renderConfirmedView(votes);
+    }
+
+    // ── CHECK EXISTING VOTES ────────────────────────────────
+    async function checkYaVotado() {
+      const cycleDate = getCycleDate();
+      try {
+        const { data, error } = await supabase
+          .from('votos')
+          .select('*')
+          .eq('usuario_id', currentUser.id)
+          .eq('fecha', cycleDate)
+          .gt('id', 40);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          initialVotes = data;
+          selectedHorarios = data.map(v => v.horario);
+          showConfirmed(data);
+        } else {
+          showForm();
+        }
+      } catch(err) {
+        console.error('Error verificando voto:', err);
+        showForm(); // Fallback: show form
+      }
+    }
+
+    // ── SUBMIT ───────────────────────────────────────────────
+    submitBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      if (selectedHorarios.length < 2) {
+        setStatus('Selecciona un viaje de ida y uno de vuelta.', '#f87171');
+        return;
+      }
+      submitBtn.disabled = true;
+      setStatus('Guardando tu selección...');
+      const cycleDate = getCycleDate();
+
+      try {
+        // Delete old votes for today
+        await supabase.from('votos').delete()
+          .eq('usuario_id', currentUser.id)
+          .eq('fecha', cycleDate);
+
+        // Insert new votes
+        const rows = selectedHorarios.map(h => ({
+          usuario_id: currentUser.id,
+          horario: h,
+          fecha: cycleDate,
+          nombre: currentUser.nombre,
+          matricula: currentUser.matricula,
+        }));
+
+        const { data, error } = await supabase.from('votos').insert(rows).select();
+        if (error) throw error;
+
+        setStatus('✅ ¡Horarios confirmados!', '#34d399');
+        setTimeout(() => showConfirmed(data), 800);
+
+      } catch(err) {
+        console.error('Error guardando voto:', err);
+        setStatus('Error al guardar. Intenta de nuevo.', '#f87171');
+        submitBtn.disabled = false;
+      }
+    });
+
+    // ── ACTION BUTTONS ───────────────────────────────────────
+    document.getElementById('btnMeFuiAntes').onclick   = () => window.location.href = 'cambios.html?tipo=antes';
+    document.getElementById('btnIreDespues').onclick   = () => window.location.href = 'cambios.html?tipo=despues';
+    document.getElementById('btnOtrosMedios').onclick  = () => window.location.href = 'cambios.html?tipo=otros';
+    document.getElementById('btnCambiarHorario').onclick = () => {
+      isEditing = true;
+      selectedHorarios = [...initialVotes.map(v => v.horario)];
+      showForm();
+    };
+
+    // ── INIT ─────────────────────────────────────────────────
+    async function init() {
+      // Load from localStorage first (instant)
+      currentUser = loadSession();
+
+      if (!currentUser) {
+        // Try Supabase auth
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          window.location.href = 'index.html';
+          return;
+        }
+        const { data: profile } = await supabase
+          .from('profiles').select('*').eq('id', session.user.id).single();
+        if (!profile) { window.location.href = 'index.html'; return; }
+        currentUser = profile;
+        localStorage.setItem('aeudj_user', JSON.stringify(profile));
+      }
+
+      buildStaffMenu(currentUser);
+      await checkYaVotado();
+    }
+
+    init();
+  </script>
 </body>
 </html>
