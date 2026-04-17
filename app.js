@@ -416,6 +416,7 @@ function initVotarPage() {
  
   async function checkYaVotado() {
     try {
+      const { data: snapshot, error } = await supabase
         .from('votos')
         .select('*')
         .eq('usuario_id', currentUser.id)
