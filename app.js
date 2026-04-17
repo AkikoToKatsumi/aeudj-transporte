@@ -1979,9 +1979,4 @@ window.cerrarModalEspera = function() {
  document.body.style.overflow = '';
 };
 
-function escapeHtml(text) {
- if (!text) return '';
- const div = document.createElement('div');
- div.textContent = text;
- return div.innerHTML;
-}
+
