@@ -1733,8 +1733,9 @@ function initCambiosPage() {
       
       window.location.href = 'gracias.html?cambio=1';
     } catch (e) {
-      alert('Error al cancelar: ' + e.message);
-      cargarDatos();
+    }
+  }
+}
 
 // ============================================
 // PÁGINA NO SUBIERON

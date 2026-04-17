@@ -458,7 +458,7 @@ tr:last-child td { border-bottom: none; }
 .space-y-5 > * + * { margin-top: 1.25rem; }
 .block { display: block; }
 .w-full { width: 100%; }
-.max-w-xl { max-w: 36rem; }
+.max-w-xl { max-width: 36rem; }
 .mx-auto { margin-left: auto; margin-right: auto; }
 .px-4 { padding-left: 1rem; padding-right: 1rem; }
 .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
