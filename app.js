@@ -1,4 +1,4 @@
-import { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY } from './supabase-config.js?v=322';
+import { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY } from './supabase-config.js?v=323';
 
 
 alert('SISTEMA ACTIVADO ✅');
@@ -11,6 +11,8 @@ let selectedHorarios = [];
 let isEditing = false;
 let initialVotes = [];
 let pageInitialized = false;
+let currentAdminStats = null;
+let horarioForm, scheduleGrid, statusMsg, confirmedView;
 
 function refreshIcons() {
  try {
@@ -635,7 +637,7 @@ function initVotarPage() {
       const { error: insErr } = await supabase.from('votos').insert(dataToInsert);
       if (insErr) throw insErr;
       
-      window.location.href = 'gracias.html?v=322';
+      window.location.href = 'gracias.html?v=323';
     } catch (error) {
       console.error('ERROR:', error);
       alert('Error al guardar: ' + error.message);
