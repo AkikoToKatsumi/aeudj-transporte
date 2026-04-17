@@ -381,15 +381,6 @@ function initIndexPage() {
  });
   }
 
- function validateEmail(email) {
- const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
- return re.test(email);
- }
- 
- function showError(msg) {
- errorDiv.textContent = msg;
- errorDiv.classList.remove('hidden');
- }
 }
 
 // ============================================
