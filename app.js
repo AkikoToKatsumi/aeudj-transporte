@@ -1,4 +1,4 @@
-import { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY } from './supabase-config.js?v=321';
+import { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY } from './supabase-config.js?v=322';
 
 
 alert('SISTEMA ACTIVADO ✅');
@@ -26,9 +26,60 @@ function refreshIcons() {
 // INICIALIZACIN
 // ============================================
 document.addEventListener('DOMContentLoaded', async function() {
- if (page) {
- initPage(page);
- }
+  refreshIcons();
+  checkSession();
+
+  const page = document.body.dataset.page;
+
+  // Asignar logout de inmediato, sin esperar auth
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.onclick = () => {
+      localStorage.clear();
+      window.location.href = 'index.html';
+    };
+  }
+
+  // Si ya hay sesion en localStorage, inicializar de inmediato
+  if (currentUser && page) {
+    pageInitialized = true;
+    initPage(page);
+  }
+
+  // Escuchar cambios de autenticacion (Supabase)
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    if (session) {
+      const user = session.user;
+      if (!currentUser || currentUser.id !== user.id) {
+        try {
+          const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+          if (data) {
+            currentUser = data;
+            if (currentUser.matricula === '20230105' && currentUser.rol !== 'desarrolladora') {
+              currentUser.rol = 'desarrolladora';
+              supabase.from('profiles').update({ rol: 'desarrolladora' }).eq('id', user.id).then();
+            }
+            setSession(currentUser);
+          }
+        } catch(e) { console.error('Error fetching profile:', e); }
+      }
+
+      if (page === 'index' && currentUser) {
+        window.location.href = 'votar.html';
+      }
+
+      // Inicializar pagina si aun no se hizo
+      if (!pageInitialized && page) {
+        pageInitialized = true;
+        initPage(page);
+      }
+    } else {
+      clearSession();
+      if (['votar', 'cambios', 'admin', 'voluntario'].includes(page)) {
+        window.location.href = 'index.html';
+      }
+    }
+  });
 });
 
 // ============================================
@@ -584,7 +635,7 @@ function initVotarPage() {
       const { error: insErr } = await supabase.from('votos').insert(dataToInsert);
       if (insErr) throw insErr;
       
-      window.location.href = 'gracias.html?v=320';
+      window.location.href = 'gracias.html?v=322';
     } catch (error) {
       console.error('ERROR:', error);
       alert('Error al guardar: ' + error.message);
