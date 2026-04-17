@@ -490,7 +490,7 @@
       if (activeFilter === 'vuelta') filtered = allVotos.filter(v => !isIda(v.horario));
 
       document.getElementById('statTotal').textContent    = allVotos.length;
-      document.getElementById('statPresentes').textContent = checked.size;
+      document.getElementById('statPresentes').textContent = Object.values(attendanceState).filter(v => v === 'subio').length;
       document.getElementById('statHorarios').textContent = new Set(allVotos.map(v=>v.horario)).size;
 
       container.innerHTML = '';
