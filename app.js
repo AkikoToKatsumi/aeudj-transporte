@@ -496,9 +496,9 @@ function initVotarPage() {
  const ahora = new Date();
  const hora = ahora.getHours();
  
- // Grupo Maana: 10 PM a 9:59 AM
+ // Grupo Manana: 10 PM a 9:59 AM
  // Grupo Tarde: 10 AM a 9:59 PM
- const currentGroup = (hora >= 22 || hora < 10) ? 'maana' : 'tarde';
+ const currentGroup = (hora >= 22 || hora < 10) ? 'manana' : 'tarde';
  
  const visibleSchedules = transportSchedules.filter(s => s.group === currentGroup);
  
