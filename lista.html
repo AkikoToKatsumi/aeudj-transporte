@@ -262,6 +262,10 @@
     <header>
       <h1>📋 Lista de Pasajeros</h1>
       <div class="date-badge" id="fechaBadge">Cargando...</div>
+      <div style="margin-top:0.5rem;display:inline-flex;align-items:center;gap:0.35rem;font-size:0.72rem;color:#34d399;font-weight:600;">
+        <span style="width:7px;height:7px;background:#34d399;border-radius:50%;display:inline-block;animation:pulse 2s infinite;"></span>
+        Actualizando en tiempo real
+      </div>
     </header>
 
     <!-- Stats -->
@@ -338,7 +342,8 @@
           .from('votos').select('*')
           .eq('fecha', cycleDate)
           .gt('id', 40)
-          .order('horario');
+          .order('horario', { ascending: true })
+          .order('created_at', { ascending: true });
 
         if (error) throw error;
 
@@ -425,6 +430,24 @@
     document.getElementById('reloadBtn').onclick = loadData;
     if (window.lucide) window.lucide.createIcons();
     loadData();
+
+    // ── TIEMPO REAL ─────────────────────────────────────
+    const cycleDate = (() => {
+      const now = new Date();
+      if (now.getHours() >= 22) {
+        const t = new Date(now); t.setDate(t.getDate()+1);
+        return t.toISOString().split('T')[0];
+      }
+      return now.toISOString().split('T')[0];
+    })();
+
+    supabase
+      .channel('votos-lista')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'votos', filter: `fecha=eq.${cycleDate}` },
+        () => { loadData(); }
+      )
+      .subscribe();
   </script>
 </body>
 </html>

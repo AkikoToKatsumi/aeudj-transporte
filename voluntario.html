@@ -390,7 +390,8 @@
           .from('votos').select('*')
           .eq('fecha', cycleDate)
           .gt('id', 40)
-          .order('horario');
+          .order('horario', { ascending: true })
+          .order('created_at', { ascending: true });
 
         if (error) throw error;
         allVotos = data || [];
@@ -500,6 +501,15 @@
 
     if (window.lucide) window.lucide.createIcons();
     loadData();
+
+    // ── TIEMPO REAL ────────────────────────
+    supabase
+      .channel('votos-voluntario')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'votos' },
+        () => { loadData(); }
+      )
+      .subscribe();
   </script>
 </body>
 </html>
