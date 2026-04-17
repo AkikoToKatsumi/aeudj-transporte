@@ -40,6 +40,11 @@
           <i data-lucide="activity"></i>
           <span>Actividad</span>
         </a>
+        <a href="#" class="nav-item" data-screen="penalidades">
+          <i data-lucide="alert-triangle"></i>
+          <span>Penalidades</span>
+          <span id="penalBadge" style="display:none;background:#ef4444;color:white;font-size:0.6rem;font-weight:700;padding:0.1rem 0.45rem;border-radius:999px;margin-left:auto;">0</span>
+        </a>
       </nav>
 
       <div class="sidebar-footer">
@@ -183,6 +188,95 @@
           <p>Próximamente podrás ver quién cambió cada horario y cuándo.</p>
         </div>
       </section>
+
+      <!-- ===== PENALIDADES SCREEN ===== -->
+      <section id="screen-penalidades" class="admin-screen hidden">
+        <style>
+          .pen-tabs { display:flex; gap:0.5rem; margin-bottom:1.5rem; }
+          .pen-tab {
+            padding:0.5rem 1.2rem; border-radius:0.6rem; font-size:0.82rem; font-weight:600;
+            border:1px solid rgba(255,255,255,0.08); background:transparent; color:#64748b; cursor:pointer; transition:all 0.15s;
+          }
+          .pen-tab.active { background:rgba(239,68,68,0.18); border-color:rgba(239,68,68,0.4); color:#f87171; }
+          .pen-tab.active-blue { background:rgba(59,130,246,0.18); border-color:rgba(59,130,246,0.4); color:#60a5fa; }
+          .pen-tab:hover:not(.active):not(.active-blue) { color:#94a3b8; border-color:rgba(255,255,255,0.15); }
+
+          .pen-table { width:100%; border-collapse:collapse; }
+          .pen-table th {
+            text-align:left; font-size:0.68rem; text-transform:uppercase; font-weight:700;
+            color:#475569; padding:0.6rem 1rem; border-bottom:1px solid rgba(255,255,255,0.05);
+          }
+          .pen-table td {
+            padding:0.85rem 1rem; border-bottom:1px solid rgba(255,255,255,0.03);
+            font-size:0.85rem; color:#cbd5e1;
+          }
+          .pen-table tr:hover td { background:rgba(255,255,255,0.02); }
+          .pen-table .name-cell { font-weight:600; color:#f1f5f9; }
+          .pen-table .mat-cell  { font-family:monospace; font-size:0.75rem; color:#475569; }
+
+          .falta-count {
+            display:inline-flex; align-items:center; gap:0.25rem;
+            font-weight:700; font-size:0.85rem;
+          }
+          .falta-count.high { color:#f87171; }
+          .falta-count.med  { color:#fbbf24; }
+          .falta-count.low  { color:#94a3b8; }
+
+          .pen-badge {
+            display:inline-block; font-size:0.65rem; font-weight:700;
+            padding:0.2rem 0.6rem; border-radius:999px;
+          }
+          .pen-badge.penalizado { background:rgba(239,68,68,0.18); color:#f87171; border:1px solid rgba(239,68,68,0.3); }
+          .pen-badge.activo     { background:rgba(52,211,153,0.12); color:#34d399; border:1px solid rgba(52,211,153,0.25); }
+
+          .btn-levantar {
+            display:inline-flex; align-items:center; gap:0.3rem;
+            padding:0.35rem 0.85rem; border-radius:0.5rem;
+            font-size:0.75rem; font-weight:700;
+            background:rgba(59,130,246,0.12); color:#60a5fa;
+            border:1px solid rgba(59,130,246,0.3); cursor:pointer; transition:all 0.15s;
+          }
+          .btn-levantar:hover { background:rgba(59,130,246,0.25); }
+          .btn-levantar:disabled { opacity:0.4; cursor:not-allowed; }
+
+          .empty-pen { text-align:center; padding:3rem; color:#475569; font-size:0.9rem; }
+        </style>
+
+        <!-- Summary cards -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin-bottom:1.5rem;">
+          <div class="stat-card glass-card">
+            <div class="stat-header"><i data-lucide="alert-circle" class="text-red-400"></i><span class="stat-label">Penalizados</span></div>
+            <div id="penStatPen" class="stat-value" style="color:#f87171;">0</div>
+            <p class="stat-sub">Con 3+ faltas</p>
+          </div>
+          <div class="stat-card glass-card">
+            <div class="stat-header"><i data-lucide="x-circle" class="text-yellow-400"></i><span class="stat-label">Total Faltas</span></div>
+            <div id="penStatFaltas" class="stat-value" style="color:#fbbf24;">0</div>
+            <p class="stat-sub">Históricas acumuladas</p>
+          </div>
+          <div class="stat-card glass-card">
+            <div class="stat-header"><i data-lucide="check-circle" class="text-green-400"></i><span class="stat-label">Levantadas</span></div>
+            <div id="penStatLevantadas" class="stat-value" style="color:#34d399;">0</div>
+            <p class="stat-sub">Pagaron y se resolvió</p>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="pen-tabs">
+          <button class="pen-tab active" data-pen-tab="penalizados">⚠️ Penalizados</button>
+          <button class="pen-tab" data-pen-tab="historial">📋 Historial de Faltas</button>
+        </div>
+
+        <!-- Tab: Penalizados -->
+        <div id="penTab-penalizados" class="glass-card p-6">
+          <div id="penalizadosTable"><div class="empty-pen">Cargando...</div></div>
+        </div>
+
+        <!-- Tab: Historial -->
+        <div id="penTab-historial" class="glass-card p-6 hidden">
+          <div id="historialTable"><div class="empty-pen">Cargando...</div></div>
+        </div>
+      </section>
     </main>
   </div>
 
@@ -194,6 +288,9 @@
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const currentUser = JSON.parse(localStorage.getItem('aeudj_user') || 'null');
+    if (!currentUser || (currentUser.rol !== 'administrador' && currentUser.rol !== 'desarrolladora')) {
+      window.location.href = 'index.html';
+    }
     
     // State management
     let currentVotos = [];
@@ -249,7 +346,8 @@
         'dashboard': 'Dashboard Informativo',
         'votos': 'Listado de Pasajeros',
         'staff': 'Gestión de Personal',
-        'logs': 'Registro de Auditoría'
+        'logs': 'Registro de Auditoría',
+        'penalidades': 'Gestión de Penalidades'
       };
       document.getElementById('screenTitle').textContent = titles[screenId] || 'Panel Administrativo';
 
@@ -257,6 +355,7 @@
       if (screenId === 'dashboard') loadDashboardData();
       if (screenId === 'votos') loadVotosDetail();
       if (screenId === 'staff') loadStaffData();
+      if (screenId === 'penalidades') loadPenalidadesData();
       
       if (window.lucide) window.lucide.createIcons();
     }
@@ -494,6 +593,166 @@
       localStorage.clear();
       window.location.href = 'index.html';
     });
+
+    // ── PENALIDADES ──────────────────────────────────────────────────
+    async function loadPenalidadesData() {
+      try {
+        // Load penalidades
+        const { data: pens } = await supabase
+          .from('penalidades').select('*').order('total_faltas', { ascending: false });
+        
+        // Load historial de faltas
+        const { data: faltas } = await supabase
+          .from('faltas').select('*').order('created_at', { ascending: false });
+
+        const penalArr = pens || [];
+        const faltaArr = faltas || [];
+
+        // Update stats
+        const penalizados  = penalArr.filter(p => p.penalizado).length;
+        const levantadas   = penalArr.filter(p => !p.penalizado && p.total_faltas === 0 && p.fecha_penalidad).length;
+        document.getElementById('penStatPen').textContent       = penalizados;
+        document.getElementById('penStatFaltas').textContent    = faltaArr.length;
+        document.getElementById('penStatLevantadas').textContent = levantadas;
+
+        // Badge in sidebar
+        const badge = document.getElementById('penalBadge');
+        if (penalizados > 0) {
+          badge.textContent = penalizados;
+          badge.style.display = 'inline-block';
+        } else {
+          badge.style.display = 'none';
+        }
+
+        renderPenalizados(penalArr);
+        renderHistorial(faltaArr);
+
+        // Tab switching
+        document.querySelectorAll('.pen-tab').forEach(btn => {
+          btn.onclick = () => {
+            document.querySelectorAll('.pen-tab').forEach(b => { b.classList.remove('active'); b.classList.remove('active-blue'); });
+            document.getElementById('penTab-penalizados').classList.add('hidden');
+            document.getElementById('penTab-historial').classList.add('hidden');
+            const tab = btn.dataset.penTab;
+            document.getElementById(`penTab-${tab}`).classList.remove('hidden');
+            btn.classList.add(tab === 'historial' ? 'active-blue' : 'active');
+          };
+        });
+
+        if (window.lucide) window.lucide.createIcons();
+      } catch(err) {
+        console.error('Error cargando penalidades:', err);
+      }
+    }
+
+    function renderPenalizados(pens) {
+      const container = document.getElementById('penalizadosTable');
+      if (!pens.length) {
+        container.innerHTML = '<div class="empty-pen">✅ No hay estudiantes penalizados.</div>';
+        return;
+      }
+
+      let html = `<table class="pen-table">
+        <thead><tr>
+          <th>Nombre</th>
+          <th>Matrícula</th>
+          <th>Email</th>
+          <th>Faltas</th>
+          <th>Estado</th>
+          <th>Fecha Pen.</th>
+          <th>Acción</th>
+        </tr></thead><tbody>`;
+
+      pens.forEach(p => {
+        const faltas = p.total_faltas;
+        const cls = faltas >= 3 ? 'high' : faltas >= 2 ? 'med' : 'low';
+        const penalizado = p.penalizado;
+        const fecha = p.fecha_penalidad ? new Date(p.fecha_penalidad).toLocaleDateString('es-ES') : '—';
+
+        html += `<tr>
+          <td class="name-cell">${p.nombre || '—'}</td>
+          <td class="mat-cell">${p.matricula || '—'}</td>
+          <td style="font-size:0.78rem;color:#64748b;">${p.email || '—'}</td>
+          <td><span class="falta-count ${cls}">${faltas} / 3</span></td>
+          <td><span class="pen-badge ${penalizado ? 'penalizado' : 'activo'}">${penalizado ? '⛔ Penalizado' : '✅ Al día'}</span></td>
+          <td style="font-size:0.78rem;">${fecha}</td>
+          <td>${penalizado
+            ? `<button class="btn-levantar" data-uid="${p.usuario_id}" data-nombre="${p.nombre}">
+                🔓 Levantar
+               </button>`
+            : '<span style="color:#475569;font-size:0.78rem;">—</span>'
+          }</td>
+        </tr>`;
+      });
+
+      html += '</tbody></table>';
+      container.innerHTML = html;
+
+      // Attach levantar handlers
+      container.querySelectorAll('.btn-levantar').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const uid    = btn.dataset.uid;
+          const nombre = btn.dataset.nombre;
+          if (!confirm(`¿Confirmas que ${nombre} ya pagó la penalidad? Esto reiniciará su contador de faltas a 0.`)) return;
+          btn.disabled = true;
+          btn.textContent = 'Procesando...';
+          await levantarPenalidad(uid);
+          loadPenalidadesData(); // Reload
+        });
+      });
+
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function renderHistorial(faltas) {
+      const container = document.getElementById('historialTable');
+      if (!faltas.length) {
+        container.innerHTML = '<div class="empty-pen">No hay faltas registradas.</div>';
+        return;
+      }
+
+      let html = `<table class="pen-table">
+        <thead><tr>
+          <th>Nombre</th>
+          <th>Matrícula</th>
+          <th>Horario</th>
+          <th>Fecha</th>
+          <th>Registrado</th>
+        </tr></thead><tbody>`;
+
+      faltas.forEach(f => {
+        const registrado = new Date(f.created_at).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+        html += `<tr>
+          <td class="name-cell">${f.nombre || '—'}</td>
+          <td class="mat-cell">${f.matricula || '—'}</td>
+          <td style="font-size:0.8rem;">${f.horario || '—'}</td>
+          <td style="font-size:0.8rem;">${f.fecha || '—'}</td>
+          <td style="font-size:0.75rem;color:#64748b;">${registrado}</td>
+        </tr>`;
+      });
+
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    async function levantarPenalidad(usuarioId) {
+      try {
+        // Reset counter and mark as NOT penalized
+        await supabase.from('penalidades').update({
+          total_faltas:    0,
+          penalizado:      false,
+          fecha_penalidad: null,
+          updated_at:      new Date().toISOString(),
+        }).eq('usuario_id', usuarioId);
+
+        // Also delete their falta history (clean slate after paying)
+        await supabase.from('faltas').delete().eq('usuario_id', usuarioId);
+
+      } catch(err) {
+        console.error('Error levantando penalidad:', err);
+        alert('Error al levantar la penalidad. Intenta de nuevo.');
+      }
+    }
   </script>
 </body>
 </html>
