@@ -1,4 +1,4 @@
-import { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY } from './supabase-config.js?v=320';
+import { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY } from './supabase-config.js?v=321';
 
 
 alert('SISTEMA ACTIVADO ✅');
@@ -368,7 +368,15 @@ function initVotarPage() {
 
   // El listener de logout ahora se asigna en DOMContentLoaded para rapidez
  
-  checkYaVotado();
+  // FALLBACK DE EMERGENCIA: Si en 3 segundos no ha cargado, forzar render
+  const safetyTimeout = setTimeout(() => {
+    if (horarioForm && !horarioForm.classList.contains('hidden') && scheduleGrid.innerHTML.includes('Cargando')) {
+      console.log('⚠️ Rescue Triggered: Fallback render');
+      renderHorarios();
+    }
+  }, 3000);
+
+  checkYaVotado().then(() => clearTimeout(safetyTimeout));
 
   async function checkYaVotado() {
     try {
