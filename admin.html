@@ -67,7 +67,7 @@
           <p class="text-sm text-gray-500">Transporte activo para el <span id="fechaAdmin"></span></p>
         </div>
         <div class="flex gap-3">
-          <button class="btn-pill-outline btn-small" onclick="location.reload()">
+          <button class="btn-pill-outline btn-small" onclick="window.refreshCurrentScreen()">
             <i data-lucide="refresh-cw" class="icon-inline"></i> Refrescar
           </button>
         </div>
@@ -527,6 +527,14 @@
       if (window.lucide) window.lucide.createIcons();
     }
 
+    window.refreshCurrentScreen = () => {
+      const activeNav = document.querySelector('.nav-item.active');
+      if (activeNav) {
+        const screenId = activeNav.dataset.screen;
+        switchScreen(screenId);
+      }
+    };
+
     async function loadDashboardData() {
       const today = new Date().toISOString().split('T')[0];
       const { data: votos, error } = await supabase.from('votos').select('*').eq('fecha', today).gt('id', 40).order('horario');
@@ -954,7 +962,7 @@
         .eq('id', volunteerId);
 
       if (error) alert('Error al asignar turno');
-      // No reload here to avoid closing modal unexpectedly
+      else loadHorariosData();
     };
 
     function initForms() {
