@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -32,10 +32,6 @@
           <i data-lucide="users"></i>
           <span>Pasajeros</span>
         </a>
-        <a href="#" class="nav-item" data-screen="horarios">
-          <i data-lucide="calendar"></i>
-          <span>Horarios</span>
-        </a>
         <a href="#" class="nav-item" data-screen="staff">
           <i data-lucide="shield-check"></i>
           <span>Personal</span>
@@ -54,7 +50,7 @@
       <div class="sidebar-footer">
         <button id="logoutBtn" class="logout-link">
           <i data-lucide="log-out"></i>
-          <span>Cerrar Sesión</span>
+          <span>Cerrar Sesion</span>
         </button>
       </div>
     </aside>
@@ -108,7 +104,7 @@
           <div class="stat-card glass-card border-blue-500/20">
             <div class="stat-header">
               <i data-lucide="timer" class="text-purple-400"></i>
-              <span class="stat-label">Control de Sesión</span>
+              <span class="stat-label">Control de SesiÃ³n</span>
             </div>
             <div class="mt-2 space-y-3">
               <div class="flex items-center justify-between">
@@ -119,18 +115,17 @@
                 </label>
               </div>
               <select id="sessionManualSelect" class="premium-select text-xs w-full py-1 h-8" disabled>
-                <option value="manana">☀️ Matutina (Mañana)</option>
-                <option value="tarde">🌙 Vespertina (Tarde/Noche)</option>
+                <option value="manana">ðŸŒ™ Matutina (MaÃ±ana)</option>
+                <option value="tarde">â˜€ï¸ Vespertina (Tarde/Noche)</option>
               </select>
             </div>
-            <p id="sessionStatusText" class="text-[10px] text-gray-500 mt-2">Automático: Según la hora</p>
+            <p id="sessionStatusText" class="text-[10px] text-gray-500 mt-2">AutomÃ¡tico: SegÃºn la hora</p>
           </div>
         </div>
 
-        <!-- Visual Analytics Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <!-- Main Demand Chart -->
-          <div class="lg:col-span-2 chart-container glass-card p-6">
+        <div class="dashboard-main-grid">
+          <!-- Charts Section -->
+          <div class="chart-container glass-card p-6">
             <div class="flex justify-between items-center mb-6">
               <h3 class="text-lg font-bold text-white flex items-center gap-2">
                 <i data-lucide="trending-up" class="text-blue-400"></i> Demanda por Horario
@@ -141,20 +136,6 @@
             </div>
           </div>
 
-          <!-- Distribution Chart -->
-          <div class="chart-container glass-card p-6">
-            <div class="flex justify-between items-center mb-6">
-              <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                <i data-lucide="pie-chart" class="text-purple-400"></i> Distribución
-              </h3>
-            </div>
-            <div class="w-full h-[300px] flex items-center justify-center">
-              <canvas id="distributionChart"></canvas>
-            </div>
-          </div>
-        </div>
-
-        <div class="dashboard-main-grid mt-6">
           <!-- Quick List -->
           <div class="summary-container glass-card p-6">
             <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
@@ -195,39 +176,17 @@
                </div>
                <div class="input-wrapper">
                  <i data-lucide="hash" class="input-icon"></i>
-                 <input type="text" id="staffMatricula" placeholder="Matrícula o ID" class="premium-input" required>
+                 <input type="text" id="staffMatricula" placeholder="MatrÃ­cula o ID" class="premium-input" required>
                </div>
                <div class="input-wrapper">
                  <i data-lucide="lock" class="input-icon"></i>
-                 <input type="password" id="staffPassword" placeholder="Contraseña Temporal" class="premium-input" required>
+                 <input type="password" id="staffPassword" placeholder="ContraseÃ±a Temporal" class="premium-input" required>
                </div>
                <select id="staffRol" class="premium-select w-full">
                  <option value="estudiante">Estudiante</option>
                  <option value="voluntario">Voluntario</option>
                  <option value="administrador">Administrador</option>
                </select>
-
-               <div id="voluntarioFields" class="hidden space-y-4 pt-2 border-t border-white/5">
-                 <p class="text-[10px] text-blue-400 font-bold uppercase tracking-wider">Asignación de Turno</p>
-                 <div class="grid grid-cols-2 gap-3">
-                   <select id="staffDia" class="premium-select text-xs">
-                     <option value="">Seleccionar Día</option>
-                     <option value="Lunes">Lunes</option>
-                     <option value="Martes">Martes</option>
-                     <option value="Miercoles">Miércoles</option>
-                     <option value="Jueves">Jueves</option>
-                     <option value="Viernes">Viernes</option>
-                     <option value="Sabado">Sábado</option>
-                   </select>
-                   <select id="staffHorario" class="premium-select text-xs">
-                     <option value="">Seleccionar Horario</option>
-                     <option value="Mañana (7:00 AM)">Mañana (7:00 AM)</option>
-                     <option value="Tarde (4:00 PM)">Tarde (4:00 PM)</option>
-                     <option value="Noche (9:00 PM)">Noche (9:00 PM)</option>
-                   </select>
-                 </div>
-               </div>
-
                <button type="submit" class="btn-premium">Registrar Usuario</button>
              </form>
              <div id="staffStatus" class="hidden mt-4 p-3 rounded-xl text-center text-sm"></div>
@@ -235,7 +194,7 @@
 
            <!-- Staff List -->
            <div id="staffListMng" class="glass-card p-8">
-              <h3 class="text-xl font-bold text-white mb-6">Gestión de Roles</h3>
+              <h3 class="text-xl font-bold text-white mb-6">GestiÃ³n de Roles</h3>
               <div id="staffTableContainer" class="custom-scroll overflow-y-auto max-h-[500px]">
                 <!-- Cargado por JS -->
               </div>
@@ -243,37 +202,12 @@
         </div>
       </section>
 
-      <!-- Horarios Management Screen -->
-      <section id="screen-horarios" class="admin-screen hidden">
-        <div class="glass-card p-8">
-          <div class="flex justify-between items-center mb-8">
-            <div>
-              <h3 class="text-xl font-bold text-white">Gestión de Turnos Semanales</h3>
-              <p class="text-xs text-gray-500 mt-1">Asigna voluntarios responsables de pasar la lista en cada horario.</p>
-            </div>
-            <div class="flex gap-2">
-              <span class="flex items-center gap-2 text-[10px] text-green-400 bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20">
-                <i data-lucide="info" class="w-3 h-3"></i> 1 Voluntario por Turno
-              </span>
-            </div>
-          </div>
-          
-          <div id="horariosGridContainer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            <!-- Cargado dinámicamente -->
-            <div class="flex flex-col items-center justify-center py-20 opacity-30">
-               <div class="spinner-small mb-4"></div>
-               <p>Cargando cuadrícula de horarios...</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <!-- Activity Logs (Future) -->
       <section id="screen-logs" class="admin-screen hidden">
         <div class="glass-card p-10 text-center opacity-60">
           <i data-lucide="construction" class="w-16 h-16 mx-auto mb-4 text-orange-400"></i>
-          <h3 class="text-xl font-bold text-white">Auditoría en Desarrollo</h3>
-          <p>Próximamente podrás ver quién cambió cada horario y cuándo.</p>
+          <h3 class="text-xl font-bold text-white">AuditorÃ­a en Desarrollo</h3>
+          <p>PrÃ³ximamente podrÃ¡s ver quiÃ©n cambiÃ³ cada horario y cuÃ¡ndo.</p>
         </div>
       </section>
 
@@ -354,19 +288,19 @@
           <div class="stat-card glass-card">
             <div class="stat-header"><i data-lucide="x-circle" class="text-yellow-400"></i><span class="stat-label">Total Faltas</span></div>
             <div id="penStatFaltas" class="stat-value" style="color:#fbbf24;">0</div>
-            <p class="stat-sub">Históricas acumuladas</p>
+            <p class="stat-sub">HistÃ³ricas acumuladas</p>
           </div>
           <div class="stat-card glass-card">
             <div class="stat-header"><i data-lucide="check-circle" class="text-green-400"></i><span class="stat-label">Levantadas</span></div>
             <div id="penStatLevantadas" class="stat-value" style="color:#34d399;">0</div>
-            <p class="stat-sub">Pagaron y se resolvió</p>
+            <p class="stat-sub">Pagaron y se resolviÃ³</p>
           </div>
         </div>
 
         <!-- Tabs -->
         <div class="pen-tabs">
-          <button class="pen-tab active" data-pen-tab="penalizados">⚠️ Penalizados</button>
-          <button class="pen-tab" data-pen-tab="historial">📋 Historial de Faltas</button>
+          <button class="pen-tab active" data-pen-tab="penalizados">âš ï¸ Penalizados</button>
+          <button class="pen-tab" data-pen-tab="historial">ðŸ“‹ Historial de Faltas</button>
         </div>
 
         <!-- Tab: Penalizados -->
@@ -448,17 +382,15 @@
       const titles = {
         'dashboard': 'Dashboard Informativo',
         'votos': 'Listado de Pasajeros',
-        'horarios': 'Gestión de Turnos',
-        'staff': 'Gestión de Personal',
-        'logs': 'Registro de Auditoría',
-        'penalidades': 'Gestión de Penalidades'
+        'staff': 'GestiÃ³n de Personal',
+        'logs': 'Registro de AuditorÃ­a',
+        'penalidades': 'GestiÃ³n de Penalidades'
       };
       document.getElementById('screenTitle').textContent = titles[screenId] || 'Panel Administrativo';
 
       // Load specific screen data
       if (screenId === 'dashboard') loadDashboardData();
       if (screenId === 'votos') loadVotosDetail();
-      if (screenId === 'horarios') loadHorariosData();
       if (screenId === 'staff') loadStaffData();
       if (screenId === 'penalidades') loadPenalidadesData();
       
@@ -527,22 +459,17 @@
       const labels = [];
       const confirmed = [];
       const waitlist = [];
-      let totalConfirmed = 0;
-      let totalWaitlist = 0;
 
       Object.keys(timeGroups).forEach(h => {
         labels.push(h.split(' ')[0] + ' ' + (h.split(' ')[1] || ''));
         confirmed.push(timeGroups[h].confirmados);
         waitlist.push(timeGroups[h].espera);
-        totalConfirmed += timeGroups[h].confirmados;
-        totalWaitlist += timeGroups[h].espera;
       });
 
-      // 1. Bar Chart: Demand per schedule
-      const ctxBar = document.getElementById('horariosChart').getContext('2d');
+      const ctx = document.getElementById('horariosChart').getContext('2d');
       if (window.adminChart) window.adminChart.destroy();
       
-      window.adminChart = new Chart(ctxBar, {
+      window.adminChart = new Chart(ctx, {
         type: 'bar',
         data: {
           labels: labels,
@@ -554,43 +481,10 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { 
-            legend: { 
-              position: 'bottom', 
-              labels: { color: '#94a3b8', font: { size: 11, weight: 'bold' } } 
-            } 
-          },
+          plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 11, weight: 'bold' } } } },
           scales: {
             x: { stacked: true, grid: { display: false }, ticks: { color: '#64748b' } },
             y: { stacked: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', stepSize: 1 } }
-          }
-        }
-      });
-
-      // 2. Donut Chart: Overall distribution
-      const ctxDonut = document.getElementById('distributionChart').getContext('2d');
-      if (window.distChart) window.distChart.destroy();
-
-      window.distChart = new Chart(ctxDonut, {
-        type: 'doughnut',
-        data: {
-          labels: ['Confirmados', 'En Espera'],
-          datasets: [{
-            data: [totalConfirmed, totalWaitlist],
-            backgroundColor: ['#3b82f6', '#f59e0b'],
-            borderWidth: 0,
-            hoverOffset: 10
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          cutout: '70%',
-          plugins: {
-            legend: {
-              position: 'bottom',
-              labels: { color: '#94a3b8', font: { size: 11, weight: 'bold' }, padding: 20 }
-            }
           }
         }
       });
@@ -666,7 +560,7 @@
                   <div class="flex flex-col gap-1">
                     <span class="text-[10px] font-bold px-2 py-1 rounded uppercase max-w-fit ${u.rol === 'administrador' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' : u.rol === 'voluntario' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-gray-500/10 text-gray-400'}">${u.rol}</span>
                     ${u.rol === 'voluntario' ? `
-                      <p class="text-[9px] text-blue-400 font-bold">${u.dia_asignado || 'Sin día'} - ${u.horario_asignado || 'Sin hora'}</p>
+                      <p class="text-[9px] text-blue-400 font-bold">${u.dia_asignado || 'Sin dÃ­a'} - ${u.horario_asignado || 'Sin hora'}</p>
                     ` : ''}
                   </div>
                 </td>
@@ -677,11 +571,32 @@
                       <option value="voluntario" ${u.rol === 'voluntario' ? 'selected' : ''}>Voluntario</option>
                       <option value="administrador" ${u.rol === 'administrador' ? 'selected' : ''}>Admin</option>
                     </select>
+
+                <div id="voluntarioFields" class="hidden space-y-4 pt-2 border-t border-white/5">
+                  <p class="text-[10px] text-blue-400 font-bold uppercase tracking-wider">Asignación de Turno</p>
+                  <div class="grid grid-cols-2 gap-3">
+                    <select id="staffDia" class="premium-select text-xs">
+                      <option value="">Seleccionar Día</option>
+                      <option value="Lunes">Lunes</option>
+                      <option value="Martes">Martes</option>
+                      <option value="Miercoles">Miércoles</option>
+                      <option value="Jueves">Jueves</option>
+                      <option value="Viernes">Viernes</option>
+                      <option value="Sabado">Sábado</option>
+                    </select>
+                    <select id="staffHorario" class="premium-select text-xs">
+                      <option value="">Seleccionar Horario</option>
+                      <option value="Mañana (7:00 AM)">Mañana (7:00 AM)</option>
+                      <option value="Tarde (4:00 PM)">Tarde (4:00 PM)</option>
+                      <option value="Noche (9:00 PM)">Noche (9:00 PM)</option>
+                    </select>
+                  </div>
+                </div>
                     
                     ${u.rol === 'voluntario' ? `
                       <div class="flex gap-1">
                         <select onchange="window.updateUserAssignment('${u.id}', 'dia', this.value)" class="bg-[#0f172a] border border-white/10 text-[9px] rounded p-1 text-gray-500 w-full">
-                          <option value="">Día...</option>
+                          <option value="">DÃ­a...</option>
                           <option value="Lunes" ${u.dia_asignado === 'Lunes' ? 'selected' : ''}>Lun</option>
                           <option value="Martes" ${u.dia_asignado === 'Martes' ? 'selected' : ''}>Mar</option>
                           <option value="Miercoles" ${u.dia_asignado === 'Miercoles' ? 'selected' : ''}>Mie</option>
@@ -689,12 +604,54 @@
                           <option value="Viernes" ${u.dia_asignado === 'Viernes' ? 'selected' : ''}>Vie</option>
                           <option value="Sabado" ${u.dia_asignado === 'Sabado' ? 'selected' : ''}>Sab</option>
                         </select>
+
+                <div id="voluntarioFields" class="hidden space-y-4 pt-2 border-t border-white/5">
+                  <p class="text-[10px] text-blue-400 font-bold uppercase tracking-wider">Asignación de Turno</p>
+                  <div class="grid grid-cols-2 gap-3">
+                    <select id="staffDia" class="premium-select text-xs">
+                      <option value="">Seleccionar Día</option>
+                      <option value="Lunes">Lunes</option>
+                      <option value="Martes">Martes</option>
+                      <option value="Miercoles">Miércoles</option>
+                      <option value="Jueves">Jueves</option>
+                      <option value="Viernes">Viernes</option>
+                      <option value="Sabado">Sábado</option>
+                    </select>
+                    <select id="staffHorario" class="premium-select text-xs">
+                      <option value="">Seleccionar Horario</option>
+                      <option value="Mañana (7:00 AM)">Mañana (7:00 AM)</option>
+                      <option value="Tarde (4:00 PM)">Tarde (4:00 PM)</option>
+                      <option value="Noche (9:00 PM)">Noche (9:00 PM)</option>
+                    </select>
+                  </div>
+                </div>
                         <select onchange="window.updateUserAssignment('${u.id}', 'horario', this.value)" class="bg-[#0f172a] border border-white/10 text-[9px] rounded p-1 text-gray-500 w-full">
                           <option value="">Hora...</option>
-                          <option value="Mañana (7:00 AM)" ${u.horario_asignado === 'Mañana (7:00 AM)' ? 'selected' : ''}>7AM</option>
+                          <option value="MaÃ±ana (7:00 AM)" ${u.horario_asignado === 'MaÃ±ana (7:00 AM)' ? 'selected' : ''}>7AM</option>
                           <option value="Tarde (4:00 PM)" ${u.horario_asignado === 'Tarde (4:00 PM)' ? 'selected' : ''}>4PM</option>
                           <option value="Noche (9:00 PM)" ${u.horario_asignado === 'Noche (9:00 PM)' ? 'selected' : ''}>9PM</option>
                         </select>
+
+                <div id="voluntarioFields" class="hidden space-y-4 pt-2 border-t border-white/5">
+                  <p class="text-[10px] text-blue-400 font-bold uppercase tracking-wider">Asignación de Turno</p>
+                  <div class="grid grid-cols-2 gap-3">
+                    <select id="staffDia" class="premium-select text-xs">
+                      <option value="">Seleccionar Día</option>
+                      <option value="Lunes">Lunes</option>
+                      <option value="Martes">Martes</option>
+                      <option value="Miercoles">Miércoles</option>
+                      <option value="Jueves">Jueves</option>
+                      <option value="Viernes">Viernes</option>
+                      <option value="Sabado">Sábado</option>
+                    </select>
+                    <select id="staffHorario" class="premium-select text-xs">
+                      <option value="">Seleccionar Horario</option>
+                      <option value="Mañana (7:00 AM)">Mañana (7:00 AM)</option>
+                      <option value="Tarde (4:00 PM)">Tarde (4:00 PM)</option>
+                      <option value="Noche (9:00 PM)">Noche (9:00 PM)</option>
+                    </select>
+                  </div>
+                </div>
                       </div>
                     ` : ''}
                   </div>
@@ -707,7 +664,7 @@
     }
 
     window.updateUserRole = async (userId, newRol) => {
-      if (!confirm('¿Cambiar el rol de este usuario?')) return;
+      if (!confirm('Â¿Cambiar el rol de este usuario?')) return;
       const { error } = await supabase.from('profiles').update({ rol: newRol }).eq('id', userId);
       if (!error) loadStaffData();
       else alert('Error al actualizar rol');
@@ -719,101 +676,8 @@
       if (field === 'horario') updateObj.horario_asignado = value;
       
       const { error } = await supabase.from('profiles').update(updateObj).eq('id', userId);
-      if (error) alert('Error al actualizar asignación');
-      else {
-        // Refresh whatever screen we are in
-        const activeScreen = document.querySelector('.nav-item.active').dataset.screen;
-        if (activeScreen === 'staff') loadStaffData();
-        if (activeScreen === 'horarios') loadHorariosData();
-      }
-    };
-
-    // ── HORARIOS GRID LOGIC ───────────────────────────────────────────────────
-    async function loadHorariosData() {
-      const container = document.getElementById('horariosGridContainer');
-      container.innerHTML = '<div class="spinner mx-auto col-span-full"></div>';
-
-      const { data: allUsers, error } = await supabase.from('profiles').select('*').order('nombre');
-      if (error) { console.error(error); return; }
-
-      const volunteers = allUsers.filter(u => u.rol === 'voluntario');
-      
-      const days = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
-      const times = ['Mañana (7:00 AM)', 'Tarde (4:00 PM)', 'Noche (9:00 PM)'];
-
-      container.innerHTML = '';
-
-      days.forEach(day => {
-        const dayCard = document.createElement('div');
-        dayCard.className = 'glass-card-sub p-6 rounded-2xl border border-white/5 bg-white/2';
-        
-        let slotsHtml = '';
-        times.forEach(time => {
-          const assigned = volunteers.filter(v => v.dia_asignado === day && v.horario_asignado === time);
-          
-          slotsHtml += `
-            <div class="mb-4 last:mb-0 pb-4 last:pb-0 border-b last:border-0 border-white/5">
-              <div class="flex justify-between items-center mb-2">
-                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">${time.split('(')[1].replace(')', '')}</span>
-                <span class="text-[9px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold uppercase">Asistencia</span>
-              </div>
-              
-              <div class="flex items-center gap-3">
-                <div class="flex-1">
-                  ${assigned.length > 0 
-                    ? `<p class="text-sm font-bold text-white">${assigned[0].nombre}</p>
-                       <p class="text-[10px] text-gray-500 uppercase">${assigned[0].matricula}</p>`
-                    : `<p class="text-sm font-bold text-gray-600 italic">Sin asignar</p>`
-                  }
-                </div>
-                
-                <select 
-                  onchange="window.assignVolunteerToSlot('${day}', '${time}', this.value)" 
-                  class="bg-[#0f172a] border border-white/10 text-[10px] rounded p-1 text-gray-400 w-32"
-                >
-                  <option value="">Cambiar...</option>
-                  ${volunteers.map(v => `
-                    <option value="${v.id}" ${assigned.length > 0 && assigned[0].id === v.id ? 'selected' : ''}>
-                      ${v.nombre}
-                    </option>
-                  `).join('')}
-                </select>
-              </div>
-            </div>
-          `;
-        });
-
-        dayCard.innerHTML = `
-          <h4 class="text-lg font-bold text-blue-400 mb-6 flex items-center gap-2">
-            <i data-lucide="calendar-days" class="w-4 h-4"></i> ${day}
-          </h4>
-          <div class="space-y-2">
-            ${slotsHtml}
-          </div>
-        `;
-        container.appendChild(dayCard);
-      });
-
-      if (window.lucide) window.lucide.createIcons();
-    }
-
-    window.assignVolunteerToSlot = async (day, time, volunteerId) => {
-      // 1. Remove previous assignment if any for THIS slot (Optional: but profiles are 1-to-1)
-      // Since a volunteer can only have ONE assignment in our current schema, 
-      // assigning V1 to DayX-TimeY will automatically remove them from DayA-TimeB.
-      
-      if (!volunteerId) {
-        // If they cleared the select, we don't know WHOM to clear unless we have the previous ID.
-        // For simplicity, this UI is for "moving" people.
-        return;
-      }
-
-      const { error } = await supabase.from('profiles')
-        .update({ dia_asignado: day, horario_asignado: time })
-        .eq('id', volunteerId);
-
-      if (error) alert('Error al asignar turno');
-      else loadHorariosData();
+      if (error) alert('Error al actualizar asignaciÃ³n');
+      else loadStaffData();
     };
 
     function initForms() {
@@ -863,7 +727,7 @@
 
           if (profileErr) throw profileErr;
 
-          status.textContent = '¡Usuario creado exitosamente!';
+          status.textContent = 'Â¡Usuario creado exitosamente!';
           status.className = 'mt-4 p-3 rounded-xl text-center text-sm bg-green-500/10 text-green-400';
           form.reset();
           loadStaffData();
@@ -874,7 +738,7 @@
       });
     }
 
-    // ── SESSION CONTROL ──────────────────────────────────────────────────────────
+    // â”€â”€ SESSION CONTROL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async function initSessionControl() {
       const toggle = document.getElementById('sessionOverrideToggle');
       const select = document.getElementById('sessionManualSelect');
@@ -886,7 +750,7 @@
           toggle.checked = data.manual_override;
           select.value = data.active_session || 'manana';
           select.disabled = !data.manual_override;
-          status.textContent = data.manual_override ? 'Modo: MANUAL (Forzado)' : 'Modo: AUTOMÁTICO (Hora)';
+          status.textContent = data.manual_override ? 'Modo: MANUAL (Forzado)' : 'Modo: AUTOMÃTICO (Hora)';
           status.className = `text-[10px] mt-2 ${data.manual_override ? 'text-purple-400' : 'text-gray-500'}`;
         }
       } catch(e) { console.error('Error loading session config:', e); }
@@ -894,7 +758,7 @@
       toggle.onchange = async () => {
         const manual = toggle.checked;
         select.disabled = !manual;
-        status.textContent = manual ? 'Modo: MANUAL (Forzado)' : 'Modo: AUTOMÁTICO (Hora)';
+        status.textContent = manual ? 'Modo: MANUAL (Forzado)' : 'Modo: AUTOMÃTICO (Hora)';
         status.className = `text-[10px] mt-2 ${manual ? 'text-purple-400' : 'text-gray-500'}`;
         
         await supabase.from('voting_config').update({ 
@@ -915,7 +779,7 @@
       window.location.href = 'index.html';
     });
 
-    // ── PENALIDADES ───────────────────────────────────────────────────────────────
+    // â”€â”€ PENALIDADES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async function loadPenalidadesData() {
       try {
         // Load penalidades
@@ -969,39 +833,39 @@
     function renderPenalizados(pens) {
       const container = document.getElementById('penalizadosTable');
       if (!pens.length) {
-        container.innerHTML = '<div class="empty-pen">✅ No hay estudiantes penalizados.</div>';
+        container.innerHTML = '<div class="empty-pen">âœ… No hay estudiantes penalizados.</div>';
         return;
       }
 
       let html = `<table class="pen-table">
         <thead><tr>
           <th>Nombre</th>
-          <th>Matrícula</th>
+          <th>MatrÃ­cula</th>
           <th>Email</th>
           <th>Faltas</th>
           <th>Estado</th>
           <th>Fecha Pen.</th>
-          <th>Acción</th>
+          <th>AcciÃ³n</th>
         </tr></thead><tbody>`;
 
       pens.forEach(p => {
         const faltas = p.total_faltas;
         const cls = faltas >= 3 ? 'high' : faltas >= 2 ? 'med' : 'low';
         const penalizado = p.penalizado;
-        const fecha = p.fecha_penalidad ? new Date(p.fecha_penalidad).toLocaleDateString('es-ES') : '---';
+        const fecha = p.fecha_penalidad ? new Date(p.fecha_penalidad).toLocaleDateString('es-ES') : 'â€”';
 
         html += `<tr>
-          <td class="name-cell">${p.nombre || '---'}</td>
-          <td class="mat-cell">${p.matricula || '---'}</td>
-          <td style="font-size:0.78rem;color:#64748b;">${p.email || '---'}</td>
+          <td class="name-cell">${p.nombre || 'â€”'}</td>
+          <td class="mat-cell">${p.matricula || 'â€”'}</td>
+          <td style="font-size:0.78rem;color:#64748b;">${p.email || 'â€”'}</td>
           <td><span class="falta-count ${cls}">${faltas} / 3</span></td>
-          <td><span class="pen-badge ${penalizado ? 'penalizado' : 'activo'}">${penalizado ? '🚫 Penalizado' : '✅ Al día'}</span></td>
+          <td><span class="pen-badge ${penalizado ? 'penalizado' : 'activo'}">${penalizado ? 'â›” Penalizado' : 'âœ… Al dÃ­a'}</span></td>
           <td style="font-size:0.78rem;">${fecha}</td>
           <td>${penalizado
             ? `<button class="btn-levantar" data-uid="${p.usuario_id}" data-nombre="${p.nombre}">
-                🔓 Levantar
+                ðŸ”“ Levantar
                </button>`
-            : '<span style="color:#475569;font-size:0.78rem;">---</span>'
+            : '<span style="color:#475569;font-size:0.78rem;">â€”</span>'
           }</td>
         </tr>`;
       });
@@ -1014,7 +878,7 @@
         btn.addEventListener('click', async () => {
           const uid    = btn.dataset.uid;
           const nombre = btn.dataset.nombre;
-          if (!confirm(`¿Confirmas que ${nombre} ya pagó la penalidad? Esto reiniciará su contador de faltas a 0.`)) return;
+          if (!confirm(`Â¿Confirmas que ${nombre} ya pagÃ³ la penalidad? Esto reiniciarÃ¡ su contador de faltas a 0.`)) return;
           btn.disabled = true;
           btn.textContent = 'Procesando...';
           await levantarPenalidad(uid);
@@ -1035,7 +899,7 @@
       let html = `<table class="pen-table">
         <thead><tr>
           <th>Nombre</th>
-          <th>Matrícula</th>
+          <th>MatrÃ­cula</th>
           <th>Horario</th>
           <th>Fecha</th>
           <th>Registrado</th>
@@ -1044,10 +908,10 @@
       faltas.forEach(f => {
         const registrado = new Date(f.created_at).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
         html += `<tr>
-          <td class="name-cell">${f.nombre || '---'}</td>
-          <td class="mat-cell">${f.matricula || '---'}</td>
-          <td style="font-size:0.8rem;">${f.horario || '---'}</td>
-          <td style="font-size:0.8rem;">${f.fecha || '---'}</td>
+          <td class="name-cell">${f.nombre || 'â€”'}</td>
+          <td class="mat-cell">${f.matricula || 'â€”'}</td>
+          <td style="font-size:0.8rem;">${f.horario || 'â€”'}</td>
+          <td style="font-size:0.8rem;">${f.fecha || 'â€”'}</td>
           <td style="font-size:0.75rem;color:#64748b;">${registrado}</td>
         </tr>`;
       });
@@ -1066,7 +930,7 @@
           updated_at:      new Date().toISOString(),
         }).eq('usuario_id', usuarioId);
 
-        // Also delete their fault history (clean slate after paying)
+        // Also delete their falta history (clean slate after paying)
         await supabase.from('faltas').delete().eq('usuario_id', usuarioId);
 
       } catch(err) {
@@ -1077,3 +941,4 @@
   </script>
 </body>
 </html>
+
