@@ -699,9 +699,59 @@
     });
 
     // ── ACTION BUTTONS ───────────────────────────────────────
-    document.getElementById('btnMeFuiAntes').onclick   = () => window.location.href = 'cambios.html?tipo=antes';
-    document.getElementById('btnIreDespues').onclick   = () => window.location.href = 'cambios.html?tipo=despues';
-    document.getElementById('btnOtrosMedios').onclick  = () => window.location.href = 'cambios.html?tipo=otros';
+    document.getElementById('btnMeFuiAntes').onclick = async () => {
+      if(!confirm("¿Estás seguro de que quieres cancelar tu viaje de regreso? (Liberarás tu cupo de vuelta)")) return;
+      
+      const { group } = await getActiveGroup();
+      const cycleDate = getCycleDate(group);
+      
+      try {
+        document.getElementById('btnMeFuiAntes').disabled = true;
+        // El viaje de vuelta siempre contiene "La Vega -> Jarabacoa"
+        await supabase.from('votos').delete()
+          .eq('usuario_id', currentUser.id)
+          .eq('fecha', cycleDate)
+          .like('horario', '%La Vega -> Jarabacoa%');
+          
+        alert("Viaje de regreso cancelado exitosamente. ¡Gracias por avisar!");
+        checkVoteStatus(); // Refrescar la pantalla
+      } catch(e) {
+        console.error(e);
+        alert("Ocurrió un error al intentar cancelar.");
+      } finally {
+        document.getElementById('btnMeFuiAntes').disabled = false;
+      }
+    };
+
+    document.getElementById('btnIreDespues').onclick = () => {
+      // Para ir después, la mejor opción es abrir el selector de horarios para que elija uno nuevo
+      isEditing = true;
+      selectedHorarios = [...initialVotes.map(v => v.horario)];
+      showForm();
+    };
+
+    document.getElementById('btnOtrosMedios').onclick = async () => {
+      if(!confirm("¿Estás seguro de que viajarás por otros medios? (Esto cancelará todos tus horarios confirmados para hoy)")) return;
+      
+      const { group } = await getActiveGroup();
+      const cycleDate = getCycleDate(group);
+      
+      try {
+        document.getElementById('btnOtrosMedios').disabled = true;
+        await supabase.from('votos').delete()
+          .eq('usuario_id', currentUser.id)
+          .eq('fecha', cycleDate);
+          
+        alert("Todos tus viajes de hoy han sido cancelados. ¡Gracias por liberar tus cupos!");
+        checkVoteStatus(); // Refrescar la pantalla
+      } catch(e) {
+        console.error(e);
+        alert("Ocurrió un error al intentar cancelar.");
+      } finally {
+        document.getElementById('btnOtrosMedios').disabled = false;
+      }
+    };
+
     document.getElementById('btnCambiarHorario').onclick = () => {
       isEditing = true;
       selectedHorarios = [...initialVotes.map(v => v.horario)];
