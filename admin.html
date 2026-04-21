@@ -1064,7 +1064,15 @@
       
       times.forEach(t => {
         const fullText = `${t.time} ${t.route}`;
-        const assigned = volunteers.filter(v => v.dia_asignado === adminSelectedDay && v.horario_asignado === fullText);
+        const assigned = volunteers.filter(v => {
+          try {
+            const scheds = JSON.parse(v.horario_asignado || '{}');
+            return scheds[adminSelectedDay] && scheds[adminSelectedDay].includes(fullText);
+          } catch(e) {
+            // Soporte legacy (por si acaso aún hay strings viejos en la DB)
+            return v.dia_asignado === adminSelectedDay && v.horario_asignado === fullText;
+          }
+        });
         const isAssigned = assigned.length > 0;
         
         // Card styled exactly like the student schedule picker
@@ -1109,19 +1117,63 @@
     };
 
     window.assignVolunteerToSlot = async (day, time, volunteerId) => {
-      if (!volunteerId) return;
-
-      const { error } = await supabase.from('profiles')
-        .update({ dia_asignado: day, horario_asignado: time })
-        .eq('id', volunteerId);
-
-      if (error) {
-        console.error('Error assigning slot:', error);
-        window.showAdminToast(error.message || 'Error al asignar turno', 'error');
-      } else {
-        window.showAdminToast('Turno asignado correctamente', 'success');
-        loadHorariosData();
+      // 1. Fetch todos los voluntarios para gestionar las asignaciones cruzadas
+      const { data: allUsers, error: fetchErr } = await supabase.from('profiles').select('*').eq('rol', 'voluntario');
+      if (fetchErr) {
+        window.showAdminToast('Error de red', 'error');
+        return;
       }
+
+      const promises = [];
+      
+      for (const v of allUsers) {
+        let scheds = {};
+        try {
+          scheds = JSON.parse(v.horario_asignado || '{}');
+        } catch(e) {
+          // Migrar formato viejo a formato nuevo
+          if (v.dia_asignado && v.horario_asignado && !v.horario_asignado.startsWith('{')) {
+            scheds[v.dia_asignado] = [v.horario_asignado];
+          }
+        }
+        
+        if (!scheds[day]) scheds[day] = [];
+        
+        let changed = false;
+        
+        // Si no es el voluntario seleccionado, le quitamos este horario si lo tenía
+        if (v.id !== volunteerId) {
+          if (scheds[day].includes(time)) {
+            scheds[day] = scheds[day].filter(t => t !== time);
+            changed = true;
+          }
+        } 
+        // Si ES el voluntario seleccionado, le agregamos el horario (manteniendo los que ya tenía)
+        else {
+          if (!scheds[day].includes(time)) {
+            scheds[day].push(time);
+            changed = true;
+          }
+        }
+        
+        if (changed) {
+          promises.push(
+            supabase.from('profiles')
+              .update({ 
+                horario_asignado: JSON.stringify(scheds),
+                dia_asignado: day // Actualiza el string legado como helper
+              })
+              .eq('id', v.id)
+          );
+        }
+      }
+
+      if (promises.length > 0) {
+        await Promise.all(promises);
+      }
+      
+      window.showAdminToast('Turno asignado correctamente', 'success');
+      loadHorariosData();
     };
 
     function initForms() {
