@@ -244,36 +244,26 @@
 
       <!-- Horarios Management Screen -->
       <section id="screen-horarios" class="admin-screen hidden">
-        <div class="glass-card p-10">
-          <div class="mb-12 flex flex-col xl:flex-row xl:items-end justify-between gap-8">
+        <!-- Outer wrapper styled like the student card container -->
+        <div style="background:#111827; border-radius:1.5rem; padding:2rem; max-width:900px; margin:0 auto;">
+
+          <!-- Day tabs -->
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:0.75rem;">
             <div>
-              <h3 class="text-4xl font-black text-white tracking-tighter">Gestión de Turnos</h3>
-              <p class="text-base text-gray-400 mt-2">Sincroniza y asigna voluntarios para cada jornada de viaje.</p>
+              <h3 style="color:#fff; font-size:1.4rem; font-weight:900; margin:0;">Gestión de Turnos</h3>
+              <p style="color:#6b7280; font-size:0.82rem; margin:0.3rem 0 0;">Asigna un voluntario a cada horario de viaje.</p>
             </div>
-            <!-- Day Selector Tabs (Fixed Proportions) -->
-            <div id="adminDayTabs" class="flex p-2 bg-slate-900/80 rounded-2xl border border-white/5 overflow-x-auto no-scrollbar">
-              <!-- JS will fill these with proper padding -->
-            </div>
-          </div>
-          
-          <div id="adminScheduleHeader" class="mb-10 p-8 rounded-[2.5rem] text-center bg-gradient-to-br from-blue-600 to-blue-900 shadow-2xl shadow-blue-500/20">
-            <div class="flex items-center justify-center gap-4">
-              <i data-lucide="calendar" class="w-8 h-8 text-white/80"></i>
-              <h4 id="adminActiveDayLabel" class="text-2xl font-black text-white uppercase tracking-[0.3em]">Horarios del Lunes</h4>
-            </div>
+            <div id="adminDayTabs" style="display:flex; gap:0.4rem; background:#0f172a; border-radius:1rem; padding:0.3rem; border:1px solid rgba(255,255,255,0.06); flex-wrap:wrap;"></div>
           </div>
 
-          <!-- Horizontal Schedule Scroll (Improved Proportions) -->
-          <div class="relative">
-            <div id="adminHorarioGrid" class="flex flex-nowrap gap-10 overflow-x-auto pb-12 pt-4 no-scrollbar" style="scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;">
-              <!-- Cards will be injected here with w-[350px] -->
-            </div>
-            
-            <!-- Visual Scroll Hint -->
-            <div class="mt-6 flex items-center justify-center gap-3 text-xs text-gray-500 font-black uppercase tracking-[0.2em] opacity-40">
-              <i data-lucide="arrow-left-right" class="w-4 h-4"></i> Desliza horizontalmente
-            </div>
+          <!-- Blue header bar (exact replica) -->
+          <div id="adminScheduleHeader" style="background:linear-gradient(135deg,#4f75ff,#3451d1); border-radius:1.2rem; padding:1.4rem; text-align:center; margin-bottom:1.25rem; display:flex; align-items:center; justify-content:center; gap:0.7rem;">
+            <i data-lucide="calendar" style="color:#fff; width:22px; height:22px;"></i>
+            <h4 id="adminActiveDayLabel" style="color:#fff; font-size:1.1rem; font-weight:900; margin:0; letter-spacing:0.08em; text-transform:uppercase;">Horarios del Lunes</h4>
           </div>
+
+          <!-- 4-column schedule grid -->
+          <div id="adminHorarioGrid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:0.85rem;"></div>
         </div>
       </section>
 
@@ -763,13 +753,11 @@
 
     function renderDayTabs() {
       const tabs = document.getElementById('adminDayTabs');
-      const days = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
-      tabs.innerHTML = days.map(d => `
-        <button onclick="window.setAdminActiveDay('${d}')" 
-          class="px-8 py-3 rounded-2xl font-black text-xs transition-all flex-shrink-0 whitespace-nowrap ${adminSelectedDay === d ? 'bg-blue-600 text-white shadow-xl shadow-blue-500/20' : 'text-gray-500 hover:text-white hover:bg-white/5'}">
-          ${d}
-        </button>
-      `).join('');
+      const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+      tabs.innerHTML = days.map(d => {
+        const active = adminSelectedDay === d;
+        return `<button onclick="window.setAdminActiveDay('${d}')" style="padding:0.4rem 1rem; border-radius:0.6rem; font-weight:800; font-size:0.72rem; border:none; cursor:pointer; white-space:nowrap; transition:all 0.15s; background:${active ? '#4f75ff' : 'transparent'}; color:${active ? '#fff' : '#6b7280'}; letter-spacing:0.03em;">${d}</button>`;
+      }).join('');
     }
 
     window.setAdminActiveDay = async (day) => {
@@ -781,7 +769,7 @@
 
     async function renderAdminHorarioGrid() {
       const grid = document.getElementById('adminHorarioGrid');
-      grid.innerHTML = '<div class="w-full flex flex-col items-center py-32 opacity-10"><div class="spinner mb-6"></div><p class="tracking-[0.5em] font-black">SINCRONIZANDO</p></div>';
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem 0;opacity:0.2;"><div class="spinner" style="margin:0 auto 1rem;"></div><p style="letter-spacing:0.4em;font-weight:900;">CARGANDO...</p></div>';
 
       const times = [
         { time: '7:00 AM',  route: 'Jarabacoa → La Vega', dir: 'ida'    },
@@ -807,51 +795,35 @@
         const assigned = volunteers.filter(v => v.dia_asignado === adminSelectedDay && v.horario_asignado === fullText);
         const isAssigned = assigned.length > 0;
         
+        // Card styled exactly like the student schedule picker
+        const isIda = t.dir === 'ida';
         const card = document.createElement('div');
-        // Aumentado a w-[350px] para evitar solapamientos
-        card.className = `flex-shrink-0 w-[350px] p-10 bg-slate-900/80 border-2 rounded-[3rem] flex flex-col items-center text-center transition-all relative group scroll-snap-align-start ${isAssigned ? 'border-blue-500 shadow-[0_20px_80px_rgba(59,130,246,0.1)]' : 'border-white/5 hover:border-white/10 hover:bg-slate-900'}`;
-        
+        card.style.cssText = `background:#1e2a3a; border-radius:1rem; padding:1.2rem 1rem; display:flex; flex-direction:column; align-items:center; text-align:center; position:relative; transition:all 0.2s; cursor:pointer; border:2px solid ${isAssigned ? 'rgba(99,133,255,0.5)' : 'transparent'}; min-height:180px;`;
+        card.onmouseenter = () => { if(!isAssigned) card.style.background = '#243044'; };
+        card.onmouseleave = () => { if(!isAssigned) card.style.background = '#1e2a3a'; };
+
+        const arrowIcon = isIda ? 'arrow-right' : 'arrow-left';
+        const badgeBg   = isIda ? 'rgba(99,133,255,0.2)' : 'rgba(138,99,255,0.2)';
+        const badgeColor= isIda ? '#7fa3ff' : '#b99fff';
+        const badgeLabel= isIda ? '↗ IDA' : '↙ VUELTA';
+
         card.innerHTML = `
-          <div class="w-20 h-20 rounded-3xl bg-blue-500/10 flex items-center justify-center mb-8 text-blue-400 shadow-inner group-hover:rotate-12 transition-transform">
-            <i data-lucide="${t.dir === 'ida' ? 'arrow-right' : 'arrow-left'}" class="w-10 h-10"></i>
+          <div style="color:#7fa3ff; margin-bottom:0.5rem;">
+            <i data-lucide="${arrowIcon}" style="width:20px;height:20px;"></i>
           </div>
-          
-          <div class="text-4xl font-black text-white mb-3 tracking-tighter">${t.time}</div>
-          <div class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-10 h-8 flex items-center justify-center">
-            ${t.route}
+          <div style="font-size:1.5rem; font-weight:900; color:#fff; margin-bottom:0.25rem; letter-spacing:-0.02em;">${t.time}</div>
+          <div style="font-size:0.68rem; color:#6b7280; margin-bottom:0.6rem; font-weight:600;">${t.route}</div>
+          <div style="background:${badgeBg}; color:${badgeColor}; font-size:0.62rem; font-weight:900; padding:0.2rem 0.65rem; border-radius:999px; margin-bottom:0.85rem; letter-spacing:0.05em;">${badgeLabel}</div>
+          <div style="width:100%; margin-top:auto;">
+            <select
+              onchange="window.assignVolunteerToSlot('${adminSelectedDay}', '${fullText}', this.value)"
+              style="width:100%; background:#0f172a; border:1px solid rgba(255,255,255,0.08); color:#fff; font-size:0.72rem; font-weight:700; padding:0.5rem 0.75rem; border-radius:0.6rem; outline:none; cursor:pointer; appearance:none; background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 24 24%22 stroke=%22rgba(255,255,255,0.35)%22><path stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222%22 d=%22M19 9l-7 7-7-7%22/></svg>'); background-repeat:no-repeat; background-position:right 0.6rem center; background-size:0.9em; padding-right:2rem;"
+            >
+              <option value="">— Voluntario —</option>
+              ${volunteers.map(v => `<option value="${v.id}" ${isAssigned && assigned[0].id === v.id ? 'selected' : ''}>${v.nombre}</option>`).join('')}
+            </select>
           </div>
-          
-          <div class="px-6 py-2 rounded-2xl text-[11px] font-black uppercase mb-12 shadow-sm ${t.dir === 'ida' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/10' : 'bg-purple-500/20 text-purple-400 border border-purple-500/10'}">
-            ${t.dir === 'ida' ? '↗ SALIDA' : '↙ REGRESO'}
-          </div>
-
-          <div class="w-full space-y-4">
-            <div class="flex items-center justify-between px-2">
-              <span class="text-[10px] font-black text-gray-600 uppercase tracking-widest">Responsable</span>
-              ${isAssigned ? '<span class="text-[10px] font-black text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded uppercase">Asignado</span>' : '<span class="text-[10px] font-black text-red-500/50 uppercase">Vacante</span>'}
-            </div>
-            
-            <div class="relative">
-              <select 
-                onchange="window.assignVolunteerToSlot('${adminSelectedDay}', '${fullText}', this.value)" 
-                class="w-full bg-slate-950 border-2 border-white/5 text-sm font-bold rounded-[1.25rem] p-5 text-white focus:border-blue-500/50 transition-all outline-none appearance-none cursor-pointer hover:bg-black/50"
-                style="background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(255,255,255,0.3)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\"); background-repeat: no-repeat; background-position: right 1.25rem center; background-size: 1.2em;"
-              >
-                <option value="">-- Sin asignar --</option>
-                ${volunteers.map(v => `
-                  <option value="${v.id}" ${isAssigned && assigned[0].id === v.id ? 'selected' : ''}>
-                    ${v.nombre}
-                  </option>
-                `).join('')}
-              </select>
-            </div>
-          </div>
-
-          ${isAssigned ? `
-            <div class="absolute top-8 right-8 w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center shadow-2xl shadow-blue-500/40 animate-in zoom-in">
-              <i data-lucide="check" class="w-5 h-5 text-white"></i>
-            </div>
-          ` : ''}
+          ${isAssigned ? `<div style="position:absolute;top:0.6rem;right:0.6rem;width:1.1rem;height:1.1rem;background:#4f75ff;border-radius:50%;display:flex;align-items:center;justify-content:center;"><i data-lucide="check" style="width:10px;height:10px;color:#fff;"></i></div>` : ''}
         `;
         grid.appendChild(card);
       });
