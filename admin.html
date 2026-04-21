@@ -245,41 +245,27 @@
       <!-- Horarios Management Screen -->
       <section id="screen-horarios" class="admin-screen hidden">
         <div class="glass-card p-8">
-          <div class="mb-10 text-center lg:text-left">
-            <h3 class="text-2xl font-extrabold text-white tracking-tight">Cronograma Semanal</h3>
-            <p class="text-sm text-gray-500 mt-2">ConfiguraciÃ³n de voluntarios responsables por turno de viaje.</p>
+          <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h3 class="text-2xl font-extrabold text-white tracking-tight">Gestión de Turnos</h3>
+              <p class="text-sm text-gray-500 mt-1">Asigna voluntarios responsables para cada horario de viaje.</p>
+            </div>
+            <!-- Day Selector Tabs -->
+            <div id="adminDayTabs" class="flex p-1 bg-white/5 rounded-2xl border border-white/10 overflow-x-auto custom-scroll">
+              <!-- JS will fill these -->
+            </div>
           </div>
           
-          <!-- Literal Weekly Grid -->
-          <div class="custom-scroll overflow-x-auto pb-4">
-            <div id="horariosDayGrid" class="min-w-[1100px] space-y-6">
-              <!-- Cargado por JS -->
+          <div id="adminScheduleHeader" class="mb-6 p-4 rounded-2xl text-center bg-gradient-to-r from-blue-600 to-blue-800 shadow-lg shadow-blue-900/20">
+            <div class="flex items-center justify-center gap-2 mb-1">
+              <i data-lucide="calendar" class="w-5 h-5 text-white"></i>
+              <h4 id="adminActiveDayLabel" class="text-lg font-black text-white uppercase tracking-widest">Horarios del Lunes</h4>
             </div>
           </div>
-        </div>
 
-        <!-- Modal Estilizado (Aestética Votar.html) -->
-        <div id="horarioModal" class="fixed inset-0 bg-black/90 backdrop-blur-xl z-[100] hidden items-center justify-center p-6">
-          <div class="glass-card w-full max-w-xl p-10 animate-in fade-in zoom-in slide-in-from-bottom-10 duration-300 shadow-[0_0_100px_rgba(59,130,246,0.15)]">
-            <div class="flex justify-between items-center mb-8">
-              <div>
-                <h4 id="modalDayTitle" class="text-3xl font-extrabold text-white tracking-tight">DÃ­a Seleccionado</h4>
-                <p class="text-blue-400 text-xs font-bold uppercase mt-1 tracking-widest">AsignaciÃ³n de Personal</p>
-              </div>
-              <button onclick="window.closeHorarioModal()" class="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all">
-                <i data-lucide="x" class="w-6 h-6"></i>
-              </button>
-            </div>
-            
-            <div id="modalSlotsContainer" class="space-y-4">
-               <!-- Slots loaded here -->
-            </div>
-
-            <div class="mt-10 pt-8 border-t border-white/5 flex justify-end">
-               <button onclick="window.closeHorarioModal()" class="px-10 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl font-bold shadow-xl shadow-blue-500/20 hover:scale-[1.02] active:scale-95 transition-all">
-                 Finalizar Cambios
-               </button>
-            </div>
+          <!-- Schedule Grid (Styled like student UI) -->
+          <div id="adminHorarioGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Cargado por JS -->
           </div>
         </div>
       </section>
@@ -760,120 +746,108 @@
       }
     };
 
-    // ── HORARIOS GRID LOGIC ───────────────────────────────────────────────────
-    async function loadHorariosData() {
-      const container = document.getElementById('horariosDayGrid');
-      container.innerHTML = '<div class="flex flex-col items-center py-20 opacity-20"><div class="spinner mb-4"></div><p>CARGANDO CRONOGRAMA...</p></div>';
+    // ── HORARIOS HIGH-FIDELITY REDESIGN ───────────────────────────────────────
+    let adminSelectedDay = 'Lunes';
 
+    async function loadHorariosData() {
+      renderDayTabs();
+      await renderAdminHorarioGrid();
+    }
+
+    function renderDayTabs() {
+      const tabs = document.getElementById('adminDayTabs');
       const days = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
-      
+      tabs.innerHTML = days.map(d => `
+        <button onclick="window.setAdminActiveDay('${d}')" 
+          class="px-6 py-2 rounded-xl font-bold text-xs transition-all ${adminSelectedDay === d ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}">
+          ${d}
+        </button>
+      `).join('');
+    }
+
+    window.setAdminActiveDay = async (day) => {
+      adminSelectedDay = day;
+      renderDayTabs();
+      document.getElementById('adminActiveDayLabel').textContent = `Horarios del ${day}`;
+      await renderAdminHorarioGrid();
+    }
+
+    async function renderAdminHorarioGrid() {
+      const grid = document.getElementById('adminHorarioGrid');
+      grid.innerHTML = '<div class="col-span-full flex flex-col items-center py-20 opacity-20"><div class="spinner mb-4"></div><p>CARGANDO HORARIOS...</p></div>';
+
+      const times = [
+        { time: '7:00 AM',  route: 'Jarabacoa → La Vega', dir: 'ida'    },
+        { time: '9:00 AM',  route: 'Jarabacoa → La Vega', dir: 'ida'    },
+        { time: '12:10 PM', route: 'La Vega → Jarabacoa', dir: 'vuelta' },
+        { time: '1:00 PM',  route: 'Jarabacoa → La Vega', dir: 'ida'    },
+        { time: '2:15 PM',  route: 'La Vega → Jarabacoa', dir: 'vuelta' },
+        { time: '3:00 PM',  route: 'Jarabacoa → La Vega', dir: 'ida'    },
+        { time: '4:10 PM',  route: 'La Vega → Jarabacoa', dir: 'vuelta' },
+        { time: '5:00 PM',  route: 'Jarabacoa → La Vega', dir: 'ida'    },
+        { time: '6:00 PM',  route: 'La Vega → Jarabacoa', dir: 'vuelta' },
+        { time: '8:00 PM',  route: 'La Vega → Jarabacoa', dir: 'vuelta' },
+        { time: '10:00 PM', route: 'La Vega → Jarabacoa', dir: 'vuelta' },
+      ];
+
       const { data: allUsers } = await supabase.from('profiles').select('*');
       const volunteers = (allUsers || []).filter(u => u.rol === 'voluntario');
-
-      container.innerHTML = '';
       
-      days.forEach(day => {
-        const row = document.createElement('div');
-        row.className = 'flex flex-col lg:flex-row items-stretch gap-6 p-1 rounded-3xl transition-all group';
+      grid.innerHTML = '';
+      
+      times.forEach(t => {
+        const fullText = `${t.time} ${t.route}`;
+        const assigned = volunteers.filter(v => v.dia_asignado === adminSelectedDay && v.horario_asignado === fullText);
+        const isAssigned = assigned.length > 0;
         
-        // Day Label (Styled like Votar.html headers)
-        const label = document.createElement('div');
-        label.className = 'lg:w-48 h-20 lg:h-auto bg-gradient-to-br from-white/10 to-transparent border border-white/10 rounded-2xl flex items-center justify-center transition-all group-hover:from-blue-500/20 group-hover:border-blue-500/30 cursor-pointer';
-        label.onclick = () => window.openHorarioModal(day, volunteers);
-        label.innerHTML = `<span class="text-lg font-black text-white/40 tracking-[0.2em] uppercase group-hover:text-blue-400 transition-colors">${day}</span>`;
+        const card = document.createElement('div');
+        // Aestética idéntica a votar.html
+        card.className = `p-6 bg-[#1e293b]/70 border-2 rounded-2xl flex flex-col items-center text-center transition-all relative group cursor-pointer ${isAssigned ? 'border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.1)]' : 'border-white/5 hover:border-white/20'}`;
         
-        // Horizontal Blocks (Literal Schedule Grid Style - Match Votar.html Time Slots)
-        const blocks = document.createElement('div');
-        blocks.className = 'flex-1 grid grid-cols-1 md:grid-cols-3 gap-4';
-        
-        const slots = [
-          { name: 'Mañana', time: '7:00 AM', icon: 'sun' },
-          { name: 'Tarde', time: '4:00 PM', icon: 'cloud-sun' },
-          { name: 'Noche', time: '9:00 PM', icon: 'moon' }
-        ];
+        card.innerHTML = `
+          <div class="mb-3 text-blue-400">
+            <i data-lucide="${t.dir === 'ida' ? 'arrow-right' : 'arrow-left'}" class="w-6 h-6"></i>
+          </div>
+          <div class="text-xl font-extrabold text-white mb-1">${t.time}</div>
+          <div class="text-[10px] font-mono text-gray-500 mb-4">${t.route}</div>
+          
+          <div class="px-3 py-1 rounded-full text-[9px] font-black uppercase mb-6 ${t.dir === 'ida' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'}">
+            ${t.dir === 'ida' ? '↗ IDA' : '↙ VUELTA'}
+          </div>
 
-        slots.forEach(s => {
-          const slotText = `${s.name} (${s.time})`;
-          const assigned = volunteers.filter(v => v.dia_asignado === day && v.horario_asignado === slotText);
-          const isAssigned = assigned.length > 0;
-          
-          const block = document.createElement('div');
-          block.className = `p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-center relative overflow-hidden ${isAssigned ? 'bg-blue-500/10 border-blue-500/40' : 'bg-white/5 border-white/5 hover:border-white/20'}`;
-          block.onclick = () => window.openHorarioModal(day, volunteers);
-          
-          block.innerHTML = `
-            <div class="flex items-center justify-between mb-3 relative z-10">
-              <div class="flex items-center gap-2">
-                <i data-lucide="${s.icon}" class="w-3.5 h-3.5 ${isAssigned ? 'text-blue-400' : 'text-gray-600'}"></i>
-                <span class="text-[10px] font-black uppercase tracking-widest ${isAssigned ? 'text-blue-400' : 'text-gray-500'}">${s.name}</span>
-              </div>
-              <span class="text-[9px] font-mono text-gray-600">${s.time}</span>
+          <!-- Asignación desplegable integrada -->
+          <div class="w-full mt-auto">
+            <p class="text-[9px] font-bold text-gray-600 uppercase mb-2 tracking-widest">Responsable</p>
+            <div class="relative">
+              <select 
+                onchange="window.assignVolunteerToSlot('${adminSelectedDay}', '${fullText}', this.value)" 
+                class="w-full bg-slate-900/50 border border-white/10 text-[11px] font-bold rounded-xl p-2.5 text-white focus:border-blue-500 transition-all outline-none appearance-none cursor-pointer"
+                style="background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(255,255,255,0.4)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\"); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1em;"
+              >
+                <option value="">-- Vacante --</option>
+                ${volunteers.map(v => `
+                  <option value="${v.id}" ${isAssigned && assigned[0].id === v.id ? 'selected' : ''}>
+                    ${v.nombre}
+                  </option>
+                `).join('')}
+              </select>
             </div>
-            <p class="text-xs font-bold truncate relative z-10 ${isAssigned ? 'text-white' : 'text-gray-700 italic'}">
-              ${isAssigned ? assigned[0].nombre : 'Sin Responsable'}
-            </p>
-            ${isAssigned ? '<div class="absolute -right-2 -bottom-2 opacity-10"><i data-lucide="check-circle" class="w-12 h-12 text-blue-400"></i></div>' : ''}
-          `;
-          blocks.appendChild(block);
-        });
-        
-        row.appendChild(label);
-        row.appendChild(blocks);
-        container.appendChild(row);
+          </div>
+
+          ${isAssigned ? `
+            <div class="absolute top-3 right-3 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/50">
+              <i data-lucide="check" class="w-3 h-3 text-white"></i>
+            </div>
+          ` : ''}
+        `;
+        grid.appendChild(card);
       });
 
       if (window.lucide) window.lucide.createIcons();
     }
 
-    window.openHorarioModal = (day, volunteers) => {
-      document.getElementById('modalDayTitle').textContent = day;
-      const container = document.getElementById('modalSlotsContainer');
-      container.innerHTML = '';
-
-      const times = [
-        { name: 'Mañana (7:00 AM)', icon: 'sun' },
-        { name: 'Tarde (4:00 PM)', icon: 'cloud-sun' },
-        { name: 'Noche (9:00 PM)', icon: 'moon' }
-      ];
-      
-      times.forEach(t => {
-        const assigned = volunteers.filter(v => v.dia_asignado === day && v.horario_asignado === t.name);
-        const slot = document.createElement('div');
-        slot.className = 'p-6 bg-white/5 border border-white/10 rounded-3xl flex items-center gap-6 hover:border-blue-500/30 transition-all group';
-        slot.innerHTML = `
-          <div class="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110">
-             <i data-lucide="${t.icon}" class="text-blue-400 w-8 h-8"></i>
-          </div>
-          
-          <div class="flex-1">
-             <div class="flex justify-between items-center mb-4">
-                <h5 class="text-white font-black text-xl tracking-tight">${t.name}</h5>
-                <span class="text-[9px] font-bold text-blue-500/50 uppercase tracking-widest">Asignar</span>
-             </div>
-             <select 
-               onchange="window.assignVolunteerToSlot('${day}', '${t.name}', this.value)" 
-               class="w-full bg-slate-950 border border-white/10 text-sm font-bold rounded-2xl p-4 text-white focus:border-blue-500 transition-all outline-none appearance-none"
-               style="background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1.2em; padding-right: 2.5rem;"
-             >
-               <option value="">-- Vacante --</option>
-               ${volunteers.map(v => `
-                 <option value="${v.id}" ${assigned.length > 0 && assigned[0].id === v.id ? 'selected' : ''}>
-                   ${v.nombre}
-                 </option>
-               `).join('')}
-             </select>
-          </div>
-        `;
-        container.appendChild(slot);
-      });
-
-      const modal = document.getElementById('horarioModal');
-      modal.style.display = 'flex';
-      if (window.lucide) window.lucide.createIcons();
-    };
-
     window.closeHorarioModal = () => {
-      document.getElementById('horarioModal').style.display = 'none';
+      // Ya no usamos modal, pero mantengo la función por si acaso
       loadHorariosData();
     };
 
