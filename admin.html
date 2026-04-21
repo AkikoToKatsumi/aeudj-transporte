@@ -569,6 +569,7 @@
 
       let total = 0;
       let espera = 0;
+      let totalCobrado = 0;
       
       const container = document.getElementById('dashboardRecentActivity');
       container.innerHTML = '';
@@ -587,13 +588,20 @@
         } else {
            total++;
            timeGroups[v.horario].confirmados++;
+           
+           // Lógica de auditoría de caja: Solo mañana (AM) y las 3:00 PM
+           const isMorning = v.horario.toUpperCase().includes('AM');
+           const is3PM = v.horario.toUpperCase().includes('3:00 PM');
+           if (isMorning || is3PM) {
+             totalCobrado++;
+           }
         }
       });
 
       // Stats Update
       document.getElementById('statTotalPasajeros').textContent = total;
       document.getElementById('statWaitlistTotal').textContent = espera;
-      document.getElementById('statIngresosReales').textContent = 'RD$ ' + (total * 100).toLocaleString();
+      document.getElementById('statIngresosReales').textContent = 'RD$ ' + (totalCobrado * 100).toLocaleString();
 
       // Chart Update
       renderDashboardChart(timeGroups);
