@@ -179,68 +179,140 @@
         </div>
       </section>
 
-      <!-- Staff Screen -->
+      <!-- Staff Management Screen -->
       <section id="screen-staff" class="admin-screen hidden">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-           <!-- Creation Form -->
-           <div class="glass-card p-8">
-             <h3 class="text-xl font-bold text-blue-400 mb-6 flex items-center gap-2">
-               <i data-lucide="user-plus"></i> Crear Nuevo Personal
-             </h3>
-             <form id="createStaffForm" class="space-y-5">
-               <div class="input-wrapper">
-                 <i data-lucide="user" class="input-icon"></i>
-                 <input type="text" id="staffNombre" placeholder="Nombre completo" class="premium-input" required>
-               </div>
-               <div class="input-wrapper">
-                 <i data-lucide="hash" class="input-icon"></i>
-                 <input type="text" id="staffMatricula" placeholder="Matrícula o ID" class="premium-input" required>
-               </div>
-               <div class="input-wrapper">
-                 <i data-lucide="lock" class="input-icon"></i>
-                 <input type="password" id="staffPassword" placeholder="Contraseña Temporal" class="premium-input" required>
-               </div>
-               <select id="staffRol" class="premium-select w-full">
-                 <option value="estudiante">Estudiante</option>
-                 <option value="voluntario">Voluntario</option>
-                 <option value="administrador">Administrador</option>
-               </select>
+        <div class="glass-card p-10">
+          <!-- Top Bar -->
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+            <div class="flex items-center gap-4">
+              <h3 class="text-4xl font-black text-white tracking-tighter">Personal</h3>
+              <button onclick="window.showAddStaffModal()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl transition-all shadow-lg shadow-blue-600/20 flex items-center gap-2">
+                <i data-lucide="plus" class="w-4 h-4"></i> AGREGAR NUEVO
+              </button>
+            </div>
+            <div class="relative group w-full md:w-80">
+              <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-blue-500 transition-colors"></i>
+              <input type="text" id="staffSearch" placeholder="Buscar usuarios..." 
+                oninput="window.filterStaff()"
+                class="w-full bg-slate-900/50 border border-white/5 text-white text-xs font-bold rounded-2xl py-4 pl-12 pr-4 focus:border-blue-500 outline-none transition-all">
+            </div>
+          </div>
 
-               <div id="voluntarioFields" class="hidden space-y-4 pt-2 border-t border-white/5">
-                 <p class="text-[10px] text-blue-400 font-bold uppercase tracking-wider">Asignación de Turno</p>
-                 <div class="grid grid-cols-2 gap-3">
-                   <select id="staffDia" class="premium-select text-xs">
-                     <option value="">Seleccionar Día</option>
-                     <option value="Lunes">Lunes</option>
-                     <option value="Martes">Martes</option>
-                     <option value="Miercoles">Miércoles</option>
-                     <option value="Jueves">Jueves</option>
-                     <option value="Viernes">Viernes</option>
-                     <option value="Sabado">Sábado</option>
-                   </select>
-                   <select id="staffHorario" class="premium-select text-xs">
-                     <option value="">Seleccionar Horario</option>
-                     <option value="Mañana (7:00 AM)">Mañana (7:00 AM)</option>
-                     <option value="Tarde (4:00 PM)">Tarde (4:00 PM)</option>
-                     <option value="Noche (9:00 PM)">Noche (9:00 PM)</option>
-                   </select>
-                 </div>
-               </div>
+          <!-- Filter Tabs -->
+          <div class="flex flex-wrap items-center gap-6 mb-8 text-[11px] font-black uppercase tracking-widest text-gray-500 border-b border-white/5 pb-4">
+            <button onclick="window.setStaffFilter('todos')" id="filter-todos" class="staff-filter active text-blue-400 hover:text-blue-300 transition-colors">Todos (<span id="count-todos">0</span>)</button>
+            <span class="opacity-20 text-white">|</span>
+            <button onclick="window.setStaffFilter('administrador')" id="filter-administrador" class="staff-filter hover:text-white transition-colors">Administradores (<span id="count-administrador">0</span>)</button>
+            <span class="opacity-20 text-white">|</span>
+            <button onclick="window.setStaffFilter('voluntario')" id="filter-voluntario" class="staff-filter hover:text-white transition-colors">Voluntarios (<span id="count-voluntario">0</span>)</button>
+            <span class="opacity-20 text-white">|</span>
+            <button onclick="window.setStaffFilter('estudiante')" id="filter-estudiante" class="staff-filter hover:text-white transition-colors">Estudiantes (<span id="count-estudiante">0</span>)</button>
+          </div>
 
-               <button type="submit" class="btn-premium">Registrar Usuario</button>
-             </form>
-             <div id="staffStatus" class="hidden mt-4 p-3 rounded-xl text-center text-sm"></div>
-           </div>
+          <!-- Bulk Actions -->
+          <div class="flex items-center gap-3 mb-6">
+            <select class="bg-slate-950 border border-white/10 text-[10px] font-black rounded-lg px-4 py-2 text-gray-400 outline-none">
+              <option>Acciones en lote</option>
+              <option>Eliminar</option>
+              <option>Cambiar Rol</option>
+            </select>
+            <button class="px-4 py-2 bg-white/5 hover:bg-white/10 text-[10px] font-black rounded-lg text-white border border-white/10 transition-all uppercase tracking-tighter">Aplicar</button>
+          </div>
 
-           <!-- Staff List -->
-           <div id="staffListMng" class="glass-card p-8">
-              <h3 class="text-xl font-bold text-white mb-6">Gestión de Roles</h3>
-              <div id="staffTableContainer" class="custom-scroll overflow-y-auto max-h-[500px]">
-                <!-- Cargado por JS -->
-              </div>
-           </div>
+          <!-- Staff Table -->
+          <div id="staffTableContainer" class="overflow-x-auto custom-scroll">
+            <table class="w-full text-left border-separate border-spacing-y-2">
+              <thead>
+                <tr class="text-[10px] font-black text-gray-600 uppercase tracking-widest px-4">
+                  <th class="pl-6 py-4 w-12"><input type="checkbox" class="accent-blue-500"></th>
+                  <th class="py-4">Usuario</th>
+                  <th class="py-4">Nombre</th>
+                  <th class="py-4">Correo</th>
+                  <th class="py-4">Rol</th>
+                  <th class="py-4 pr-6 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="staffTableBody">
+                <!-- Injected by JS -->
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
+
+      <!-- Add Staff Modal -->
+      <div id="addStaffModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] flex items-center justify-center hidden p-4">
+        <div class="glass-card w-full max-w-lg p-10 relative animate-in fade-in zoom-in duration-300">
+          <button onclick="window.hideAddStaffModal()" class="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors">
+            <i data-lucide="x" class="w-6 h-6"></i>
+          </button>
+          
+          <h3 class="text-3xl font-black text-white mb-2 tracking-tighter">Agregar Nuevo</h3>
+          <p class="text-sm text-gray-500 mb-8">Crea una nueva cuenta de personal o voluntario.</p>
+          
+          <form id="createStaffForm" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Nombre Completo</label>
+                <div class="relative group">
+                  <i data-lucide="user" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-blue-500 transition-colors"></i>
+                  <input type="text" id="staffNombre" placeholder="Ej: Juan Perez" class="w-full bg-slate-900 border border-white/5 text-white text-xs font-bold rounded-2xl py-4 pl-12 pr-4 focus:border-blue-500 outline-none transition-all" required>
+                </div>
+              </div>
+              <div class="space-y-2">
+                <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Matrícula / ID</label>
+                <div class="relative group">
+                  <i data-lucide="hash" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-blue-500 transition-colors"></i>
+                  <input type="text" id="staffMatricula" placeholder="100456789" class="w-full bg-slate-900 border border-white/5 text-white text-xs font-bold rounded-2xl py-4 pl-12 pr-4 focus:border-blue-500 outline-none transition-all" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Contraseña Temporal</label>
+              <div class="relative group">
+                <i data-lucide="lock" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-blue-500 transition-colors"></i>
+                <input type="password" id="staffPassword" placeholder="••••••••" class="w-full bg-slate-900 border border-white/5 text-white text-xs font-bold rounded-2xl py-4 pl-12 pr-4 focus:border-blue-500 outline-none transition-all" required>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Rol de Usuario</label>
+              <select id="staffRol" class="w-full bg-slate-900 border border-white/5 text-white text-xs font-bold rounded-2xl py-4 px-4 focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer" style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 24 24%22 stroke=%22rgba(255,255,255,0.3)%22><path stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222%22 d=%22M19 9l-7 7-7-7%22/></svg>'); background-repeat: no-repeat; background-position: right 1.25rem center; background-size: 1.2em;">
+                <option value="estudiante">Estudiante</option>
+                <option value="voluntario">Voluntario</option>
+                <option value="administrador">Administrador</option>
+              </select>
+            </div>
+
+            <div id="voluntarioFields" class="hidden animate-in slide-in-from-top-2 duration-300">
+              <div class="p-6 bg-blue-500/5 rounded-3xl border border-blue-500/10 space-y-4">
+                <p class="text-[10px] text-blue-400 font-black uppercase tracking-[0.2em] mb-2">Asignación Directa</p>
+                <div class="grid grid-cols-2 gap-4">
+                  <select id="staffDia" class="w-full bg-slate-950/50 border border-white/5 text-white text-[10px] font-bold rounded-xl p-3 outline-none">
+                    <option value="">Día</option>
+                    <option value="Lunes">Lunes</option>
+                    <option value="Martes">Martes</option>
+                    <option value="Miércoles">Miércoles</option>
+                    <option value="Jueves">Jueves</option>
+                    <option value="Viernes">Viernes</option>
+                    <option value="Sábado">Sábado</option>
+                  </select>
+                  <select id="staffHorario" class="w-full bg-slate-950/50 border border-white/5 text-white text-[10px] font-bold rounded-xl p-3 outline-none">
+                    <option value="">Horario</option>
+                    <option value="Mañana (7:00 AM)">Mañana (7:00 AM)</option>
+                    <option value="Tarde (4:00 PM)">Tarde (4:00 PM)</option>
+                    <option value="Noche (9:00 PM)">Noche (9:00 PM)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-xs py-5 rounded-2xl transition-all shadow-xl shadow-blue-600/20 uppercase tracking-widest">Registrar Usuario</button>
+            <div id="staffStatus" class="hidden p-4 rounded-2xl text-center text-[10px] font-black uppercase tracking-widest"></div>
+          </form>
+        </div>
+      </div>
 
       <!-- Horarios Management Screen -->
       <section id="screen-horarios" class="admin-screen hidden">
@@ -652,80 +724,139 @@
       });
     }
 
+    let staffData = [];
+    let staffFilter = 'todos';
+
     async function loadStaffData() {
       const container = document.getElementById('staffTableContainer');
-      container.innerHTML = '<div class="spinner mx-auto"></div>';
-      
-      const { data: staff, error } = await supabase.from('profiles').select('*').order('nombre');
+      const { data, error } = await supabase.from('profiles').select('*').order('nombre');
       if (error) return;
-
-      container.innerHTML = `
-        <div class="custom-scroll overflow-x-auto">
-          <table class="w-full text-left border-collapse" style="min-width: 700px;">
-            <thead>
-              <tr class="text-[10px] uppercase text-gray-500 border-b border-white/10 font-extrabold tracking-widest">
-                <th class="py-4 px-6">Usuario</th>
-                <th class="py-4 px-6">Rol / Turno</th>
-                <th class="py-4 px-6">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${staff.map(u => `
-                <tr class="border-b border-white/5 hover:bg-white/2 transition-colors">
-                  <td class="py-5 px-6">
-                    <p class="text-[0.95rem] font-bold text-white">${u.nombre}</p>
-                    <p class="text-[11px] text-gray-500 font-mono mt-1">${u.matricula}</p>
-                  </td>
-                  <td class="py-5 px-6">
-                    <div class="flex flex-col gap-2">
-                      <span class="text-[10px] font-bold px-2 py-1 rounded uppercase max-w-fit ${u.rol === 'administrador' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' : u.rol === 'voluntario' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-gray-500/10 text-gray-400'}">${u.rol}</span>
-                      ${u.rol === 'voluntario' ? `
-                        <p class="text-[10px] text-blue-400 font-bold bg-blue-500/5 px-2 py-0.5 rounded border border-blue-500/10 max-w-fit">${u.dia_asignado || 'Sin día'} • ${u.horario_asignado || 'Sin hora'}</p>
-                      ` : ''}
-                    </div>
-                  </td>
-                  <td class="py-5 px-6">
-                    <div class="flex flex-col gap-2">
-                      <select onchange="window.updateUserRole('${u.id}', this.value)" class="bg-[#0f172a] border border-white/10 text-[10px] rounded p-2 text-gray-300 w-full">
-                        <option value="estudiante" ${u.rol === 'estudiante' ? 'selected' : ''}>Estudiante</option>
-                        <option value="voluntario" ${u.rol === 'voluntario' ? 'selected' : ''}>Voluntario</option>
-                        <option value="administrador" ${u.rol === 'administrador' ? 'selected' : ''}>Admin</option>
-                      </select>
-                      
-                      ${u.rol === 'voluntario' ? `
-                        <div class="flex gap-2">
-                          <select onchange="window.updateUserAssignment('${u.id}', 'dia', this.value)" class="bg-[#0f172a] border border-white/10 text-[9px] rounded p-1.5 text-gray-500 w-full">
-                            <option value="">Día...</option>
-                            <option value="Lunes" ${u.dia_asignado === 'Lunes' ? 'selected' : ''}>Lun</option>
-                            <option value="Martes" ${u.dia_asignado === 'Martes' ? 'selected' : ''}>Mar</option>
-                            <option value="Miercoles" ${u.dia_asignado === 'Miercoles' ? 'selected' : ''}>Mie</option>
-                            <option value="Jueves" ${u.dia_asignado === 'Jueves' ? 'selected' : ''}>Jue</option>
-                            <option value="Viernes" ${u.dia_asignado === 'Viernes' ? 'selected' : ''}>Vie</option>
-                            <option value="Sabado" ${u.dia_asignado === 'Sabado' ? 'selected' : ''}>Sab</option>
-                          </select>
-                          <select onchange="window.updateUserAssignment('${u.id}', 'horario', this.value)" class="bg-[#0f172a] border border-white/10 text-[9px] rounded p-1.5 text-gray-500 w-full">
-                            <option value="">Hora...</option>
-                            <option value="Mañana (7:00 AM)" ${u.horario_asignado === 'Mañana (7:00 AM)' ? 'selected' : ''}>7AM</option>
-                            <option value="Tarde (4:00 PM)" ${u.horario_asignado === 'Tarde (4:00 PM)' ? 'selected' : ''}>4PM</option>
-                            <option value="Noche (9:00 PM)" ${u.horario_asignado === 'Noche (9:00 PM)' ? 'selected' : ''}>9PM</option>
-                          </select>
-                        </div>
-                      ` : ''}
-                    </div>
-                  </td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-      `;
+      staffData = data || [];
+      updateStaffCounts();
+      renderStaffTable();
     }
 
+    function updateStaffCounts() {
+      document.getElementById('count-todos').textContent = staffData.length;
+      document.getElementById('count-administrador').textContent = staffData.filter(u => u.rol === 'administrador').length;
+      document.getElementById('count-voluntario').textContent = staffData.filter(u => u.rol === 'voluntario').length;
+      document.getElementById('count-estudiante').textContent = staffData.filter(u => u.rol === 'estudiante').length;
+    }
+
+    window.setStaffFilter = (f) => {
+      staffFilter = f;
+      document.querySelectorAll('.staff-filter').forEach(el => {
+        el.classList.remove('text-blue-400', 'active');
+        el.classList.add('text-gray-500');
+      });
+      document.getElementById(`filter-${f}`).classList.add('text-blue-400', 'active');
+      renderStaffTable();
+    };
+
+    window.filterStaff = () => {
+      renderStaffTable();
+    };
+
+    function renderStaffTable() {
+      const tbody = document.getElementById('staffTableBody');
+      const search = document.getElementById('staffSearch').value.toLowerCase();
+      
+      let filtered = staffData;
+      if (staffFilter !== 'todos') {
+        filtered = filtered.filter(u => u.rol === staffFilter);
+      }
+      if (search) {
+        filtered = filtered.filter(u => 
+          (u.nombre || '').toLowerCase().includes(search) || 
+          (u.matricula || '').toLowerCase().includes(search)
+        );
+      }
+
+      tbody.innerHTML = filtered.map(u => {
+        const isSelf = u.id === supabase.auth.user()?.id;
+        const roleColors = {
+          administrador: 'bg-red-500/10 text-red-400 border-red-500/20',
+          voluntario: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+          estudiante: 'bg-slate-500/10 text-slate-400 border-slate-500/20'
+        };
+
+        const initials = (u.nombre || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+        return `
+          <tr class="group hover:bg-white/[0.02] transition-colors border-b border-white/[0.03]">
+            <td class="pl-6 py-5 w-12"><input type="checkbox" class="accent-blue-500"></td>
+            <td class="py-5">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 border border-white/5 flex items-center justify-center text-[10px] font-black text-blue-400 shadow-inner">
+                  ${initials}
+                </div>
+                <div>
+                  <div class="text-[12px] font-black text-white leading-tight group-hover:text-blue-400 transition-colors">${u.matricula || 'N/A'}</div>
+                  <div class="text-[9px] font-bold text-gray-600 uppercase tracking-tighter">@aeudj_user</div>
+                </div>
+              </div>
+            </td>
+            <td class="py-5 text-[12px] font-bold text-gray-300">${u.nombre}</td>
+            <td class="py-5 text-[11px] font-mono text-gray-500">${u.matricula}@aeudj.com</td>
+            <td class="py-5">
+              <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase border ${roleColors[u.rol] || roleColors.estudiante}">
+                ${u.rol}
+              </span>
+            </td>
+            <td class="py-5 pr-6 text-right">
+              <div class="flex items-center justify-end gap-2">
+                <button onclick="window.editUserRole('${u.id}', '${u.rol}')" class="p-2 hover:bg-blue-500/10 rounded-lg transition-colors text-gray-500 hover:text-blue-400" title="Editar Rol">
+                  <i data-lucide="edit-3" class="w-4 h-4"></i>
+                </button>
+                <button onclick="window.deleteUser('${u.id}')" class="p-2 hover:bg-red-500/10 rounded-lg transition-colors text-gray-500 hover:text-red-400" ${isSelf ? 'disabled opacity-20' : ''} title="Eliminar">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    window.showAddStaffModal = () => {
+      document.getElementById('addStaffModal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    };
+
+    window.hideAddStaffModal = () => {
+      document.getElementById('addStaffModal').classList.add('hidden');
+      document.body.style.overflow = '';
+      document.getElementById('createStaffForm').reset();
+      document.getElementById('staffStatus').classList.add('hidden');
+    };
+
+    window.editUserRole = async (userId, currentRole) => {
+      const newRole = prompt('Nuevo rol (estudiante, voluntario, administrador):', currentRole);
+      if (!newRole || newRole === currentRole) return;
+      if (!['estudiante', 'voluntario', 'administrador'].includes(newRole)) {
+        alert('Rol no válido');
+        return;
+      }
+      
+      const { error } = await supabase.from('profiles').update({ rol: newRole }).eq('id', userId);
+      if (error) alert('Error al actualizar rol');
+      else loadStaffData();
+    };
+
+    window.deleteUser = async (userId) => {
+      if (!confirm('¿Seguro que quieres eliminar este usuario? Esta acción no se puede deshacer.')) return;
+      
+      const { error } = await supabase.from('profiles').delete().eq('id', userId);
+      if (error) alert('Error al eliminar usuario');
+      else loadStaffData();
+    };
+
     window.updateUserRole = async (userId, newRol) => {
-      if (!confirm('¿Cambiar el rol de este usuario?')) return;
+      // Compatibility wrapper
       const { error } = await supabase.from('profiles').update({ rol: newRol }).eq('id', userId);
       if (!error) loadStaffData();
-      else alert('Error al actualizar rol');
     };
 
     window.updateUserAssignment = async (userId, field, value) => {
@@ -734,13 +865,7 @@
       if (field === 'horario') updateObj.horario_asignado = value;
       
       const { error } = await supabase.from('profiles').update(updateObj).eq('id', userId);
-      if (error) alert('Error al actualizar asignación');
-      else {
-        // Refresh whatever screen we are in
-        const activeScreen = document.querySelector('.nav-item.active').dataset.screen;
-        if (activeScreen === 'staff') loadStaffData();
-        if (activeScreen === 'horarios') loadHorariosData();
-      }
+      if (!error) loadStaffData();
     };
 
     // ── HORARIOS HIGH-FIDELITY REDESIGN ───────────────────────────────────────
