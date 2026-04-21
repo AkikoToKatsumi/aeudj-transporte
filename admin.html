@@ -741,9 +741,17 @@
     let staffFilter = 'todos';
 
     async function loadStaffData() {
-      const container = document.getElementById('staffTableContainer');
+      const grid = document.getElementById('staffCardGrid');
+      if (grid) grid.innerHTML = '<div class="col-span-full py-20 text-center"><p class="text-gray-500 font-black uppercase tracking-widest text-xs animate-pulse">Sincronizando con base de datos...</p></div>';
+
       const { data, error } = await supabase.from('profiles').select('*').order('nombre');
-      if (error) return;
+      if (error) {
+        console.error('Error fetching staff:', error);
+        window.showAdminToast('Error al conectar con la base de datos', 'error');
+        return;
+      }
+      
+      console.log('Staff data reloaded:', data);
       staffData = data || [];
       updateStaffCounts();
       renderStaffTable();
@@ -802,10 +810,11 @@
       }
 
       grid.innerHTML = filtered.map(u => {
-        // Safe check for current user ID
+        // More robust current user detection
         const session = supabase.auth.session ? supabase.auth.session() : null;
-        const currentUserId = session ? session.user.id : (supabase.auth.user ? supabase.auth.user()?.id : null);
-        const isSelf = u.id === currentUserId;
+        const localUser = JSON.parse(localStorage.getItem('aeudj_user') || '{}');
+        const currentId = session?.user?.id || localUser?.id || null;
+        const isSelf = u.id === currentId;
 
         const initials = (u.nombre || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
         const isAdmin = u.rol === 'administrador';
@@ -883,14 +892,20 @@
     };
 
     window.deleteUser = async (userId) => {
-      if (!confirm('¿Seguro que quieres eliminar este usuario? Esta acción no se puede deshacer.')) return;
+      const confirmMsg = '¿Estás seguro de eliminar esta cuenta? Esta acción borrará el perfil permanentemente de la base de datos.';
+      if (!confirm(confirmMsg)) return;
       
+      window.showAdminToast('Eliminando...', 'info');
+
       const { error } = await supabase.from('profiles').delete().eq('id', userId);
+      
       if (error) {
-        window.showAdminToast('Error al eliminar usuario', 'error');
+        console.error('Delete error:', error);
+        window.showAdminToast(error.message || 'No tienes permisos para eliminar este usuario', 'error');
       } else {
-        window.showAdminToast('Usuario eliminado', 'success');
-        loadStaffData();
+        window.showAdminToast('Usuario eliminado correctamente', 'success');
+        // Force immediate reload
+        await loadStaffData();
       }
     };
 
