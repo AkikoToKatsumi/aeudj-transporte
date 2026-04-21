@@ -241,75 +241,60 @@
       </section>
 
       <!-- Add Staff Modal -->
-      <div id="addStaffModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] flex items-center justify-center hidden p-4">
-        <div class="glass-card w-full max-w-lg p-10 relative animate-in fade-in zoom-in duration-300">
-          <button onclick="window.hideAddStaffModal()" class="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors">
-            <i data-lucide="x" class="w-6 h-6"></i>
+      <div id="addStaffModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[100] flex items-center justify-center hidden p-4">
+        <div class="glass-card w-full max-w-xl p-12 relative animate-in fade-in zoom-in duration-300 rounded-[3rem] border-white/10 shadow-[0_30px_100px_rgba(0,0,0,0.5)]">
+          <button onclick="window.hideAddStaffModal()" class="absolute top-8 right-8 text-gray-600 hover:text-white transition-all hover:rotate-90">
+            <i data-lucide="x" class="w-8 h-8"></i>
           </button>
           
-          <h3 class="text-3xl font-black text-white mb-2 tracking-tighter">Agregar Nuevo</h3>
-          <p class="text-sm text-gray-500 mb-8">Crea una nueva cuenta de personal o voluntario.</p>
+          <div class="mb-10 text-center">
+            <h3 class="text-4xl font-black text-white mb-3 tracking-tighter">Nuevo Usuario</h3>
+            <p class="text-sm text-gray-500 font-bold uppercase tracking-[0.15em] opacity-60">Creación de cuenta administrativa</p>
+          </div>
           
-          <form id="createStaffForm" class="space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="space-y-2">
-                <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Nombre Completo</label>
+          <form id="createStaffForm" class="space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div class="space-y-3">
+                <label class="text-[10px] font-black text-gray-500 uppercase tracking-[0.25em] ml-2">Nombre Completo</label>
                 <div class="relative group">
-                  <i data-lucide="user" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-blue-500 transition-colors"></i>
-                  <input type="text" id="staffNombre" placeholder="Ej: Juan Perez" class="w-full bg-slate-900 border border-white/5 text-white text-xs font-bold rounded-2xl py-4 pl-12 pr-4 focus:border-blue-500 outline-none transition-all" required>
+                  <i data-lucide="user" class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 group-focus-within:text-blue-500 transition-colors"></i>
+                  <input type="text" id="staffNombre" placeholder="Nombre y Apellidos" class="w-full bg-slate-950/80 border-2 border-white/5 text-white text-sm font-bold rounded-[1.5rem] py-5 pl-14 pr-6 focus:border-blue-500/50 outline-none transition-all placeholder:text-gray-700" required>
                 </div>
               </div>
-              <div class="space-y-2">
-                <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Matrícula / ID</label>
+              <div class="space-y-3">
+                <label class="text-[10px] font-black text-gray-500 uppercase tracking-[0.25em] ml-2">Matrícula / ID</label>
                 <div class="relative group">
-                  <i data-lucide="hash" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-blue-500 transition-colors"></i>
-                  <input type="text" id="staffMatricula" placeholder="100456789" class="w-full bg-slate-900 border border-white/5 text-white text-xs font-bold rounded-2xl py-4 pl-12 pr-4 focus:border-blue-500 outline-none transition-all" required>
+                  <i data-lucide="hash" class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 group-focus-within:text-blue-500 transition-colors"></i>
+                  <input type="text" id="staffMatricula" placeholder="10-0000" class="w-full bg-slate-950/80 border-2 border-white/5 text-white text-sm font-bold rounded-[1.5rem] py-5 pl-14 pr-6 focus:border-blue-500/50 outline-none transition-all placeholder:text-gray-700" required>
                 </div>
               </div>
             </div>
 
-            <div class="space-y-2">
-              <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Contraseña Temporal</label>
+            <div class="space-y-3">
+              <label class="text-[10px] font-black text-gray-500 uppercase tracking-[0.25em] ml-2">Contraseña de Acceso</label>
               <div class="relative group">
-                <i data-lucide="lock" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-blue-500 transition-colors"></i>
-                <input type="password" id="staffPassword" placeholder="••••••••" class="w-full bg-slate-900 border border-white/5 text-white text-xs font-bold rounded-2xl py-4 pl-12 pr-4 focus:border-blue-500 outline-none transition-all" required>
+                <i data-lucide="lock" class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 group-focus-within:text-blue-500 transition-colors"></i>
+                <input type="password" id="staffPassword" placeholder="••••••••••••" class="w-full bg-slate-950/80 border-2 border-white/5 text-white text-sm font-bold rounded-[1.5rem] py-5 pl-14 pr-6 focus:border-blue-500/50 outline-none transition-all placeholder:text-gray-700" required>
               </div>
             </div>
 
-            <div class="space-y-2">
-              <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Rol de Usuario</label>
-              <select id="staffRol" class="w-full bg-slate-900 border border-white/5 text-white text-xs font-bold rounded-2xl py-4 px-4 focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer" style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 24 24%22 stroke=%22rgba(255,255,255,0.3)%22><path stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222%22 d=%22M19 9l-7 7-7-7%22/></svg>'); background-repeat: no-repeat; background-position: right 1.25rem center; background-size: 1.2em;">
-                <option value="estudiante">Estudiante</option>
-                <option value="voluntario">Voluntario</option>
-                <option value="administrador">Administrador</option>
-              </select>
-            </div>
-
-            <div id="voluntarioFields" class="hidden animate-in slide-in-from-top-2 duration-300">
-              <div class="p-6 bg-blue-500/5 rounded-3xl border border-blue-500/10 space-y-4">
-                <p class="text-[10px] text-blue-400 font-black uppercase tracking-[0.2em] mb-2">Asignación Directa</p>
-                <div class="grid grid-cols-2 gap-4">
-                  <select id="staffDia" class="w-full bg-slate-950/50 border border-white/5 text-white text-[10px] font-bold rounded-xl p-3 outline-none">
-                    <option value="">Día</option>
-                    <option value="Lunes">Lunes</option>
-                    <option value="Martes">Martes</option>
-                    <option value="Miércoles">Miércoles</option>
-                    <option value="Jueves">Jueves</option>
-                    <option value="Viernes">Viernes</option>
-                    <option value="Sábado">Sábado</option>
-                  </select>
-                  <select id="staffHorario" class="w-full bg-slate-950/50 border border-white/5 text-white text-[10px] font-bold rounded-xl p-3 outline-none">
-                    <option value="">Horario</option>
-                    <option value="Mañana (7:00 AM)">Mañana (7:00 AM)</option>
-                    <option value="Tarde (4:00 PM)">Tarde (4:00 PM)</option>
-                    <option value="Noche (9:00 PM)">Noche (9:00 PM)</option>
-                  </select>
-                </div>
+            <div class="space-y-3">
+              <label class="text-[10px] font-black text-gray-500 uppercase tracking-[0.25em] ml-2">Rol Asignado</label>
+              <div class="relative group">
+                <i data-lucide="shield" class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 group-focus-within:text-blue-500 transition-colors"></i>
+                <select id="staffRol" class="w-full bg-slate-950/80 border-2 border-white/5 text-white text-sm font-bold rounded-[1.5rem] py-5 pl-14 pr-12 focus:border-blue-500/50 outline-none transition-all appearance-none cursor-pointer" style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 24 24%22 stroke=%22rgba(255,255,255,0.3)%22><path stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222%22 d=%22M19 9l-7 7-7-7%22/></svg>'); background-repeat: no-repeat; background-position: right 1.5rem center; background-size: 1.2em;">
+                  <option value="estudiante">Estudiante</option>
+                  <option value="voluntario">Voluntario</option>
+                  <option value="administrador">Administrador</option>
+                </select>
               </div>
             </div>
 
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-xs py-5 rounded-2xl transition-all shadow-xl shadow-blue-600/20 uppercase tracking-widest">Registrar Usuario</button>
-            <div id="staffStatus" class="hidden p-4 rounded-2xl text-center text-[10px] font-black uppercase tracking-widest"></div>
+            <div class="pt-6">
+              <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 text-white font-black text-[11px] py-6 rounded-[1.5rem] transition-all shadow-2xl shadow-blue-500/30 uppercase tracking-[0.3em]">Registrar Nuevo Usuario</button>
+            </div>
+            
+            <div id="staffStatus" class="hidden p-5 rounded-2xl text-center text-[10px] font-black uppercase tracking-[0.2em] border border-white/5"></div>
           </form>
         </div>
       </div>
@@ -976,19 +961,11 @@
       const form = document.getElementById('createStaffForm');
       if (!form) return;
 
-      // Handle Role change to show/hide volunteer fields
-      const roleSelect = document.getElementById('staffRol');
-      const volFields  = document.getElementById('voluntarioFields');
-      roleSelect.onchange = () => {
-        if (roleSelect.value === 'voluntario') volFields.classList.remove('hidden');
-        else volFields.classList.add('hidden');
-      };
-
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const status = document.getElementById('staffStatus');
         status.textContent = 'Procesando...';
-        status.className = 'mt-4 p-3 rounded-xl text-center text-sm bg-blue-500/10 text-blue-400';
+        status.className = 'mt-4 p-5 rounded-2xl text-center text-[10px] font-black uppercase tracking-[0.2em] bg-blue-500/10 text-blue-400 border border-blue-500/20';
         status.classList.remove('hidden');
 
         try {
@@ -996,8 +973,6 @@
           const matricula = document.getElementById('staffMatricula').value;
           const password = document.getElementById('staffPassword').value;
           const rol = document.getElementById('staffRol').value;
-          const dia = document.getElementById('staffDia').value;
-          const horario = document.getElementById('staffHorario').value;
 
           const pseudoEmail = `${matricula}@aeudj.com`;
           
@@ -1008,24 +983,23 @@
 
           if (authErr) throw authErr;
 
-          const { error: profileErr } = await supabase.from('profiles').insert({
-            id: auth.user.id,
-            nombre,
-            matricula,
-            rol,
-            dia_asignado: rol === 'voluntario' ? dia : null,
-            horario_asignado: rol === 'voluntario' ? horario : null
-          });
+          const { error: profileErr } = await supabase.from('profiles').insert([
+            { id: auth.user.id, nombre, matricula, rol }
+          ]);
 
           if (profileErr) throw profileErr;
 
-          status.textContent = '¡Usuario creado exitosamente!';
-          status.className = 'mt-4 p-3 rounded-xl text-center text-sm bg-green-500/10 text-green-400';
-          form.reset();
-          loadStaffData();
+          status.textContent = 'Usuario registrado con éxito';
+          status.className = 'mt-4 p-5 rounded-2xl text-center text-[10px] font-black uppercase tracking-[0.2em] bg-green-500/10 text-green-400 border border-green-500/20';
+          
+          setTimeout(() => {
+            window.hideAddStaffModal();
+            loadStaffData();
+          }, 1500);
+
         } catch (err) {
-          status.textContent = 'Error: ' + err.message;
-          status.className = 'mt-4 p-3 rounded-xl text-center text-sm bg-red-500/10 text-red-400';
+          status.textContent = err.message || 'Error en el registro';
+          status.className = 'mt-4 p-5 rounded-2xl text-center text-[10px] font-black uppercase tracking-[0.2em] bg-red-500/10 text-red-400 border border-red-500/20';
         }
       });
     }
