@@ -180,58 +180,127 @@
       </section>
 
       <!-- Staff Management Screen -->
-      <section id="screen-staff" class="admin-screen hidden">
-        <!-- Prominent Search & Filter Card (Centered like the schedule selector) -->
-        <div class="max-w-4xl mx-auto mb-10">
-          <div class="glass-card p-8 rounded-[2.5rem] border-2 border-white/5 shadow-2xl relative overflow-hidden">
-            <!-- Background Accent -->
-            <div class="absolute -top-24 -right-24 w-48 h-48 bg-blue-600/10 blur-[80px] rounded-full"></div>
-            
-            <div class="relative z-10">
-              <div class="flex flex-col md:flex-row gap-6 items-center">
-                <div class="flex-1 w-full">
-                  <span class="text-[10px] text-blue-400 font-black uppercase tracking-[0.3em] mb-3 block">Buscador Inteligente</span>
-                  <div class="relative">
-                    <i data-lucide="search" class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500"></i>
-                    <input type="text" id="staffSearch" 
-                      placeholder="Buscar por nombre, matrícula o teléfono..." 
-                      oninput="window.filterStaff()"
-                      style="width:100%; background:rgba(0,0,0,0.3); border:2px solid rgba(255,255,255,0.05); color:white; padding:1.2rem 1rem 1.2rem 3.5rem; border-radius:1.5rem; font-size:1.1rem; font-weight:700; outline:none;"
-                      class="focus:border-blue-500 focus:bg-slate-900/80 transition-all placeholder:text-gray-600">
-                  </div>
-                </div>
-                
-                <div class="w-full md:w-auto">
-                   <span class="text-[10px] text-gray-500 font-black uppercase tracking-[0.3em] mb-3 block text-center md:text-left">Acción</span>
-                   <button onclick="window.showAddStaffModal()" class="btn-premium w-full md:w-56 py-4 rounded-[1.5rem]">
-                     <i data-lucide="user-plus" class="w-5 h-5"></i> AGREGAR NUEVO
-                   </button>
-                </div>
-              </div>
+      <section id="screen-staff" class="admin-screen hidden jakarta-font">
+        <!-- TOP BAR -->
+        <div class="staff-topbar">
+          <div>
+            <div class="staff-page-title">Gestión de Personal</div>
+            <div class="staff-page-sub" id="staff-current-date">Transporte activo</div>
+          </div>
+          <div class="staff-topbar-actions">
+            <button class="staff-btn staff-btn-ghost" onclick="window.refreshCurrentScreen()">🔄 Refrescar</button>
+          </div>
+        </div>
 
-              <!-- Filter Pills -->
-              <div class="flex flex-wrap gap-3 mt-8 justify-center">
-                <button onclick="window.setStaffFilter('todos')" id="filter-todos" class="staff-filter active bg-blue-500 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">Todos <span id="count-todos" class="ml-2 opacity-50">0</span></button>
-                <button onclick="window.setStaffFilter('administrador')" id="filter-administrador" class="staff-filter bg-white/5 text-gray-400 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all border border-white/5">Admins <span id="count-administrador" class="ml-2 opacity-50">0</span></button>
-                <button onclick="window.setStaffFilter('voluntario')" id="filter-voluntario" class="staff-filter bg-white/5 text-gray-400 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all border border-white/5">Voluntarios <span id="count-voluntario" class="ml-2 opacity-50">0</span></button>
-              </div>
+        <!-- STATS -->
+        <div class="staff-stats-row">
+          <div class="staff-stat-card">
+            <div class="staff-stat-icon blue">👥</div>
+            <div>
+              <div class="staff-stat-num" id="staff-count-todos">0</div>
+              <div class="staff-stat-lbl">Total Personal</div>
+            </div>
+          </div>
+          <div class="staff-stat-card">
+            <div class="staff-stat-icon green">🛡️</div>
+            <div>
+              <div class="staff-stat-num" id="staff-count-admin">0</div>
+              <div class="staff-stat-lbl">Administradores</div>
+            </div>
+          </div>
+          <div class="staff-stat-card">
+            <div class="staff-stat-icon amber">🙋</div>
+            <div>
+              <div class="staff-stat-num" id="staff-count-voluntario">0</div>
+              <div class="staff-stat-lbl">Voluntarios</div>
+            </div>
+          </div>
+          <div class="staff-stat-card">
+            <div class="staff-stat-icon purple">🎓</div>
+            <div>
+              <div class="staff-stat-num" id="staff-count-estudiante">0</div>
+              <div class="staff-stat-lbl">Estudiantes</div>
             </div>
           </div>
         </div>
 
-        <!-- Section Label -->
-        <div class="max-w-7xl mx-auto px-4 mb-6">
-           <h3 class="text-xs font-black text-gray-600 uppercase tracking-[0.4em] flex items-center gap-4">
-             <span class="h-px bg-gray-800 flex-1"></span>
-             Directorio de Personal
-             <span class="h-px bg-gray-800 flex-1"></span>
-           </h3>
-        </div>
+        <!-- CONTENT GRID -->
+        <div class="staff-content-grid">
 
-        <!-- Staff Card Grid (Centered & Spacious) -->
-        <div class="max-w-7xl mx-auto px-4">
-          <div id="staffCardGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            <!-- Injected by JS -->
+          <!-- LEFT: STAFF TABLE -->
+          <div class="staff-panel">
+            <div class="staff-panel-header">
+              <div class="staff-panel-title">📋 Directorio de Personal</div>
+              <div class="staff-search-wrap">
+                <span class="staff-search-icon">🔍</span>
+                <input class="staff-search-input" type="text" id="staffSearchNew" placeholder="Buscar por nombre, matrícula o teléfono…" oninput="window.filterStaffNew()">
+              </div>
+            </div>
+
+            <div class="staff-filter-tabs">
+              <button class="staff-filter-tab active" id="tab-todos" onclick="window.setStaffFilterNew('todos')">Todos <span style="opacity:.6;margin-left:4px" id="tab-count-todos">0</span></button>
+              <button class="staff-filter-tab" id="tab-administrador" onclick="window.setStaffFilterNew('administrador')">Admins <span style="opacity:.6;margin-left:4px" id="tab-count-admin">0</span></button>
+              <button class="staff-filter-tab" id="tab-voluntario" onclick="window.setStaffFilterNew('voluntario')">Voluntarios <span style="opacity:.6;margin-left:4px" id="tab-count-voluntario">0</span></button>
+              <button class="staff-filter-tab" id="tab-estudiante" onclick="window.setStaffFilterNew('estudiante')">Estudiantes <span style="opacity:.6;margin-left:4px" id="tab-count-estudiante">0</span></button>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="staff-table-new">
+                <thead>
+                  <tr>
+                    <th>Miembro</th>
+                    <th>Rol</th>
+                    <th>Matrícula</th>
+                    <th style="text-align:right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="staffTableBodyNew">
+                  <!-- Injected by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- RIGHT COL -->
+          <div class="staff-right-col">
+            <!-- QUICK ADD -->
+            <div class="staff-quick-add-panel">
+              <div class="staff-qa-title">➕ Agregar Personal</div>
+
+              <div class="staff-qa-field">
+                <label class="staff-qa-label">Nombre completo</label>
+                <input class="staff-qa-input" id="qa-nombre" type="text" placeholder="Ej. Carlos Pérez">
+              </div>
+              <div class="staff-qa-field">
+                <label class="staff-qa-label">Teléfono (Opcional)</label>
+                <input class="staff-qa-input" id="qa-telefono" type="tel" placeholder="809-000-0000">
+              </div>
+              <div class="staff-qa-field">
+                <label class="staff-qa-label">Matrícula</label>
+                <input class="staff-qa-input" id="qa-matricula" type="text" placeholder="Ej. EF-2025">
+              </div>
+              <div class="staff-qa-field">
+                <label class="staff-qa-label">Contraseña</label>
+                <input class="staff-qa-input" id="qa-password" type="password" placeholder="Mínimo 6 caracteres">
+              </div>
+              <div class="staff-qa-field">
+                <label class="staff-qa-label">Rol</label>
+                <select class="staff-qa-select" id="qa-rol">
+                  <option value="estudiante">Estudiante</option>
+                  <option value="voluntario">Voluntario</option>
+                  <option value="administrador">Administrador</option>
+                </select>
+              </div>
+
+              <button class="staff-btn-add-full" onclick="window.handleQuickAddStaff()">👤 Agregar al Directorio</button>
+            </div>
+            
+            <!-- Activity Panel placeholder -->
+            <div class="staff-activity-panel hidden" id="staff-activity-container">
+               <div class="staff-panel-title" style="margin-bottom:1rem;font-size:.875rem">🕐 Actividad Reciente</div>
+               <div id="staff-activity-list"></div>
+            </div>
+            
           </div>
         </div>
       </section>
@@ -741,8 +810,8 @@
     let staffFilter = 'todos';
 
     async function loadStaffData() {
-      const grid = document.getElementById('staffCardGrid');
-      if (grid) grid.innerHTML = '<div class="col-span-full py-20 text-center"><p class="text-gray-500 font-black uppercase tracking-widest text-xs animate-pulse">Sincronizando con base de datos...</p></div>';
+      const tbody = document.getElementById('staffTableBodyNew');
+      if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:3rem;opacity:0.5;font-weight:bold;letter-spacing:0.2em;">SINCRONIZANDO...</td></tr>';
 
       const { data, error } = await supabase.from('profiles').select('*').order('nombre');
       if (error) {
@@ -751,40 +820,58 @@
         return;
       }
       
-      console.log('Staff data reloaded:', data);
       staffData = data || [];
       updateStaffCounts();
-      renderStaffTable();
+      renderStaffTableNew();
     }
 
     function updateStaffCounts() {
-      document.getElementById('count-todos').textContent = staffData.length;
-      document.getElementById('count-administrador').textContent = staffData.filter(u => u.rol === 'administrador').length;
-      document.getElementById('count-voluntario').textContent = staffData.filter(u => u.rol === 'voluntario').length;
-      document.getElementById('count-estudiante').textContent = staffData.filter(u => u.rol === 'estudiante').length;
+      const setTotal = (statId, tabId, count) => {
+        const elStat = document.getElementById(statId);
+        const elTab  = document.getElementById(tabId);
+        if (elStat) elStat.textContent = count;
+        if (elTab) elTab.textContent = count;
+      };
+
+      const admins = staffData.filter(u => u.rol === 'administrador').length;
+      const vols = staffData.filter(u => u.rol === 'voluntario').length;
+      const ests = staffData.filter(u => u.rol === 'estudiante').length;
+
+      setTotal('staff-count-todos', 'tab-count-todos', staffData.length);
+      setTotal('staff-count-admin', 'tab-count-admin', admins);
+      setTotal('staff-count-voluntario', 'tab-count-voluntario', vols);
+      setTotal('staff-count-estudiante', 'tab-count-estudiante', ests);
+      
+      const dateLbl = document.getElementById('staff-current-date');
+      if(dateLbl) {
+        const d = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        dateLbl.textContent = `Transporte activo · ${d.toLocaleDateString('es-ES', options)}`;
+      }
     }
 
-    window.setStaffFilter = (f) => {
+    window.setStaffFilterNew = (f) => {
       staffFilter = f;
-      document.querySelectorAll('.staff-filter').forEach(el => {
-        el.className = 'staff-filter bg-white/5 text-gray-400 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all border border-white/5';
+      document.querySelectorAll('.staff-filter-tab').forEach(el => {
+        el.className = 'staff-filter-tab';
       });
-      const activeBtn = document.getElementById(`filter-${f}`);
+      const activeBtn = document.getElementById(`tab-${f}`);
       if (activeBtn) {
-        activeBtn.className = 'staff-filter active bg-blue-500 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all';
+        activeBtn.className = 'staff-filter-tab active';
       }
-      renderStaffTable();
+      renderStaffTableNew();
     };
 
-    window.filterStaff = () => {
-      renderStaffTable();
+    window.filterStaffNew = () => {
+      renderStaffTableNew();
     };
 
-    async function renderStaffTable() {
-      const grid = document.getElementById('staffCardGrid');
-      if (!grid) return;
+    async function renderStaffTableNew() {
+      const tbody = document.getElementById('staffTableBodyNew');
+      if (!tbody) return;
 
-      const search = document.getElementById('staffSearch').value.toLowerCase();
+      const searchInput = document.getElementById('staffSearchNew');
+      const search = searchInput ? searchInput.value.toLowerCase() : '';
       
       let filtered = staffData;
       if (staffFilter !== 'todos') {
@@ -799,134 +886,160 @@
       }
 
       if (filtered.length === 0) {
-        grid.innerHTML = `
-          <div class="col-span-full py-20 text-center glass-card rounded-[2rem]">
-            <i data-lucide="search-x" class="w-16 h-16 text-gray-800 mx-auto mb-6 opacity-20"></i>
-            <p class="text-gray-500 font-black uppercase tracking-[0.3em] text-xs">No se encontraron resultados para tu búsqueda</p>
-          </div>
+        tbody.innerHTML = `
+          <tr><td colspan="4" style="text-align:center;padding:4rem;color:#94a3b8;">
+            <div style="font-size:2rem;margin-bottom:1rem;opacity:0.3;">🔍</div>
+            <p style="font-weight:600;font-size:0.9rem;">No se encontraron resultados para tu búsqueda</p>
+          </td></tr>
         `;
-        if (window.lucide) window.lucide.createIcons();
         return;
       }
 
-      grid.innerHTML = filtered.map(u => {
-        // More robust current user detection
-        const session = supabase.auth.session ? supabase.auth.session() : null;
-        const localUser = JSON.parse(localStorage.getItem('aeudj_user') || '{}');
-        const currentId = session?.user?.id || localUser?.id || null;
-        const isSelf = u.id === currentId;
+      const session = supabase.auth.session ? supabase.auth.session() : null;
+      const localUser = JSON.parse(localStorage.getItem('aeudj_user') || '{}');
+      const currentId = session?.user?.id || localUser?.id || null;
 
+      tbody.innerHTML = filtered.map(u => {
+        const isSelf = u.id === currentId;
         const initials = (u.nombre || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-        const isAdmin = u.rol === 'administrador';
+        
+        let badgeClass = 'staff-badge-gray';
+        let badgeLabel = 'Estudiante';
+        let icon = '🎓';
+        
+        if(u.rol === 'administrador') { badgeClass = 'staff-badge-amber'; badgeLabel = 'Admin'; icon = '🛡️'; }
+        if(u.rol === 'voluntario') { badgeClass = 'staff-badge-blue'; badgeLabel = 'Voluntario'; icon = '🙋'; }
+
+        // Color based on initials (deterministic)
+        const charCode = initials.charCodeAt(0) || 65;
+        const colors = [
+          'linear-gradient(135deg,#3b82f6,#2563eb)',
+          'linear-gradient(135deg,#10b981,#059669)',
+          'linear-gradient(135deg,#f59e0b,#d97706)',
+          'linear-gradient(135deg,#8b5cf6,#6d28d9)',
+          'linear-gradient(135deg,#ec4899,#be185d)'
+        ];
+        const avatarBg = colors[charCode % colors.length];
 
         return `
-          <div class="glass-card p-8 flex flex-col items-center text-center animate-fade-in relative group overflow-hidden border-2 border-white/5 hover:border-blue-500/30 transition-all duration-500 rounded-[2rem]">
-            <!-- Decorative corner -->
-            <div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl ${isAdmin ? 'from-red-500/10' : 'from-blue-500/10'} to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-
-            <div class="w-20 h-20 rounded-3xl bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-white/10 flex items-center justify-center text-2xl font-black text-white shadow-2xl mb-6 group-hover:scale-110 transition-transform duration-500 group-hover:border-blue-500/30">
-              ${initials}
-            </div>
-            
-            <h4 class="text-white font-black text-xl leading-tight mb-2 group-hover:text-blue-400 transition-colors">${u.nombre}</h4>
-            <div class="flex flex-wrap justify-center gap-2 mb-8">
-               <span class="text-[9px] font-mono text-gray-500 uppercase tracking-widest bg-black/40 px-3 py-1 rounded-full border border-white/5">${u.matricula}</span>
-               ${u.telefono ? `<span class="text-[9px] font-mono text-blue-400 uppercase tracking-widest bg-blue-500/5 px-3 py-1 rounded-full border border-blue-500/10">${u.telefono}</span>` : ''}
-            </div>
-            
-            <div class="w-full mt-auto pt-6 border-t border-white/5 space-y-4">
-              <div class="relative">
-                <select 
-                  onchange="window.updateUserRole('${u.id}', this.value)"
-                  class="w-full bg-slate-950/80 border-2 border-white/5 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl px-5 py-4 outline-none focus:border-blue-500 appearance-none cursor-pointer transition-all"
-                >
-                  <option value="estudiante" ${u.rol === 'estudiante' ? 'selected' : ''}>Estudiante</option>
-                  <option value="voluntario" ${u.rol === 'voluntario' ? 'selected' : ''}>Voluntario</option>
-                  <option value="administrador" ${u.rol === 'administrador' ? 'selected' : ''}>Administrador</option>
-                </select>
-                <i data-lucide="shield" class="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 pointer-events-none"></i>
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:.75rem">
+                <div class="staff-avatar-new" style="background:${avatarBg}">${initials}</div>
+                <div>
+                  <div class="staff-name-new">${u.nombre}</div>
+                  <div class="staff-meta-new">${u.telefono ? `📞 ${u.telefono}` : 'Sin teléfono'}</div>
+                </div>
               </div>
-              
-              <button 
-                onclick="window.deleteUser('${u.id}')" 
-                class="w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-3 ${isSelf ? 'opacity-10 cursor-not-allowed grayscale' : 'bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border-2 border-red-500/20'}"
-                ${isSelf ? 'disabled' : ''}
-              >
-                <i data-lucide="trash-2" class="w-4 h-4"></i> ELIMINAR CUENTA
-              </button>
-            </div>
-          </div>
+            </td>
+            <td>
+              <div style="display:flex; flex-direction:column; gap:0.4rem; align-items:flex-start;">
+                 <span class="staff-badge ${badgeClass}">${icon} ${badgeLabel}</span>
+                 <select 
+                   onchange="window.updateUserRoleNew('${u.id}', this.value)"
+                   style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); color:#94a3b8; font-size:0.7rem; border-radius:4px; padding:2px 4px; outline:none;"
+                 >
+                   <option value="estudiante" ${u.rol === 'estudiante' ? 'selected' : ''}>Cambiar a Estudiante</option>
+                   <option value="voluntario" ${u.rol === 'voluntario' ? 'selected' : ''}>Cambiar a Voluntario</option>
+                   <option value="administrador" ${u.rol === 'administrador' ? 'selected' : ''}>Cambiar a Admin</option>
+                 </select>
+              </div>
+            </td>
+            <td><code style="font-size:.78rem;color:#94a3b8;background:rgba(0,0,0,.25);padding:.2rem .5rem;border-radius:.4rem;border:1px solid rgba(255,255,255,0.05);">${u.matricula || 'N/A'}</code></td>
+            <td>
+              <div class="staff-row-actions">
+                <button class="staff-icon-btn danger" title="Eliminar Cuenta" onclick="window.deleteUserNew('${u.id}')" ${isSelf ? 'disabled style="opacity:0.2;cursor:not-allowed;"' : ''}>
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
         `;
       }).join('');
-
-      if (window.lucide) window.lucide.createIcons();
     }
 
-    window.showAddStaffModal = () => {
-      document.getElementById('addStaffModal').classList.remove('hidden');
-      document.body.style.overflow = 'hidden';
-    };
-
-    window.hideAddStaffModal = () => {
-      document.getElementById('addStaffModal').classList.add('hidden');
-      document.body.style.overflow = '';
-      document.getElementById('createStaffForm').reset();
-      document.getElementById('staffStatus').classList.add('hidden');
-    };
-
-    window.editUserRole = async (userId, currentRole) => {
-      const newRole = prompt('Nuevo rol (estudiante, voluntario, administrador):', currentRole);
-      if (!newRole || newRole === currentRole) return;
-      if (!['estudiante', 'voluntario', 'administrador'].includes(newRole)) {
-        window.showAdminToast('Rol no válido', 'error');
-        return;
-      }
-      
+    window.updateUserRoleNew = async (userId, newRole) => {
+      window.showAdminToast('Actualizando rol...', 'info');
       const { error } = await supabase.from('profiles').update({ rol: newRole }).eq('id', userId);
       if (error) {
-        window.showAdminToast('Error al actualizar rol', 'error');
+         window.showAdminToast('Error al actualizar', 'error');
       } else {
-        window.showAdminToast('Rol actualizado', 'success');
-        loadStaffData();
+         window.showAdminToast('Rol actualizado correctamente', 'success');
+         await loadStaffData();
       }
     };
 
-    window.deleteUser = async (userId) => {
-      const confirmMsg = '¿Estás seguro de eliminar esta cuenta? Esta acción borrará el perfil permanentemente de la base de datos.';
+    window.deleteUserNew = async (userId) => {
+      const confirmMsg = '¿Estás seguro de eliminar esta cuenta permanentemente?';
       if (!confirm(confirmMsg)) return;
       
       window.showAdminToast('Eliminando...', 'info');
-
       const { error } = await supabase.from('profiles').delete().eq('id', userId);
       
       if (error) {
         console.error('Delete error:', error);
-        window.showAdminToast(error.message || 'No tienes permisos para eliminar este usuario', 'error');
+        window.showAdminToast(error.message || 'Error al eliminar usuario', 'error');
       } else {
         window.showAdminToast('Usuario eliminado correctamente', 'success');
-        // Force immediate reload
         await loadStaffData();
       }
     };
 
-    window.updateUserRole = async (userId, newRol) => {
-      const { error } = await supabase.from('profiles').update({ rol: newRol }).eq('id', userId);
-      if (error) {
-        window.showAdminToast('Error al actualizar rol', 'error');
-      } else {
-        window.showAdminToast('Rol actualizado con éxito', 'success');
-        loadStaffData();
+    window.handleQuickAddStaff = async () => {
+      const btn = document.querySelector('.staff-btn-add-full');
+      const ogText = btn.innerHTML;
+      btn.innerHTML = '⏳ Procesando...';
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+
+      try {
+        const nombre = document.getElementById('qa-nombre').value.trim();
+        const telefono = document.getElementById('qa-telefono').value.trim();
+        const matricula = document.getElementById('qa-matricula').value.trim();
+        const password = document.getElementById('qa-password').value;
+        const rol = document.getElementById('qa-rol').value;
+
+        if (!nombre || !matricula || !password) {
+          throw new Error('Nombre, matrícula y contraseña son obligatorios');
+        }
+        if (password.length < 6) {
+          throw new Error('La contraseña debe tener al menos 6 caracteres');
+        }
+
+        const pseudoEmail = `${matricula.toLowerCase()}@aeudj.com`;
+        
+        const { data: auth, error: authErr } = await supabase.auth.signUp({ 
+          email: pseudoEmail, 
+          password: password 
+        });
+
+        if (authErr) throw authErr;
+
+        const { error: profileErr } = await supabase.from('profiles').insert([
+          { id: auth.user.id, nombre, matricula, telefono, rol }
+        ]);
+
+        if (profileErr) throw profileErr;
+
+        window.showAdminToast('Personal agregado al directorio', 'success');
+        
+        // Clear form
+        document.getElementById('qa-nombre').value = '';
+        document.getElementById('qa-telefono').value = '';
+        document.getElementById('qa-matricula').value = '';
+        document.getElementById('qa-password').value = '';
+        document.getElementById('qa-rol').value = 'estudiante';
+
+        await loadStaffData();
+      } catch(err) {
+        window.showAdminToast(err.message, 'error');
+      } finally {
+        btn.innerHTML = ogText;
+        btn.disabled = false;
+        btn.style.opacity = '1';
       }
     };
 
-    window.updateUserAssignment = async (userId, field, value) => {
-      const updateObj = {};
-      if (field === 'dia') updateObj.dia_asignado = value;
-      if (field === 'horario') updateObj.horario_asignado = value;
-      
-      const { error } = await supabase.from('profiles').update(updateObj).eq('id', userId);
-      if (!error) loadStaffData();
-    };
 
     // ── HORARIOS HIGH-FIDELITY REDESIGN ───────────────────────────────────────
     let adminSelectedDay = 'Lunes';
