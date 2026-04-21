@@ -849,27 +849,39 @@
       const newRole = prompt('Nuevo rol (estudiante, voluntario, administrador):', currentRole);
       if (!newRole || newRole === currentRole) return;
       if (!['estudiante', 'voluntario', 'administrador'].includes(newRole)) {
-        alert('Rol no válido');
+        window.showAdminToast('Rol no válido', 'error');
         return;
       }
       
       const { error } = await supabase.from('profiles').update({ rol: newRole }).eq('id', userId);
-      if (error) alert('Error al actualizar rol');
-      else loadStaffData();
+      if (error) {
+        window.showAdminToast('Error al actualizar rol', 'error');
+      } else {
+        window.showAdminToast('Rol actualizado', 'success');
+        loadStaffData();
+      }
     };
 
     window.deleteUser = async (userId) => {
       if (!confirm('¿Seguro que quieres eliminar este usuario? Esta acción no se puede deshacer.')) return;
       
       const { error } = await supabase.from('profiles').delete().eq('id', userId);
-      if (error) alert('Error al eliminar usuario');
-      else loadStaffData();
+      if (error) {
+        window.showAdminToast('Error al eliminar usuario', 'error');
+      } else {
+        window.showAdminToast('Usuario eliminado', 'success');
+        loadStaffData();
+      }
     };
 
     window.updateUserRole = async (userId, newRol) => {
-      // Compatibility wrapper
       const { error } = await supabase.from('profiles').update({ rol: newRol }).eq('id', userId);
-      if (!error) loadStaffData();
+      if (error) {
+        window.showAdminToast('Error al actualizar rol', 'error');
+      } else {
+        window.showAdminToast('Rol actualizado con éxito', 'success');
+        loadStaffData();
+      }
     };
 
     window.updateUserAssignment = async (userId, field, value) => {
