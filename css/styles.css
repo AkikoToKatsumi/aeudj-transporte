@@ -1332,3 +1332,56 @@ tr:last-child td { border-bottom: none; }
     padding: 0.875rem 1rem 0.875rem 3rem !important;
   }
 }
+
+/* ============================================
+   ADMIN TOAST NOTIFICATIONS
+   ============================================ */
+.admin-toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -40%);
+  background: rgba(15, 23, 42, 0.98);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: white;
+  padding: 1.25rem 2rem;
+  border-radius: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  z-index: 10000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6);
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  min-width: 320px;
+  justify-content: center;
+}
+
+.admin-toast.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, -50%);
+}
+
+.admin-toast.error { 
+  border-color: rgba(239, 68, 68, 0.4); 
+  color: #ef4444;
+  background: rgba(15, 23, 42, 0.98);
+}
+
+.admin-toast.success { 
+  border-color: rgba(52, 211, 153, 0.4); 
+  color: #10b981; 
+  background: rgba(15, 23, 42, 0.98);
+}
+
+.admin-toast i {
+  width: 20px;
+  height: 20px;
+}

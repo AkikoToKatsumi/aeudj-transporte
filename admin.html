@@ -511,6 +511,30 @@
       }
     };
 
+    window.showAdminToast = (msg, type = 'success') => {
+      // Remove any existing toast
+      const old = document.querySelector('.admin-toast');
+      if (old) old.remove();
+
+      const toast = document.createElement('div');
+      toast.className = `admin-toast ${type}`;
+      toast.innerHTML = `
+        <i data-lucide="${type === 'error' ? 'alert-triangle' : 'check-circle'}"></i>
+        <span>${msg}</span>
+      `;
+      document.body.appendChild(toast);
+      if (window.lucide) window.lucide.createIcons();
+
+      // Trigger reflow for animation
+      toast.offsetHeight;
+      toast.classList.add('show');
+
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 500);
+      }, 3500);
+    };
+
     async function loadDashboardData() {
       const today = new Date().toISOString().split('T')[0];
       const { data: votos, error } = await supabase.from('votos').select('*').eq('fecha', today).gt('id', 40).order('horario');
@@ -957,8 +981,13 @@
         .update({ dia_asignado: day, horario_asignado: time })
         .eq('id', volunteerId);
 
-      if (error) alert('Error al asignar turno');
-      else loadHorariosData();
+      if (error) {
+        console.error('Error assigning slot:', error);
+        window.showAdminToast(error.message || 'Error al asignar turno', 'error');
+      } else {
+        window.showAdminToast('Turno asignado correctamente', 'success');
+        loadHorariosData();
+      }
     };
 
     function initForms() {
