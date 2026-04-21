@@ -1217,9 +1217,118 @@ tr:last-child td { border-bottom: none; }
   display: none;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .schedule-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 0.75rem;
+  }
+}
+
+/* ============================================
+   MOBILE OPTIMIZATION & STABILITY FIXES
+   ============================================ */
+
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden !important;
+    position: relative;
+    width: 100% !important;
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .admin-wrapper {
+    overflow-x: hidden;
+  }
+
+  input, select, textarea, button {
+    font-size: 16px !important;
+  }
+
+  .content-wrapper {
+    padding: 1rem 0.75rem !important;
+    height: auto !important;
+    overflow-x: hidden;
+  }
+
+  .content-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 1rem;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .sidebar-wrapper {
+    padding: 0.5rem !important;
+    border-radius: 0 !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+
+  .sidebar-header {
+    margin-bottom: 1rem !important;
+    justify-content: center;
+  }
+
+  .sidebar-nav {
+    gap: 0.25rem !important;
+    padding-bottom: 0.25rem;
+  }
+
+  .nav-item {
+    padding: 0.6rem 0.8rem !important;
+    border-radius: 0.75rem !important;
+  }
+
+  .glass-card {
+    padding: 1.25rem !important;
+    margin: 1rem 0 !important;
+    border-radius: 1.5rem !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .stat-card {
+    padding: 1rem !important;
+  }
+
+  #addStaffModal .glass-card {
+    padding: 1.5rem !important;
+    border-radius: 2rem !important;
+    width: 100% !important;
+    max-width: calc(100vw - 2rem) !important;
+    margin: auto !important;
+  }
+
+  #addStaffModal h3 {
+    font-size: 2rem !important;
+  }
+
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -0.5rem;
+    padding: 0 0.5rem;
+  }
+
+  #adminHorarioGrid {
+    padding-bottom: 1rem;
+    scrollbar-width: none;
+  }
+
+  #adminHorarioGrid::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .text-4xl { font-size: 1.75rem !important; }
+  .text-3xl { font-size: 1.5rem !important; }
+  
+  .btn-premium {
+    padding: 1.25rem !important;
+    font-size: 0.9rem !important;
+  }
+
+  .premium-input, .premium-select {
+    padding: 0.875rem 1rem 0.875rem 3rem !important;
   }
 }
