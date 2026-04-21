@@ -541,7 +541,13 @@
 
     // ── RENDER HORARIOS ─────────────────────────────────────
     function renderHorarios(group) {
-      const visible = SCHEDULES.filter(s => s.group === group);
+      let visible = SCHEDULES.filter(s => s.group === group);
+
+      // Si es Sábado (día 6), solo permitimos 7:00 AM y 12:10 PM
+      const d = new Date(getCycleDate(group) + 'T12:00:00');
+      if (d.getDay() === 6) {
+        visible = visible.filter(s => s.time === '7:00 AM' || s.time === '12:10 PM');
+      }
 
       scheduleGrid.innerHTML = '';
 

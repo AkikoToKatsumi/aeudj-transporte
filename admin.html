@@ -1043,7 +1043,7 @@
       const grid = document.getElementById('adminHorarioGrid');
       grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem 0;opacity:0.2;"><div class="spinner" style="margin:0 auto 1rem;"></div><p style="letter-spacing:0.4em;font-weight:900;">CARGANDO...</p></div>';
 
-      const times = [
+      let times = [
         { time: '7:00 AM',  route: 'Jarabacoa → La Vega', dir: 'ida'    },
         { time: '9:00 AM',  route: 'Jarabacoa → La Vega', dir: 'ida'    },
         { time: '12:10 PM', route: 'La Vega → Jarabacoa', dir: 'vuelta' },
@@ -1056,6 +1056,10 @@
         { time: '8:00 PM',  route: 'La Vega → Jarabacoa', dir: 'vuelta' },
         { time: '10:00 PM', route: 'La Vega → Jarabacoa', dir: 'vuelta' },
       ];
+
+      if (adminSelectedDay === 'Sábado') {
+        times = times.filter(t => t.time === '7:00 AM' || t.time === '12:10 PM');
+      }
 
       const { data: allUsers } = await supabase.from('profiles').select('*');
       const volunteers = (allUsers || []).filter(u => u.rol === 'voluntario');
