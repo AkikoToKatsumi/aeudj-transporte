@@ -57,16 +57,6 @@ body {
   overscroll-behavior-y: none;       /* Prevents rubber-band/bounce overshoot */
 }
 
-/* Evitar doble scroll en el panel de admin */
-body.admin-page {
-  overflow: hidden;
-}
-@media (max-width: 768px) {
-  body.admin-page {
-    overflow-y: auto !important;
-  }
-}
-
 /* Fixed background layer — replaces background-attachment:fixed safely on mobile */
 body::after {
   content: '';
@@ -1128,12 +1118,9 @@ tr:last-child td {
 .content-wrapper {
   flex: 1;
   padding: 2rem 3rem;
-  overflow-y: auto;
-  height: 100vh;
-  height: 100dvh;
+  min-height: 100vh;
   /* Smooth inertia scroll on iOS */
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
   /* Custom scrollbar */
   scrollbar-width: thin;
   scrollbar-color: rgba(59,130,246,0.3) transparent;
