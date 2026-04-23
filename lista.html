@@ -341,7 +341,7 @@
       const container = document.getElementById('listContainer');
 
       try {
-        const { data: votos, error } = await supabase
+        let { data: votos, error } = await supabase
           .from('votos').select('*')
           .eq('fecha', cycleDate)
           .gt('id', 40)
@@ -349,14 +349,17 @@
           .order('created_at', { ascending: true });
 
         if (error) throw error;
+        
+        // Filtrar pasajeros que ya fueron pasados en la lista (se_monto !== null)
+        votos = votos.filter(v => v.se_monto === null);
 
         container.innerHTML = '';
 
         if (!votos || votos.length === 0) {
           container.innerHTML = `
             <div class="empty-state">
-              <i data-lucide="users" style="display:block;"></i>
-              <p>No hay pasajeros registrados para hoy.</p>
+              <i data-lucide="check-circle" style="display:block; color:#34d399; margin: 0 auto 1rem; width: 48px; height: 48px;"></i>
+              <p>No hay listas pendientes o todas las listas de hoy ya fueron pasadas. ¡Buen viaje!</p>
             </div>`;
           if (window.lucide) window.lucide.createIcons();
           return;
