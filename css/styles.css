@@ -994,6 +994,13 @@ html, body {
   height: 100%;
 }
 
+body.admin-page {
+  background: #020617 !important;
+}
+body.admin-page::after {
+  display: none !important;
+}
+
 .admin-wrapper {
   display: flex;
   min-height: 100%;
