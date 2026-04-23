@@ -25,7 +25,7 @@ function refreshIcons() {
 }
 
 // ============================================
-// INICIALIZACIN
+// INICIALIZACIÓN
 // ============================================
 async function initApp() {
   refreshIcons();
@@ -87,7 +87,7 @@ if (document.readyState === 'loading') {
 }
 
 // ============================================
-// GESTIN DE SESIN
+// GESTIÓN DE SESIÓN
 // ============================================
 function checkSession() {
  try {
@@ -133,7 +133,7 @@ async function logout() {
 }
 
 // ============================================
-// INICIALIZACIN DE PGINAS
+// INICIALIZACIÓN DE PÁGINAS
 // ============================================
 function initPage(page) {
  switch(page) {
@@ -165,7 +165,7 @@ function initPage(page) {
 }
 
 // ============================================
-// PGINA INDEX (LOGIN/REGISTRO)
+// PÁGINA INDEX (LOGIN/REGISTRO)
 // ============================================
 function initIndexPage() {
  refreshIcons();
@@ -249,7 +249,7 @@ function initIndexPage() {
 
  let userDataLocal = null;
  
- // Buscar por matrcula o telfono
+ // Buscar por matrícula o teléfono
  const { data: userByMat, error: errMat } = await supabase
  .from('profiles')
  .select('*')
@@ -301,7 +301,7 @@ function initIndexPage() {
  .single();
 
  if (userData) {
- // Auto-promover a administradora/desarrolladora (ejemplo del cdigo original)
+ // Auto-promover a administradora/desarrolladora (ejemplo del código original)
  if (userData.matricula === '0000' && userData.rol !== 'administrador') {
  userData.rol = 'administrador';
  await supabase.from('profiles').update({ rol: 'administrador' }).eq('id', user.id);
@@ -309,7 +309,7 @@ function initIndexPage() {
  
  if (userData.matricula === '20230105' && userData.rol !== 'desarrolladora') {
  userData.rol = 'desarrolladora';
- // Actualizacin silenciosa (si el RLS lo bloquea, an retendr el rol en su sesin actual)
+ // Actualización silenciosa (si el RLS lo bloquea, aún retendrá el rol en su sesión actual)
  supabase.from('profiles').update({ rol: 'desarrolladora' }).eq('id', user.id).then();
  }
  
@@ -321,7 +321,7 @@ function initIndexPage() {
  
  } catch (error) {
  console.error('Error:', error);
- showError('Error al iniciar sesin. Verifica tu matrcula o contrasea.');
+ showError('Error al iniciar sesión. Verifica tu matrícula o contraseña.');
  }
  btn.disabled = false;
  btn.textContent = 'Entrar';
@@ -342,17 +342,17 @@ function initIndexPage() {
  const universidad = document.getElementById('universidad').value;
  
  if (matricula.length < 3) {
- showError('Matrcula muy corta.');
+ showError('Matrícula muy corta.');
  return;
  }
  
  if (pass.length < 6) {
- showError('La contrasea debe tener al menos 6 caracteres.');
+ showError('La contraseña debe tener al menos 6 caracteres.');
  return;
  }
  
  if (!validateEmail(email)) {
- showError('Correo invlido.');
+ showError('Correo inválido.');
  return;
  }
  
@@ -361,7 +361,7 @@ function initIndexPage() {
  btn.textContent = 'Registrando...';
 
  try {
- // Verificar si la matrcula ya existe
+ // Verificar si la matrícula ya existe
  const { data: existingUser } = await supabase
  .from('profiles')
  .select('id')
@@ -369,7 +369,7 @@ function initIndexPage() {
  .maybeSingle();
  
  if (existingUser) {
- showError('Esta matrcula ya est registrada. Usa "Iniciar sesin".');
+ showError('Esta matrícula ya está registrada. Usa "Iniciar sesión".');
  btn.disabled = false;
  btn.textContent = 'Registrar';
  return;
@@ -415,7 +415,7 @@ function initIndexPage() {
 }
 
 // ============================================
-// PGINA VOTAR
+// PÁGINA VOTAR
 // ============================================
 function initVotarPage() {
  if (!currentUser) {
@@ -427,7 +427,7 @@ function initVotarPage() {
  if (staffMenu && currentUser) {
  staffMenu.innerHTML = ''; // Limpiar para evitar duplicados en recargas de SPA
  if (currentUser.rol === 'administrador' || currentUser.rol === 'desarrolladora') {
- staffMenu.innerHTML += `<a href="admin.html" class="btn p-3 mb-2" style="background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); color: #c4b5fd; text-shadow: 0 0 10px rgba(196,181,253,0.5); box-shadow: 0 0 15px rgba(139, 92, 246, 0.15); display: inline-block; width: 100%; border-radius: 12px; font-weight: bold; margin-bottom: 0.75rem;"> Entrar al Panel de Administracin</a>`;
+ staffMenu.innerHTML += `<a href="admin.html" class="btn p-3 mb-2" style="background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); color: #c4b5fd; text-shadow: 0 0 10px rgba(196,181,253,0.5); box-shadow: 0 0 15px rgba(139, 92, 246, 0.15); display: inline-block; width: 100%; border-radius: 12px; font-weight: bold; margin-bottom: 0.75rem;"> Entrar al Panel de Administración</a>`;
  staffMenu.classList.remove('hidden');
  }
  if (currentUser.rol === 'voluntario' || currentUser.rol === 'desarrolladora') {
@@ -580,7 +580,7 @@ function initVotarPage() {
  return hDirection !== direction;
  });
  
- // Si ya estaba seleccionado, simplemente queramos apagarlo, as que salimos.
+ // Si ya estaba seleccionado, simplemente queríamos apagarlo, así que salimos.
  if (isCurrentlySelected && prevSelectedList.length === 1) {
  return;
  }
@@ -694,7 +694,7 @@ function initPasswordToggle() {
 }
 
 // ============================================
-// PGINA LISTA
+// PÁGINA LISTA
 // ============================================
 async function initListaPage() {
  const listContainer = document.getElementById('listContainer');
@@ -1265,7 +1265,7 @@ function initAdminPage() {
  
  function renderAdminItem(p, isEspera = false, isCompact = false) {
  if (isCompact) {
- // Versin compacta para la cuadrcula
+ // Versión compacta para la cuadrícula
  const statusClass = p.se_monto === 1 ? 'border-emerald-500/30' : (p.se_monto === 0 ? 'border-rose-500/30' : '');
  const bgClass = p.se_monto === 1 ? 'bg-emerald-500/10' : (p.se_monto === 0 ? 'bg-rose-500/10' : 'bg-slate-800/40');
  
@@ -1298,7 +1298,7 @@ function initAdminPage() {
  `;
  }
 
- // Versin original (fallback o para listas largas si se requiere)
+ // Versión original (fallback o para listas largas si se requiere)
  let statusHtml = '';
  if (p.se_monto === null) {
  statusHtml = `
@@ -1393,7 +1393,7 @@ function initAdminPage() {
 }
 
 // ============================================
-// PGINA VOLUNTARIO
+// PÁGINA VOLUNTARIO
 // ============================================
 function initVoluntarioPage() {
  if (!currentUser || (currentUser.rol !== 'voluntario' && currentUser.rol !== 'desarrolladora')) {
@@ -1408,7 +1408,7 @@ function initVoluntarioPage() {
  const misHorarios = currentUser.rol === 'desarrolladora' ? transportSchedules.map(s => s.fullText) : (currentUser.horarios_asignados || []);
  
  if (misHorarios.length === 0) {
- if(horariosText) horariosText.textContent = "No tienes ningn horario asignado.";
+ if(horariosText) horariosText.textContent = "No tienes ningún horario asignado.";
  if(container) container.innerHTML = '<p class="text-center text-gray-600 mt-4">Contacta al administrador para que te asigne una ruta.</p>';
  return;
  }
@@ -1446,8 +1446,8 @@ function initVoluntarioPage() {
  if (horariosActivos.length === 0) {
  container.innerHTML = `
  <div class="col-span-full text-center p-8 bg-slate-800/50 rounded-2xl border border-dashed border-slate-700">
- <p class="text-xl text-slate-300 font-medium mb-2">An no es hora de pasar lista.</p>
- <p class="text-slate-500 text-sm">Las listas aparecen automticamente 10 minutos antes de la hora de salida.</p>
+ <p class="text-xl text-slate-300 font-medium mb-2">Aún no es hora de pasar lista.</p>
+ <p class="text-slate-500 text-sm">Las listas aparecen automáticamente 10 minutos antes de la hora de salida.</p>
  </div>
  `;
  return;
@@ -1519,12 +1519,12 @@ function isHorarioActivo(horarioStr, ignoraTiempo = false) {
  const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
  // El horario se activa 10 minutos antes (ej: 12:50 para las 1:00)
- // Y se mantiene visible hasta 1 hora despus (ej: 2:00)
+ // Y se mantiene visible hasta 1 hora después (ej: 2:00)
  return (currentMinutes >= hMinutes - 10) && (currentMinutes <= hMinutes + 60);
 }
 
 // ============================================
-// PGINA CAMBIOS
+// PÁGINA CAMBIOS
 // ============================================
 function initCambiosPage() {
   if (!currentUser) {
