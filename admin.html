@@ -1368,8 +1368,13 @@
     };
 
     window.deleteUserNew = async (userId) => {
-      const confirmMsg = '¿Estás seguro de eliminar esta cuenta permanentemente?';
-      if (!confirm(confirmMsg)) return;
+      const confirmed = await window.aeudjConfirm('Esta acción es permanente y no se puede deshacer. ¿Deseas eliminar esta cuenta?', {
+        title: '¿Eliminar usuario?',
+        type: 'danger',
+        okText: 'Sí, eliminar',
+        cancelText: 'Cancelar'
+      });
+      if (!confirmed) return;
       
       window.showAdminToast('Eliminando...', 'info');
       const { data, error } = await supabase.from('profiles').delete().eq('id', userId).select();
