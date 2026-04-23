@@ -1,0 +1,54 @@
+      <!-- Passengers List Screen -->
+      <section id="screen-votos" class="admin-screen hidden">
+        <style>
+          .pv-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:.75rem; margin-bottom:1.4rem; }
+          .pv-stat  { background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.08); border-radius:1rem; padding:1rem 1.2rem; text-align:center; }
+          .pv-stat-num { font-size:1.9rem; font-weight:900; line-height:1; }
+          .pv-stat-lbl { font-size:.6rem; text-transform:uppercase; letter-spacing:.1em; color:#475569; font-weight:700; margin-top:.2rem; }
+          .pv-toolbar { display:flex; gap:.5rem; margin-bottom:1.25rem; flex-wrap:wrap; align-items:center; }
+          .pv-filter-lbl { font-size:.72rem; text-transform:uppercase; color:#475569; font-weight:700; margin-right:.2rem; }
+          .pv-filter-btn { padding:.38rem .9rem; border-radius:999px; font-size:.78rem; font-weight:700; border:1px solid rgba(255,255,255,0.1); background:rgba(30,41,59,0.6); color:#64748b; cursor:pointer; transition:all .15s; }
+          .pv-filter-btn.active { background:rgba(59,130,246,.2); border-color:rgba(59,130,246,.45); color:#93c5fd; }
+          .pv-filter-btn:hover:not(.active) { color:#94a3b8; border-color:rgba(255,255,255,0.18); }
+          .pv-group { background:rgba(15,23,42,0.75); border:1px solid rgba(255,255,255,0.07); border-radius:1rem; overflow:hidden; margin-bottom:.85rem; }
+          .pv-group-hdr { display:flex; align-items:center; justify-content:space-between; padding:.85rem 1.15rem; border-bottom:1px solid rgba(255,255,255,0.05); cursor:pointer; user-select:none; transition:background .12s; }
+          .pv-group-hdr:hover { background:rgba(255,255,255,0.025); }
+          .pv-group-title { font-size:.95rem; font-weight:700; color:#93c5fd; }
+          .pv-group-meta { display:flex; align-items:center; gap:.45rem; }
+          .pv-dir-pill { font-size:.57rem; font-weight:800; padding:.18rem .58rem; border-radius:999px; text-transform:uppercase; letter-spacing:.05em; }
+          .pv-dir-ida    { background:rgba(59,130,246,.18); color:#93c5fd; border:1px solid rgba(59,130,246,.3); }
+          .pv-dir-vuelta { background:rgba(139,92,246,.18); color:#c4b5fd; border:1px solid rgba(139,92,246,.3); }
+          .pv-count-pill { font-size:.67rem; font-weight:700; background:rgba(15,23,42,.8); color:#64748b; padding:.17rem .58rem; border-radius:999px; border:1px solid rgba(255,255,255,.06); }
+          .pv-chevron { color:#475569; width:16px; height:16px; transition:transform .2s; }
+          .pv-chevron.open { transform:rotate(180deg); }
+          .pv-body { display:flex; flex-direction:column; }
+          .pv-row { display:flex; align-items:center; gap:.8rem; padding:.7rem 1.15rem; border-bottom:1px solid rgba(255,255,255,0.04); transition:background .12s; }
+          .pv-row:last-child { border-bottom:none; }
+          .pv-row:hover { background:rgba(255,255,255,0.02); }
+          .pv-num { width:28px; height:28px; border-radius:50%; flex-shrink:0; background:rgba(59,130,246,.12); border:1px solid rgba(59,130,246,.2); display:flex; align-items:center; justify-content:center; font-size:.7rem; font-weight:800; color:#60a5fa; }
+          .pv-info { flex:1; min-width:0; }
+          .pv-name { font-size:.87rem; font-weight:700; color:#f1f5f9; }
+          .pv-mat  { font-size:.67rem; font-family:monospace; color:#475569; margin-top:.03rem; }
+          .pv-badge { font-size:.6rem; font-weight:800; flex-shrink:0; padding:.15rem .55rem; border-radius:999px; text-transform:uppercase; }
+          .pv-badge-ok     { background:rgba(52,211,153,.12); color:#34d399; border:1px solid rgba(52,211,153,.25); }
+          .pv-badge-espera { background:rgba(251,146,60,.12); color:#fb923c; border:1px solid rgba(251,146,60,.25); }
+          .pv-time { font-size:.74rem; font-weight:700; color:#60a5fa; font-family:monospace; flex-shrink:0; }
+          .pv-empty { text-align:center; padding:3rem 1.5rem; color:#475569; }
+          .pv-spin { width:30px; height:30px; margin:0 auto .75rem; border:3px solid rgba(59,130,246,.2); border-top-color:#3b82f6; border-radius:50%; animation:pvSpin .8s linear infinite; }
+          @keyframes pvSpin { to { transform:rotate(360deg); } }
+        </style>
+        <div class="pv-stats">
+          <div class="pv-stat"><div class="pv-stat-num" id="pvStatTotal" style="color:#60a5fa;">-</div><div class="pv-stat-lbl">Confirmados</div></div>
+          <div class="pv-stat"><div class="pv-stat-num" id="pvStatEspera" style="color:#fb923c;">0</div><div class="pv-stat-lbl">En Espera</div></div>
+          <div class="pv-stat"><div class="pv-stat-num" id="pvStatHorarios" style="color:#c4b5fd;">-</div><div class="pv-stat-lbl">Horarios</div></div>
+        </div>
+        <div class="pv-toolbar">
+          <span class="pv-filter-lbl">Filtrar:</span>
+          <button type="button" class="pv-filter-btn active" data-pv-filter="todos">Todos</button>
+          <button type="button" class="pv-filter-btn" data-pv-filter="ida">&#x2197; Ida</button>
+          <button type="button" class="pv-filter-btn" data-pv-filter="vuelta">&#x2199; Vuelta</button>
+        </div>
+        <div id="passengerListDetail">
+          <div class="pv-empty"><div class="pv-spin"></div><p>Cargando pasajeros...</p></div>
+        </div>
+      </section>
