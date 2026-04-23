@@ -468,7 +468,7 @@ function initVotarPage() {
         const pendingVotes = snapshot.filter(v => v.se_monto === null);
 
         if (pendingVotes.length > 0) {
-          initialVotes = pendingVotes;
+          initialVotes = [...pendingVotes];
           selectedHorarios = pendingVotes.map(v => v.horario);
           
           if (horarioForm) horarioForm.classList.add('hidden');
@@ -481,12 +481,24 @@ function initVotarPage() {
         } else {
           // Todos los viajes de hoy ya fueron completados (se_monto no es null).
           // Mostrar el form limpio para que puedan reservar de nuevo si lo necesitan.
-          if (horarioForm) horarioForm.classList.remove('hidden');
+          initialVotes = [];
+          selectedHorarios = [];
+          if (horarioForm) {
+            horarioForm.classList.remove('hidden');
+            const submitBtn = horarioForm.querySelector('button[type="submit"]');
+            if (submitBtn) submitBtn.textContent = 'Confirmar Selección';
+          }
           if (confirmedView) confirmedView.classList.add('hidden');
           renderHorarios();
         }
       } else {
-        if (horarioForm) horarioForm.classList.remove('hidden');
+        initialVotes = [];
+        selectedHorarios = [];
+        if (horarioForm) {
+          horarioForm.classList.remove('hidden');
+          const submitBtn = horarioForm.querySelector('button[type="submit"]');
+          if (submitBtn) submitBtn.textContent = 'Confirmar Selección';
+        }
         if (confirmedView) confirmedView.classList.add('hidden');
         renderHorarios();
       }
