@@ -1,17 +1,20 @@
 // supabase-config.js - Configuracion de Supabase
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
 const SUPABASE_URL = 'https://irjwxegepkznqrisbrys.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyand4ZWdlcGt6bnFyaXNicnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNjk0NDIsImV4cCI6MjA5MTc0NTQ0Mn0.TZOhsy0ghfmjK8rd4GWcgbtOLpERKRJ62mjqc5gaYOM';
 
-let supabase;
+let supabaseClient;
 
 try {
-    supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     console.log('✅ Supabase configurado');
 } catch (error) {
     console.error('❌ Error configurando Supabase:', error);
 }
+
+window.supabase = supabaseClient;
+window.SUPABASE_URL = SUPABASE_URL;
+window.SUPABASE_KEY = SUPABASE_KEY;
 
 const transportSchedules = [
   { time: "7:00 AM",  route: "Jarabacoa -> La Vega", fullText: "7:00 AM Jarabacoa -> La Vega", group: "manana" },
@@ -44,4 +47,6 @@ function formatDate(dateStr) {
   return `${day}/${month}/${year}`;
 }
 
-export { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY };
+window.transportSchedules = transportSchedules;
+window.getCycleDate = getCycleDate;
+window.formatDate = formatDate;
