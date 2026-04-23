@@ -41,7 +41,7 @@ async function initApp() {
     };
   }
 
-  if (currentUser && page) {
+  if (page) {
     pageInitialized = true;
     initPage(page);
   }
