@@ -2021,8 +2021,8 @@
       
       adminListaData = data || [];
       adminListaData.forEach(v => {
-        if(v.subio === true) adminAttendanceState[v.id] = 'subio';
-        else if(v.subio === false) adminAttendanceState[v.id] = 'no-subio';
+        if(v.se_monto === 1) adminAttendanceState[v.id] = 'subio';
+        else if(v.se_monto === 0) adminAttendanceState[v.id] = 'no-subio';
       });
       
       renderAdminLista();
@@ -2155,8 +2155,9 @@
 
     window.marcarAsistenciaAdmin = async (p, action) => {
       const subio = (action === 'subio');
+      const se_monto = subio ? 1 : 0;
       try {
-        await supabase.from('votos').update({ subio }).eq('id', p.id);
+        await supabase.from('votos').update({ se_monto }).eq('id', p.id);
         if (!subio) {
           await supabase.from('faltas').insert({
             usuario_id: p.usuario_id,
@@ -2306,8 +2307,8 @@
       rows.forEach((r, i) => {
         html += '<tr>';
         if (auditActiveTab === 'votos') {
-          const estado = r.subio === true ? '<span class="audit-badge activo">✓ Subió</span>'
-                       : r.subio === false ? '<span class="audit-badge falta">✗ No subió</span>'
+          const estado = r.se_monto === 1 ? '<span class="audit-badge activo">✓ Subió</span>'
+                       : r.se_monto === 0 ? '<span class="audit-badge falta">✗ No subió</span>'
                        : '<span class="audit-badge voto">Pendiente</span>';
           html += `
             <td class="audit-time">${i + 1}</td>

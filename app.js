@@ -464,16 +464,27 @@ function initVotarPage() {
         .gt('id', 40);
       
       if (snapshot && snapshot.length > 0) {
-        initialVotes = snapshot;
-        selectedHorarios = snapshot.map(v => v.horario);
-        
-        if (horarioForm) horarioForm.classList.add('hidden');
-        if (confirmedView) {
-          confirmedView.classList.remove('hidden');
-          renderConfirmedView(snapshot);
+        // Filtrar solo los votos pendientes (aún no se ha pasado lista)
+        const pendingVotes = snapshot.filter(v => v.se_monto === null);
+
+        if (pendingVotes.length > 0) {
+          initialVotes = pendingVotes;
+          selectedHorarios = pendingVotes.map(v => v.horario);
+          
+          if (horarioForm) horarioForm.classList.add('hidden');
+          if (confirmedView) {
+            confirmedView.classList.remove('hidden');
+            renderConfirmedView(pendingVotes);
+          }
+          const submitBtn = horarioForm?.querySelector('button[type="submit"]');
+          if (submitBtn) submitBtn.textContent = 'Actualizar Selección';
+        } else {
+          // Todos los viajes de hoy ya fueron completados (se_monto no es null).
+          // Mostrar el form limpio para que puedan reservar de nuevo si lo necesitan.
+          if (horarioForm) horarioForm.classList.remove('hidden');
+          if (confirmedView) confirmedView.classList.add('hidden');
+          renderHorarios();
         }
-        const submitBtn = horarioForm?.querySelector('button[type="submit"]');
-        if (submitBtn) submitBtn.textContent = 'Actualizar Seleccion';
       } else {
         if (horarioForm) horarioForm.classList.remove('hidden');
         if (confirmedView) confirmedView.classList.add('hidden');
@@ -597,8 +608,8 @@ function initVotarPage() {
  horarioForm.addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    if (selectedHorarios.length !== 2) {
-      alert('Debes seleccionar exactamente 2 horarios: uno de ida y uno de vuelta.');
+    if (selectedHorarios.length === 0 || selectedHorarios.length > 2) {
+      alert('Debes seleccionar al menos 1 horario (y máximo 2: ida y vuelta).');
       return;
     }
     
@@ -620,12 +631,13 @@ function initVotarPage() {
     btn.textContent = 'Guardando...';
 
     try {
-      // CLEAR ALL EXISTING VOTES for today/cycle for this user to prevent duplicates
+      // Eliminar SOLO LOS VOTOS PENDIENTES de hoy para no borrar el historial de los que ya subieron
       const { error: clearErr } = await supabase
         .from('votos')
         .delete()
         .eq('usuario_id', currentUser.id)
-        .eq('fecha', cycleDate);
+        .eq('fecha', cycleDate)
+        .is('se_monto', null);
       
       if (clearErr) throw clearErr;
 
