@@ -74,10 +74,10 @@
           <p class="text-sm text-gray-500">Transporte activo para el <span id="fechaAdmin"></span></p>
         </div>
         <div class="flex gap-3">
-          <button class="btn-pill-outline btn-small text-green-400 hover:bg-green-500/10 transition-colors" style="border:1px solid rgba(16,185,129,0.3);background:rgba(16,185,129,0.05);" onclick="window.downloadCajaReport()">
+          <button type="button" class="btn-pill-outline btn-small text-green-400 hover:bg-green-500/10 transition-colors" style="border:1px solid rgba(16,185,129,0.3);background:rgba(16,185,129,0.05);" onclick="window.downloadCajaReport()">
             <i data-lucide="download" class="icon-inline text-green-400"></i> Reporte Caja
           </button>
-          <button class="btn-pill-outline btn-small" onclick="window.refreshCurrentScreen()">
+          <button type="button" class="btn-pill-outline btn-small" onclick="window.refreshCurrentScreen()">
             <i data-lucide="refresh-cw" class="icon-inline"></i> Refrescar
           </button>
         </div>
@@ -198,9 +198,9 @@
           <!-- Filters -->
           <div class="flex gap-2 mb-6 flex-wrap">
             <span class="text-xs uppercase font-bold text-gray-500 self-center mr-2">Filtrar:</span>
-            <button class="btn-pill-outline btn-small active" onclick="window.filterAdminLista('todos')" id="adminListFilter-todos">Todos</button>
-            <button class="btn-pill-outline btn-small" onclick="window.filterAdminLista('ida')" id="adminListFilter-ida">↗ Ida</button>
-            <button class="btn-pill-outline btn-small" onclick="window.filterAdminLista('vuelta')" id="adminListFilter-vuelta">↙ Vuelta</button>
+            <button type="button" class="btn-pill-outline btn-small active" onclick="window.filterAdminLista('todos')" id="adminListFilter-todos">Todos</button>
+            <button type="button" class="btn-pill-outline btn-small" onclick="window.filterAdminLista('ida')" id="adminListFilter-ida">↗ Ida</button>
+            <button type="button" class="btn-pill-outline btn-small" onclick="window.filterAdminLista('vuelta')" id="adminListFilter-vuelta">↙ Vuelta</button>
           </div>
 
           <!-- Stats -->
@@ -1723,8 +1723,8 @@
             ${p.en_espera ? '<span class="text-[9px] font-bold text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded-full uppercase border border-orange-500/20">Espera</span>' : ''}
             <div class="text-xs font-mono text-blue-400 font-bold shrink-0">${time}</div>
             <div class="flex gap-1.5 shrink-0 ml-2">
-              <button class="att-admin-btn subio text-[10px] font-bold px-3 py-1.5 rounded-full border transition-all flex items-center gap-1 ${subioActive ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50' : 'text-emerald-400/60 border-emerald-500/20 hover:border-emerald-500/50 hover:bg-emerald-500/10'}" data-id="${p.id}" data-action="subio"><i data-lucide="check" class="w-3 h-3"></i> Subió</button>
-              <button class="att-admin-btn nosubio text-[10px] font-bold px-3 py-1.5 rounded-full border transition-all flex items-center gap-1 ${noSubioActive ? 'bg-red-500/20 text-red-400 border-red-500/50' : 'text-red-400/60 border-red-500/20 hover:border-red-500/50 hover:bg-red-500/10'}" data-id="${p.id}" data-action="no-subio"><i data-lucide="x" class="w-3 h-3"></i> No subió</button>
+              <button type="button" class="att-admin-btn subio text-[10px] font-bold px-3 py-1.5 rounded-full border transition-all flex items-center gap-1 ${subioActive ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50' : 'text-emerald-400/60 border-emerald-500/20 hover:border-emerald-500/50 hover:bg-emerald-500/10'}" data-id="${p.id}" data-action="subio"><i data-lucide="check" class="w-3 h-3"></i> Subió</button>
+              <button type="button" class="att-admin-btn nosubio text-[10px] font-bold px-3 py-1.5 rounded-full border transition-all flex items-center gap-1 ${noSubioActive ? 'bg-red-500/20 text-red-400 border-red-500/50' : 'text-red-400/60 border-red-500/20 hover:border-red-500/50 hover:bg-red-500/10'}" data-id="${p.id}" data-action="no-subio"><i data-lucide="x" class="w-3 h-3"></i> No subió</button>
             </div>
           `;
 
@@ -1782,9 +1782,9 @@
             fecha_penalidad: penalizado ? new Date().toISOString().split('T')[0] : null,
             updated_at:      new Date().toISOString(),
           }, { onConflict: 'usuario_id' });
-          window.showAdminToast(\`Falta registrada a \${p.nombre}. Total: \${count}/3\`, count >= 3 ? 'warning' : 'error');
+          window.showAdminToast(`Falta registrada a ${p.nombre}. Total: ${count}/3`, count >= 3 ? 'warning' : 'error');
         } else {
-          window.showAdminToast(\`Asistencia confirmada para \${p.nombre}\`, 'success');
+          window.showAdminToast(`Asistencia confirmada para ${p.nombre}`, 'success');
         }
       } catch(err) {
         console.error(err);
