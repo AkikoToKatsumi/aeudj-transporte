@@ -191,39 +191,180 @@
 
       <!-- Pasar Lista Screen (Voluntarios View inside Admin) -->
       <section id="screen-pasarlista" class="admin-screen hidden">
-        <div class="glass-card p-8 min-h-[500px]">
-          <h3 class="text-xl font-bold text-white mb-2">Panel de Pase de Lista</h3>
-          <p class="text-gray-400 text-sm mb-6">Vista unificada de todos los turnos para administración interactiva</p>
 
-          <!-- Filters -->
-          <div class="flex gap-2 mb-6 flex-wrap">
-            <span class="text-xs uppercase font-bold text-gray-500 self-center mr-2">Filtrar:</span>
-            <button type="button" class="btn-pill-outline btn-small active" onclick="window.filterAdminLista('todos')" id="adminListFilter-todos">Todos</button>
-            <button type="button" class="btn-pill-outline btn-small" onclick="window.filterAdminLista('ida')" id="adminListFilter-ida">↗ Ida</button>
-            <button type="button" class="btn-pill-outline btn-small" onclick="window.filterAdminLista('vuelta')" id="adminListFilter-vuelta">↙ Vuelta</button>
+        <style>
+          /* ── Pasar Lista: Voluntario-exact styles ── */
+          #screen-pasarlista .vl-stats-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: .75rem;
+            margin-bottom: 1.25rem;
+          }
+          #screen-pasarlista .vl-stat-card {
+            background: rgba(15,23,42,.6);
+            border: 1px solid rgba(255,255,255,.06);
+            border-radius: .85rem;
+            padding: .85rem 1rem;
+            text-align: center;
+            backdrop-filter: blur(16px);
+          }
+          #screen-pasarlista .vl-stat-num  { font-size: 1.7rem; font-weight: 800; }
+          #screen-pasarlista .vl-stat-lbl  { font-size: .65rem; text-transform: uppercase; color: #475569; font-weight: 700; }
+          #screen-pasarlista .vl-stat-blue   .vl-stat-num { color: #60a5fa; }
+          #screen-pasarlista .vl-stat-green  .vl-stat-num { color: #34d399; }
+          #screen-pasarlista .vl-stat-purple .vl-stat-num { color: #c4b5fd; }
+
+          #screen-pasarlista .vl-filter-bar {
+            display: flex;
+            gap: .6rem;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+            align-items: center;
+          }
+          #screen-pasarlista .vl-filter-lbl { font-size: .75rem; text-transform: uppercase; color: #475569; font-weight: 700; margin-right: .25rem; }
+          #screen-pasarlista .vl-filter-btn {
+            padding: .4rem .85rem;
+            border-radius: 999px;
+            font-size: .78rem;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,.08);
+            background: rgba(30,41,59,.5);
+            color: #64748b;
+            cursor: pointer;
+            transition: all .15s;
+          }
+          #screen-pasarlista .vl-filter-btn.active {
+            background: rgba(59,130,246,.2);
+            border-color: rgba(59,130,246,.4);
+            color: #60a5fa;
+          }
+          #screen-pasarlista .vl-filter-btn:hover:not(.active) { border-color: rgba(255,255,255,.15); color: #94a3b8; }
+
+          #screen-pasarlista .vl-section {
+            background: rgba(15,23,42,.6);
+            border: 1px solid rgba(255,255,255,.07);
+            border-radius: 1.1rem;
+            overflow: hidden;
+            margin-bottom: 1rem;
+            box-shadow: 0 8px 25px rgba(0,0,0,.15);
+          }
+          #screen-pasarlista .vl-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: .9rem 1.1rem;
+            border-bottom: 1px solid rgba(255,255,255,.05);
+            cursor: pointer;
+            user-select: none;
+          }
+          #screen-pasarlista .vl-section-header:hover { background: rgba(255,255,255,.02); }
+          #screen-pasarlista .vl-horario-title { font-size: .95rem; font-weight: 700; color: #60a5fa; }
+          #screen-pasarlista .vl-horario-meta  { display: flex; gap: .5rem; align-items: center; }
+          #screen-pasarlista .vl-dir-badge {
+            font-size: .62rem; font-weight: 700;
+            padding: .18rem .55rem;
+            border-radius: 999px;
+            text-transform: uppercase;
+          }
+          #screen-pasarlista .vl-dir-ida    { background: rgba(59,130,246,.15); color: #60a5fa; border: 1px solid rgba(59,130,246,.25); }
+          #screen-pasarlista .vl-dir-vuelta { background: rgba(139,92,246,.15); color: #c4b5fd; border: 1px solid rgba(139,92,246,.25); }
+          #screen-pasarlista .vl-count-badge {
+            font-size: .72rem; font-weight: 700;
+            background: rgba(30,41,59,.7); color: #64748b;
+            padding: .18rem .55rem; border-radius: 999px;
+          }
+          #screen-pasarlista .vl-chevron { color: #475569; transition: transform .2s; }
+          #screen-pasarlista .vl-chevron.open { transform: rotate(180deg); }
+
+          #screen-pasarlista .vl-table { display: flex; flex-direction: column; }
+          #screen-pasarlista .vl-row {
+            display: flex;
+            align-items: center;
+            padding: .75rem 1.1rem;
+            border-bottom: 1px solid rgba(255,255,255,.03);
+            gap: .85rem;
+            transition: background .12s;
+          }
+          #screen-pasarlista .vl-row:last-child { border-bottom: none; }
+          #screen-pasarlista .vl-row:hover { background: rgba(255,255,255,.02); }
+          #screen-pasarlista .vl-row-num {
+            width: 26px; height: 26px;
+            background: rgba(59,130,246,.15);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: .72rem; font-weight: 700; color: #60a5fa;
+            flex-shrink: 0;
+          }
+          #screen-pasarlista .vl-row-info { flex: 1; min-width: 0; }
+          #screen-pasarlista .vl-row-name { font-size: .88rem; font-weight: 600; color: #f1f5f9; }
+          #screen-pasarlista .vl-row-mat  { font-size: .7rem; color: #475569; font-family: monospace; }
+          #screen-pasarlista .vl-row-time { font-size: .78rem; font-weight: 700; color: #60a5fa; font-family: monospace; flex-shrink: 0; }
+
+          #screen-pasarlista .vl-att-btns { display: flex; gap: .35rem; flex-shrink: 0; }
+          #screen-pasarlista .vl-att-btn {
+            display: inline-flex; align-items: center; gap: .25rem;
+            padding: .3rem .7rem;
+            border-radius: 999px;
+            font-size: .72rem; font-weight: 700;
+            border: 1px solid;
+            cursor: pointer;
+            background: transparent;
+            transition: all .15s;
+            white-space: nowrap;
+          }
+          #screen-pasarlista .vl-att-btn.subio    { color: #34d399; border-color: rgba(52,211,153,.3); }
+          #screen-pasarlista .vl-att-btn.no-subio { color: #f87171; border-color: rgba(248,113,113,.3); }
+          #screen-pasarlista .vl-att-btn.subio.active    { background: rgba(52,211,153,.18); border-color: #34d399; }
+          #screen-pasarlista .vl-att-btn.no-subio.active { background: rgba(248,113,113,.18); border-color: #f87171; }
+          #screen-pasarlista .vl-att-btn.active  { opacity: 1; }
+          #screen-pasarlista .vl-att-btn:not(.active) { opacity: .6; }
+
+          #screen-pasarlista .vl-empty {
+            text-align: center; padding: 3rem 1.5rem; color: #475569;
+          }
+          #screen-pasarlista .vl-spinner {
+            width: 32px; height: 32px;
+            border: 3px solid rgba(59,130,246,.2);
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: vlSpin .8s linear infinite;
+            margin: 0 auto 1rem;
+          }
+          @keyframes vlSpin { to { transform: rotate(360deg); } }
+        </style>
+
+        <!-- Stats -->
+        <div class="vl-stats-bar">
+          <div class="vl-stat-card vl-stat-blue">
+            <div class="vl-stat-num" id="adminListStatTotal">–</div>
+            <div class="vl-stat-lbl">Pasajeros</div>
           </div>
-
-          <!-- Stats -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div class="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 text-center">
-              <div class="text-3xl font-black text-blue-400" id="adminListStatTotal">0</div>
-              <div class="text-xs uppercase font-bold text-gray-500 mt-1">Pasajeros Totales</div>
-            </div>
-            <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 text-center">
-              <div class="text-3xl font-black text-emerald-400" id="adminListStatPresentes">0</div>
-              <div class="text-xs uppercase font-bold text-gray-500 mt-1">Presentes Confirmados</div>
-            </div>
-            <div class="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4 text-center">
-              <div class="text-3xl font-black text-purple-400" id="adminListStatHorarios">0</div>
-              <div class="text-xs uppercase font-bold text-gray-500 mt-1">Horarios Activos</div>
-            </div>
+          <div class="vl-stat-card vl-stat-green">
+            <div class="vl-stat-num" id="adminListStatPresentes">0</div>
+            <div class="vl-stat-lbl">Presentes</div>
           </div>
-
-          <!-- List Container -->
-          <div id="adminListContainer" class="space-y-4">
-             <!-- Renderizado JS -->
+          <div class="vl-stat-card vl-stat-purple">
+            <div class="vl-stat-num" id="adminListStatHorarios">–</div>
+            <div class="vl-stat-lbl">Horarios</div>
           </div>
         </div>
+
+        <!-- Filters -->
+        <div class="vl-filter-bar">
+          <span class="vl-filter-lbl">Filtrar:</span>
+          <button type="button" class="vl-filter-btn active" data-vl-filter="todos">Todos</button>
+          <button type="button" class="vl-filter-btn" data-vl-filter="ida">↗ Ida</button>
+          <button type="button" class="vl-filter-btn" data-vl-filter="vuelta">↙ Vuelta</button>
+        </div>
+
+        <!-- List -->
+        <div id="adminListContainer">
+          <div class="vl-empty">
+            <div class="vl-spinner"></div>
+            <p>Cargando datos...</p>
+          </div>
+        </div>
+
       </section>
 
       <!-- Staff Management Screen -->
@@ -1686,73 +1827,73 @@
       container.innerHTML = '';
       Object.entries(groups).forEach(([horario, passengers]) => {
         const ida = isIda(horario);
-        const card = document.createElement('div');
-        card.className = 'bg-slate-900/40 border border-white/5 rounded-2xl overflow-hidden shadow-lg';
-        
+
+        const section = document.createElement('div');
+        section.className = 'vl-section';
+
         const header = document.createElement('div');
-        header.className = 'p-4 border-b border-white/5 flex justify-between items-center cursor-pointer hover:bg-white/5 transition-colors select-none';
+        header.className = 'vl-section-header';
         header.innerHTML = `
-          <div class="font-bold text-blue-400 text-sm md:text-base">${horario}</div>
-          <div class="flex items-center gap-2">
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${ida ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400'}">${ida ? '↗ Ida' : '↙ Vuelta'}</span>
-            <span class="text-[11px] font-bold text-gray-400 bg-black/40 px-2 py-0.5 rounded-full">${passengers.length} persona${passengers.length!==1?'s':''}</span>
-            <i data-lucide="chevron-down" class="text-gray-500 w-4 h-4 transition-transform chevron"></i>
+          <div class="vl-horario-title">${horario}</div>
+          <div class="vl-horario-meta">
+            <span class="vl-dir-badge ${ida ? 'vl-dir-ida' : 'vl-dir-vuelta'}">${ida ? '↗ IDA' : '↙ VUELTA'}</span>
+            <span class="vl-count-badge">${passengers.length} persona${passengers.length !== 1 ? 's' : ''}</span>
+            <i data-lucide="chevron-down" class="vl-chevron open" style="width:16px;height:16px;"></i>
           </div>
         `;
 
-        const body = document.createElement('div');
-        body.className = 'flex flex-col';
+        const table = document.createElement('div');
+        table.className = 'vl-table';
 
         passengers.forEach((p, idx) => {
-          const t = new Date(p.created_at);
+          const t    = new Date(p.created_at);
           const time = t.getHours().toString().padStart(2,'0') + ':' + t.getMinutes().toString().padStart(2,'0');
-          const state = adminAttendanceState[p.id];
-          const subioActive = state === 'subio';
-          const noSubioActive = state === 'no-subio';
+          const isSubio   = adminAttendanceState[p.id] === 'subio';
+          const isNoSubio = adminAttendanceState[p.id] === 'no-subio';
 
           const row = document.createElement('div');
-          row.className = 'p-3 flex items-center gap-3 border-b border-white/5 hover:bg-white/5 transition-colors';
-          if(idx === passengers.length - 1) row.classList.remove('border-b');
+          row.className = 'vl-row';
 
           row.innerHTML = `
-            <div class="w-8 h-8 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center text-[11px] font-black shrink-0 border border-blue-500/20">${idx+1}</div>
-            <div class="flex-1 min-w-0">
-              <div class="font-bold text-white text-[13px] md:text-sm truncate">${p.nombre || 'Sin nombre'}</div>
-              <div class="text-[10px] font-mono text-gray-500 tracking-wider">${p.matricula || ''}</div>
+            <div class="vl-row-num">${idx + 1}</div>
+            <div class="vl-row-info">
+              <div class="vl-row-name">${p.nombre || 'Sin nombre'}</div>
+              <div class="vl-row-mat">${p.matricula || ''}</div>
             </div>
-            ${p.en_espera ? '<span class="text-[9px] font-bold text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded-full uppercase border border-orange-500/20">Espera</span>' : ''}
-            <div class="text-xs font-mono text-blue-400 font-bold shrink-0">${time}</div>
-            <div class="flex gap-1.5 shrink-0 ml-2">
-              <button type="button" class="att-admin-btn subio text-[10px] font-bold px-3 py-1.5 rounded-full border transition-all flex items-center gap-1 ${subioActive ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50' : 'text-emerald-400/60 border-emerald-500/20 hover:border-emerald-500/50 hover:bg-emerald-500/10'}" data-id="${p.id}" data-action="subio"><i data-lucide="check" class="w-3 h-3"></i> Subió</button>
-              <button type="button" class="att-admin-btn nosubio text-[10px] font-bold px-3 py-1.5 rounded-full border transition-all flex items-center gap-1 ${noSubioActive ? 'bg-red-500/20 text-red-400 border-red-500/50' : 'text-red-400/60 border-red-500/20 hover:border-red-500/50 hover:bg-red-500/10'}" data-id="${p.id}" data-action="no-subio"><i data-lucide="x" class="w-3 h-3"></i> No subió</button>
+            ${p.en_espera ? '<span style="font-size:.6rem;font-weight:700;background:rgba(251,146,60,.15);color:#fb923c;border:1px solid rgba(251,146,60,.3);padding:.1rem .5rem;border-radius:999px;flex-shrink:0;">Espera</span>' : ''}
+            <div class="vl-row-time">${time}</div>
+            <div class="vl-att-btns">
+              <button type="button" class="vl-att-btn subio ${isSubio ? 'active' : ''}" data-id="${p.id}" data-action="subio">✅ Subió</button>
+              <button type="button" class="vl-att-btn no-subio ${isNoSubio ? 'active' : ''}" data-id="${p.id}" data-action="no-subio">❌ No subió</button>
             </div>
           `;
 
-          row.querySelectorAll('.att-admin-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
+          row.querySelectorAll('.vl-att-btn').forEach(btn => {
+            btn.addEventListener('click', async e => {
               e.stopPropagation();
               const action = btn.dataset.action;
               if (adminAttendanceState[p.id] === action) return;
-              
               adminAttendanceState[p.id] = action;
               renderAdminLista();
               window.marcarAsistenciaAdmin(p, action);
             });
           });
 
-          body.appendChild(row);
+          table.appendChild(row);
         });
 
         header.addEventListener('click', () => {
-          const isHidden = body.style.display === 'none';
-          body.style.display = isHidden ? 'flex' : 'none';
-          header.querySelector('.chevron').style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
+          const chevron = header.querySelector('.vl-chevron');
+          const isOpen  = chevron.classList.contains('open');
+          table.style.display = isOpen ? 'none' : 'flex';
+          chevron.classList.toggle('open', !isOpen);
         });
 
-        card.appendChild(header);
-        card.appendChild(body);
-        container.appendChild(card);
+        section.appendChild(header);
+        section.appendChild(table);
+        container.appendChild(section);
       });
+
       if (window.lucide) window.lucide.createIcons();
     }
 
