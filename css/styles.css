@@ -1996,18 +1996,9 @@ tr:last-child td {
 
 .staff-table-container {
   overflow-x: auto;
-  overflow-y: auto;
-  max-height: calc(100vh - 350px);
-  min-height: 300px;
   -webkit-overflow-scrolling: touch;
   border-bottom-left-radius: 1.5rem;
   border-bottom-right-radius: 1.5rem;
-}
-
-@media (max-width: 768px) {
-  .staff-table-container {
-    max-height: 450px;
-  }
 }
 
 .staff-table-new {
