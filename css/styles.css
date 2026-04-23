@@ -61,6 +61,11 @@ body {
 body.admin-page {
   overflow: hidden;
 }
+@media (max-width: 768px) {
+  body.admin-page {
+    overflow-y: auto !important;
+  }
+}
 
 /* Fixed background layer — replaces background-attachment:fixed safely on mobile */
 body::after {
