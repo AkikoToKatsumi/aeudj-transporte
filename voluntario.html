@@ -596,16 +596,12 @@
 
               // Update local state immediately
               attendanceState[p.id] = action;
-              row.querySelectorAll('.att-btn').forEach(b => b.classList.remove('active'));
-              btn.classList.add('active');
-              btn.textContent = btn.textContent; // force repaint
+              
+              // Call renderList immediately to hide the group if it's completely finished
+              renderList();
 
-              // Update stats
-              const presentes = Object.values(attendanceState).filter(v => v === 'subio').length;
-              document.getElementById('statPresentes').textContent = presentes;
-
-              // Save to Supabase
-              await marcarAsistencia(p, action);
+              // Save to Supabase (in background)
+              marcarAsistencia(p, action);
             });
           });
 
