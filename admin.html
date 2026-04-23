@@ -166,15 +166,20 @@
           </div>
         </div>
 
-        <div class="glass-card p-8">
-          <h3 class="text-lg font-bold text-white mb-8 flex items-center gap-2">
-            <i data-lucide="list" class="text-gray-400 w-5 h-5"></i> Resumen de Viajes Activos
-          </h3>
-          <div id="dashboardRecentActivity" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-             <div class="flex flex-col items-center justify-center py-10 opacity-30 col-span-full">
-               <div class="spinner-small mb-4"></div>
-               <p class="text-sm font-bold uppercase tracking-widest">Sincronizando Datos...</p>
-             </div>
+        <!-- Dashboard Trip Activity -->
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+            <h3 style="font-size:1rem;font-weight:800;color:#f1f5f9;display:flex;align-items:center;gap:.5rem;">
+              <i data-lucide="list" style="width:18px;height:18px;color:#60a5fa;"></i>
+              Resumen de Viajes Activos
+            </h3>
+            <button type="button" onclick="switchScreen('votos')" style="font-size:.72rem;font-weight:700;color:#60a5fa;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);border-radius:999px;padding:.3rem .85rem;cursor:pointer;transition:all .15s;">Ver lista completa →</button>
+          </div>
+          <div id="dashboardRecentActivity">
+            <div style="text-align:center;padding:2.5rem 1rem;color:#475569;">
+              <div style="width:28px;height:28px;border:3px solid rgba(59,130,246,.2);border-top-color:#3b82f6;border-radius:50%;animation:pvSpin .8s linear infinite;margin:0 auto .75rem;"></div>
+              <p style="font-size:.8rem;">Sincronizando datos...</p>
+            </div>
           </div>
         </div>
       </section>
@@ -890,9 +895,6 @@
       let total = 0;
       let espera = 0;
       let totalCobrado = 0;
-      
-      const container = document.getElementById('dashboardRecentActivity');
-      container.innerHTML = '';
 
       const timeGroups = {};
       const listado = {};
@@ -926,31 +928,57 @@
       // Chart Update
       renderDashboardChart(timeGroups);
 
-      // Travel List (Aestética Votar.html)
-      Object.keys(listado).forEach(h => {
-        const card = document.createElement('div');
-        card.className = 'p-5 bg-white/5 border border-white/10 rounded-2xl flex flex-col justify-between hover:border-blue-500/30 transition-all cursor-pointer group';
-        card.onclick = () => switchScreen('votos');
-        
-        const tripIda = h.includes('La Vega');
-        
-        card.innerHTML = `
-          <div class="flex items-center justify-between mb-4">
-            <div class="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400">
-               <i data-lucide="${tripIda ? 'arrow-right' : 'arrow-left'}" class="w-5 h-5"></i>
-            </div>
-            <span class="text-[9px] font-black px-2 py-1 rounded bg-white/5 text-gray-500 uppercase">${h.split(' ')[0]} ${h.split(' ')[1] || ''}</span>
-          </div>
-          <div>
-            <h4 class="font-bold text-white text-base leading-tight">${h.split(' ').slice(2).join(' ')}</h4>
-            <div class="flex gap-2 mt-3">
-              <span class="text-[9px] font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/10">${listado[h].filter(p => !p.en_espera).length} LISTO</span>
-              ${listado[h].filter(p => p.en_espera).length > 0 ? `<span class="text-[9px] font-bold text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded-full border border-orange-500/10">${listado[h].filter(p => p.en_espera).length} ESPERA</span>` : ''}
-            </div>
-          </div>
-        `;
-        container.appendChild(card);
-      });
+      // Build trip activity with sectioned design
+      const container = document.getElementById('dashboardRecentActivity');
+      container.innerHTML = '';
+
+      if (Object.keys(listado).length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:2.5rem;color:#475569;"><p>No hay viajes activos hoy.</p></div>';
+      } else {
+        const IDA_KW = ['Jarabacoa -> La Vega', 'Jarabacoa \u2192 La Vega'];
+        const isIda  = h => IDA_KW.some(k => h.includes(k));
+
+        Object.entries(listado).forEach(([horario, paxList]) => {
+          const ida         = isIda(horario);
+          const confirmados = paxList.filter(p => !p.en_espera).length;
+          const enEspera    = paxList.filter(p =>  p.en_espera).length;
+
+          const group = document.createElement('div');
+          group.className = 'pv-group';
+          group.style.cursor = 'pointer';
+          group.onclick = () => switchScreen('votos');
+
+          const hdr = document.createElement('div');
+          hdr.className = 'pv-group-hdr';
+          hdr.style.cursor = 'pointer';
+          hdr.innerHTML =
+            '<div class="pv-group-title">' + horario + '</div>' +
+            '<div class="pv-group-meta">' +
+              '<span class="pv-dir-pill ' + (ida ? 'pv-dir-ida' : 'pv-dir-vuelta') + '">' + (ida ? '\u2197 IDA' : '\u2199 VUELTA') + '</span>' +
+              '<span class="pv-count-pill">' + paxList.length + ' persona' + (paxList.length !== 1 ? 's' : '') + '</span>' +
+            '</div>';
+
+          const body = document.createElement('div');
+          body.style.cssText = 'padding:.6rem 1.15rem;display:flex;gap:.75rem;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.04);';
+
+          if (confirmados > 0) {
+            const c = document.createElement('span');
+            c.style.cssText = 'font-size:.68rem;font-weight:800;background:rgba(52,211,153,.1);color:#34d399;border:1px solid rgba(52,211,153,.2);padding:.2rem .6rem;border-radius:999px;';
+            c.textContent = '\u2713 ' + confirmados + ' Confirmado' + (confirmados !== 1 ? 's' : '');
+            body.appendChild(c);
+          }
+          if (enEspera > 0) {
+            const e = document.createElement('span');
+            e.style.cssText = 'font-size:.68rem;font-weight:800;background:rgba(251,146,60,.1);color:#fb923c;border:1px solid rgba(251,146,60,.2);padding:.2rem .6rem;border-radius:999px;';
+            e.textContent = '\u23f3 ' + enEspera + ' En Espera';
+            body.appendChild(e);
+          }
+
+          group.appendChild(hdr);
+          group.appendChild(body);
+          container.appendChild(group);
+        });
+      }
       if (window.lucide) window.lucide.createIcons();
     }
 
