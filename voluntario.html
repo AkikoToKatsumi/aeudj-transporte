@@ -502,6 +502,12 @@
         }
         
         allVotos = fetchedVotos;
+        // Sincronizar estado local con DB
+        allVotos.forEach(v => {
+          if (v.subio === true) attendanceState[v.id] = 'subio';
+          else if (v.subio === false) attendanceState[v.id] = 'no-subio';
+        });
+        
         renderList();
       } catch(err) {
         container.innerHTML = `<div class="empty-state"><p style="color:#f87171;">Error: ${err.message}</p></div>`;
@@ -531,7 +537,16 @@
         groups[v.horario].push(v);
       });
 
+      const isAdmin = currentUser && (currentUser.rol === 'administrador' || currentUser.rol === 'desarrolladora');
+      let pendingGroupsCount = 0;
+
       Object.entries(groups).forEach(([horario, passengers]) => {
+        // Ocultar el grupo si ya fue pasado por completo
+        const completado = passengers.every(p => attendanceState[p.id] !== undefined);
+        if (completado) return;
+
+        pendingGroupsCount++;
+        
         const ida = isIda(horario);
         const section = document.createElement('div');
         section.className = 'horario-section';
@@ -609,6 +624,18 @@
         section.appendChild(table);
         container.appendChild(section);
       });
+
+      if (pendingGroupsCount === 0 && Object.keys(groups).length > 0) {
+        container.innerHTML = `
+        <div style="text-align:center; padding: 3rem 1.5rem; background: rgba(16,185,129,0.1); border-radius: 1.5rem; border: 1px solid rgba(16,185,129,0.2); margin-top: 1rem;">
+          <div style="width:60px; height:60px; margin: 0 auto 1.5rem; background: rgba(16,185,129,0.15); color: #34d399; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 25px rgba(16,185,129,0.2);">
+            <i data-lucide="check-check" style="width:32px; height:32px;"></i>
+          </div>
+          <h2 style="font-size: 1.5rem; font-weight: 800; color: #34d399; margin-bottom: 0.5rem;">¡Excelente trabajo!</h2>
+          <p style="color: #6ee7b7; font-size: 0.95rem; opacity: 0.8; max-width: 300px; margin: 0 auto;">Has completado el pase de lista para estos viajes. Ya no quedan pasajeros pendientes.</p>
+        </div>
+        `;
+      }
 
       if (window.lucide) window.lucide.createIcons();
     }
