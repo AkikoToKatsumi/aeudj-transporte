@@ -709,6 +709,8 @@
         const { data, error } = await supabase.from('votos').insert(rows).select();
         if (error) throw error;
 
+        initialVotes = data;
+
         setStatus('✅ ¡Horarios confirmados!', '#34d399');
         setTimeout(() => showConfirmed(data), 800);
 
