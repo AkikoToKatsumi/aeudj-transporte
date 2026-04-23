@@ -491,9 +491,10 @@
 
           <!-- RIGHT COL -->
           <div class="staff-right-col">
-            <!-- QUICK ADD -->
-            <div class="staff-quick-add-panel">
-              <div class="staff-qa-title">➕ Agregar Personal</div>
+            <!-- QUICK ADD / EDIT -->
+            <div class="staff-quick-add-panel" id="qa-panel-container">
+              <div class="staff-qa-title" id="qa-title">➕ Agregar Personal</div>
+              <input type="hidden" id="qa-edit-id" value="">
 
               <div class="staff-qa-field">
                 <label class="staff-qa-label">Nombre completo</label>
@@ -511,7 +512,7 @@
                 <label class="staff-qa-label">Correo Electrónico (Opcional)</label>
                 <input class="staff-qa-input" id="qa-email" type="email" placeholder="correo@ejemplo.com">
               </div>
-              <div class="staff-qa-field">
+              <div class="staff-qa-field" id="qa-password-container">
                 <label class="staff-qa-label">Contraseña</label>
                 <div style="position:relative;display:flex;align-items:center;">
                   <input class="staff-qa-input" id="qa-password" type="password" placeholder="Mínimo 6 caracteres" style="width:100%; padding-right:2.5rem;">
@@ -530,7 +531,10 @@
                 </select>
               </div>
 
-              <button class="staff-btn-add-full" onclick="window.handleQuickAddStaff()">👤 Agregar al Directorio</button>
+              <div style="display:flex; gap:0.5rem; margin-top:1rem;">
+                <button class="staff-btn-add-full" id="qa-submit-btn" style="flex:1;" onclick="window.handleQuickAddStaff()">👤 Agregar al Directorio</button>
+                <button class="staff-btn-add-full hidden" id="qa-cancel-btn" style="flex:0.3; background:rgba(239,68,68,0.2); color:#fca5a5; border-color:rgba(239,68,68,0.3);" onclick="window.resetQuickAddForm()">❌</button>
+              </div>
             </div>
             
             <!-- Activity Panel placeholder -->
@@ -1731,88 +1735,146 @@
       }
     };
 
+    window.resetQuickAddForm = () => {
+      document.getElementById('qa-edit-id').value = '';
+      document.getElementById('qa-title').innerHTML = '➕ Agregar Personal';
+      const btn = document.getElementById('qa-submit-btn');
+      btn.innerHTML = '👤 Agregar al Directorio';
+      btn.style.background = '';
+      btn.style.color = '';
+      document.getElementById('qa-cancel-btn').classList.add('hidden');
+      document.getElementById('qa-password-container').style.display = 'block';
+      
+      document.getElementById('qa-nombre').value = '';
+      document.getElementById('qa-telefono').value = '';
+      document.getElementById('qa-matricula').value = '';
+      document.getElementById('qa-password').value = '';
+      document.getElementById('qa-email').value = '';
+      document.getElementById('qa-rol').value = 'estudiante';
+    };
+
     window.editUserNew = async (id) => {
       const user = staffData.find(u => u.id === id);
       if(!user) return;
-      const nuevoNombre = prompt("Nombre completo:", user.nombre || "");
-      if(nuevoNombre === null) return;
-      const nuevoTelefono = prompt("Teléfono:", user.telefono || "");
-      if(nuevoTelefono === null) return;
-      const nuevaMatricula = prompt("Matrícula:", user.matricula || "");
-      if(nuevaMatricula === null) return;
-      const nuevoEmail = prompt("Correo (Opcional):", user.email || "");
-      if(nuevoEmail === null) return;
-
-      try {
-        await supabase.from('profiles').update({
-          nombre: nuevoNombre,
-          telefono: nuevoTelefono,
-          matricula: nuevaMatricula,
-          email: nuevoEmail
-        }).eq('id', id);
-        window.showAdminToast('Datos actualizados');
-        loadStaffData();
-      } catch(e) {
-        window.showAdminToast('Error al editar', 'error');
+      
+      // Pasar datos al formulario
+      document.getElementById('qa-edit-id').value = id;
+      document.getElementById('qa-title').innerHTML = '✏️ Editar Personal';
+      document.getElementById('qa-nombre').value = user.nombre || '';
+      document.getElementById('qa-telefono').value = user.telefono || '';
+      document.getElementById('qa-matricula').value = user.matricula || '';
+      document.getElementById('qa-email').value = user.email || '';
+      
+      // Ocultar contraseña porque no podemos cambiarla por seguridad (RLS/Auth)
+      document.getElementById('qa-password-container').style.display = 'none';
+      
+      // Seleccionar rol adecuado
+      const rolText = (user.rol || '').toLowerCase();
+      const selectRol = document.getElementById('qa-rol');
+      
+      let matchedValue = 'estudiante';
+      for (let i = 0; i < selectRol.options.length; i++) {
+        if (selectRol.options[i].value === rolText) {
+          matchedValue = rolText;
+          break;
+        }
       }
+      selectRol.value = matchedValue;
+
+      // Cambiar botones
+      const submitBtn = document.getElementById('qa-submit-btn');
+      submitBtn.innerHTML = '💾 Guardar Cambios';
+      submitBtn.style.background = 'rgba(16,185,129,0.2)';
+      submitBtn.style.color = '#34d399';
+      document.getElementById('qa-cancel-btn').classList.remove('hidden');
+
+      // Scroll hacia el formulario para pantallas pequeñas
+      document.getElementById('qa-panel-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
     window.handleQuickAddStaff = async () => {
-      const nombre = document.getElementById('qa-nombre').value.trim();
-      const telefono = document.getElementById('qa-telefono').value.trim();
-      const matricula = document.getElementById('qa-matricula').value.trim();
-      const password = document.getElementById('qa-password').value.trim();
-      const rol = document.getElementById('qa-rol').value;
-      const emailInput = document.getElementById('qa-email');
-      const email = emailInput ? emailInput.value.trim() : '';
-
-      if(!nombre || !matricula || !password) {
-        alert("Nombre, matrícula y contraseña son obligatorios.");
-        return;
-      }
-      if(password.length < 6) {
-        alert("La contraseña debe tener al menos 6 caracteres.");
-        return;
-      }
-
-      const correoUsar = email || `${matricula.replace(/\\s+/g, '')}@aeudj.com`;
+      const editId = document.getElementById('qa-edit-id').value;
+      const isEditing = editId !== '';
+      
+      const btn = document.getElementById('qa-submit-btn');
+      const ogText = btn.innerHTML;
+      btn.innerHTML = '⏳ Procesando...';
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
 
       try {
-        const { data: authData, error: authErr } = await supabase.auth.signUp({
-          email: correoUsar,
-          password: password
-        });
+        const nombre = document.getElementById('qa-nombre').value.trim();
+        const telefono = document.getElementById('qa-telefono').value.trim();
+        const matricula = document.getElementById('qa-matricula').value.trim();
+        const password = document.getElementById('qa-password').value.trim();
+        const rol = document.getElementById('qa-rol').value;
+        const emailInput = document.getElementById('qa-email');
+        const email = emailInput ? emailInput.value.trim() : '';
 
-        if (authErr) {
-          alert('Error creando cuenta auth: ' + authErr.message);
-          return;
+        if(!nombre || !matricula) {
+          throw new Error("Nombre y matrícula son obligatorios.");
         }
 
-        const newUser = {
-          id: authData.user.id,
-          nombre,
-          telefono,
-          matricula,
-          email: correoUsar,
-          rol,
-          universidad: 'Indefinida'
-        };
+        if (isEditing) {
+          // ================= MODO EDICIÓN =================
+          await supabase.from('profiles').update({
+            nombre: nombre,
+            telefono: telefono,
+            matricula: matricula,
+            email: email,
+            rol: rol
+          }).eq('id', editId);
+          
+          window.showAdminToast('Usuario actualizado correctamente', 'success');
+          window.resetQuickAddForm();
+          await loadStaffData();
+          
+        } else {
+          // ================= MODO CREACIÓN =================
+          if(!password) throw new Error("La contraseña es obligatoria para nuevos usuarios.");
+          if(password.length < 6) throw new Error("La contraseña debe tener al menos 6 caracteres.");
 
-        const { error: profileErr } = await supabase.from('profiles').insert(newUser);
-        if (profileErr) throw profileErr;
+          const correoUsar = email || `${matricula.replace(/\\s+/g, '')}@aeudj.com`;
 
-        window.showAdminToast('Usuario creado exitosamente');
-        
-        document.getElementById('qa-nombre').value = '';
-        document.getElementById('qa-telefono').value = '';
-        document.getElementById('qa-matricula').value = '';
-        document.getElementById('qa-password').value = '';
-        if(emailInput) emailInput.value = '';
-        
-        loadStaffData();
-      } catch (err) {
+          // GUARDAR SESIÓN DEL ADMIN
+          const { data: currentSessionData } = await supabase.auth.getSession();
+          const adminSession = currentSessionData?.session;
+
+          // CREAR NUEVO USUARIO
+          const { data: auth, error: authErr } = await supabase.auth.signUp({ 
+            email: correoUsar, 
+            password: password 
+          });
+
+          if (authErr) throw authErr;
+
+          // INSERTAR PERFIL
+          const { error: profileErr } = await supabase.from('profiles').insert([
+            { id: auth.user.id, nombre, matricula, telefono, rol, email: correoUsar, universidad: 'Indefinida' }
+          ]);
+
+          if (profileErr) throw profileErr;
+
+          // RESTAURAR SESIÓN DEL ADMIN
+          if (adminSession) {
+            await supabase.auth.setSession({
+              access_token: adminSession.access_token,
+              refresh_token: adminSession.refresh_token
+            });
+          }
+
+          window.showAdminToast('Usuario creado correctamente', 'success');
+          window.resetQuickAddForm();
+          await loadStaffData();
+        }
+
+      } catch(err) {
         console.error(err);
-        alert('Error al crear el usuario.');
+        window.showAdminToast(err.message || 'Error en la operación', 'error');
+      } finally {
+        btn.innerHTML = ogText;
+        btn.disabled = false;
+        btn.style.opacity = '1';
       }
     };
 
