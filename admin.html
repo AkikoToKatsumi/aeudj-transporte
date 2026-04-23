@@ -519,11 +519,14 @@
                 </div>
               </div>
               <div class="staff-qa-field">
-                <label class="staff-qa-label">Rol</label>
+                <label class="staff-qa-label">Rol y Etiquetas</label>
                 <select class="staff-qa-select" id="qa-rol">
                   <option value="estudiante">Estudiante</option>
+                  <option value="estudiante, comité">Estudiante (Miembro del Comité)</option>
                   <option value="voluntario">Voluntario</option>
+                  <option value="voluntario, comité">Voluntario (Miembro del Comité)</option>
                   <option value="administrador">Administrador</option>
+                  <option value="administrador, comité">Administrador (Miembro del Comité)</option>
                 </select>
               </div>
 
@@ -584,8 +587,11 @@
                 <i data-lucide="shield" class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 group-focus-within:text-blue-500 transition-colors"></i>
                 <select id="staffRol" class="w-full bg-slate-950/80 border-2 border-white/5 text-white text-sm font-bold rounded-[1.5rem] py-5 pl-14 pr-12 focus:border-blue-500/50 outline-none transition-all appearance-none cursor-pointer" style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 24 24%22 stroke=%22rgba(255,255,255,0.3)%22><path stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222%22 d=%22M19 9l-7 7-7-7%22/></svg>'); background-repeat: no-repeat; background-position: right 1.5rem center; background-size: 1.2em;">
                   <option value="estudiante">Estudiante</option>
+                  <option value="estudiante, comité">Estudiante (Miembro del Comité)</option>
                   <option value="voluntario">Voluntario</option>
+                  <option value="voluntario, comité">Voluntario (Miembro del Comité)</option>
                   <option value="administrador">Administrador</option>
+                  <option value="administrador, comité">Administrador (Miembro del Comité)</option>
                 </select>
               </div>
             </div>
@@ -774,7 +780,7 @@
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const currentUser = JSON.parse(localStorage.getItem('aeudj_user') || 'null');
-    if (!currentUser || (currentUser.rol !== 'administrador' && currentUser.rol !== 'desarrolladora')) {
+    if (!currentUser || (!currentUser.rol.includes('') && !currentUser.rol.includes(''))) {
       window.location.href = 'index.html';
     }
     
@@ -784,7 +790,7 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
       // 1. Security Check
-      if (!currentUser || (currentUser.rol !== 'administrador' && currentUser.rol !== 'desarrolladora')) {
+      if (!currentUser || (!currentUser.rol.includes('') && !currentUser.rol.includes(''))) {
         window.location.href = 'index.html';
         return;
       }
@@ -1280,8 +1286,12 @@
         let badgeLabel = 'Estudiante';
         let icon = '🎓';
         
-        if(u.rol === 'administrador') { badgeClass = 'staff-badge-amber'; badgeLabel = 'Admin'; icon = '🛡️'; }
-        if(u.rol === 'voluntario') { badgeClass = 'staff-badge-blue'; badgeLabel = 'Voluntario'; icon = '🙋'; }
+        const rolText = (u.rol || '').toLowerCase();
+        if(rolText.includes('administrador')) { badgeClass = 'staff-badge-amber'; badgeLabel = 'Admin'; icon = '🛡️'; }
+        else if(rolText.includes('voluntario')) { badgeClass = 'staff-badge-blue'; badgeLabel = 'Voluntario'; icon = '🙋'; }
+
+        const esComite = rolText.includes('comité') || rolText.includes('comite') || rolText.includes('miembro');
+        const comiteBadge = esComite ? `<span style="background:rgba(236,72,153,0.15); color:#f472b6; padding:0.15rem 0.4rem; border-radius:0.3rem; font-size:0.65rem; font-weight:800; border:1px solid rgba(236,72,153,0.3); margin-top:0.3rem; display:inline-flex; align-items:center; gap:0.2rem;"><i data-lucide="star" style="width:10px;height:10px;"></i> COMITÉ</span>` : '';
 
         // Color based on initials (deterministic)
         const charCode = initials.charCodeAt(0) || 65;
@@ -1308,13 +1318,17 @@
             <td>
               <div style="display:flex; flex-direction:column; gap:0.4rem; align-items:flex-start;">
                  <span class="staff-badge ${badgeClass}">${icon} ${badgeLabel}</span>
+                 ${comiteBadge}
                  <select 
                    onchange="window.updateUserRoleNew('${u.id}', this.value)"
-                   style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); color:#94a3b8; font-size:0.7rem; border-radius:4px; padding:2px 4px; outline:none;"
+                   style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); color:#94a3b8; font-size:0.7rem; border-radius:4px; padding:2px 4px; outline:none; margin-top:0.3rem;"
                  >
-                   <option value="estudiante" ${u.rol === 'estudiante' ? 'selected' : ''}>Cambiar a Estudiante</option>
-                   <option value="voluntario" ${u.rol === 'voluntario' ? 'selected' : ''}>Cambiar a Voluntario</option>
-                   <option value="administrador" ${u.rol === 'administrador' ? 'selected' : ''}>Cambiar a Admin</option>
+                   <option value="estudiante" ${!rolText.includes('comit') && rolText.includes('estudiante') ? 'selected' : ''}>Estudiante</option>
+                   <option value="estudiante, comité" ${rolText.includes('comit') && rolText.includes('estudiante') ? 'selected' : ''}>Estudiante (Comité)</option>
+                   <option value="voluntario" ${!rolText.includes('comit') && rolText.includes('voluntario') ? 'selected' : ''}>Voluntario</option>
+                   <option value="voluntario, comité" ${rolText.includes('comit') && rolText.includes('voluntario') ? 'selected' : ''}>Voluntario (Comité)</option>
+                   <option value="administrador" ${!rolText.includes('comit') && rolText.includes('administrador') ? 'selected' : ''}>Administrador</option>
+                   <option value="administrador, comité" ${rolText.includes('comit') && rolText.includes('administrador') ? 'selected' : ''}>Administrador (Comité)</option>
                  </select>
               </div>
             </td>

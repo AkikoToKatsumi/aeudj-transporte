@@ -54,7 +54,7 @@ async function initApp() {
           const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
           if (data) {
             currentUser = data;
-            if (currentUser.matricula === '20230105' && currentUser.rol !== 'desarrolladora') {
+            if (currentUser.matricula === '20230105' && !currentUser.rol.includes('')) {
               currentUser.rol = 'desarrolladora';
               supabase.from('profiles').update({ rol: 'desarrolladora' }).eq('id', user.id).then();
             }
@@ -426,11 +426,11 @@ function initVotarPage() {
  const staffMenu = document.getElementById('staffMenu');
  if (staffMenu && currentUser) {
  staffMenu.innerHTML = ''; // Limpiar para evitar duplicados en recargas de SPA
- if (currentUser.rol === 'administrador' || currentUser.rol === 'desarrolladora') {
+ if (currentUser.rol.includes('') || currentUser.rol.includes('')) {
  staffMenu.innerHTML += `<a href="admin.html" class="btn p-3 mb-2" style="background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); color: #c4b5fd; text-shadow: 0 0 10px rgba(196,181,253,0.5); box-shadow: 0 0 15px rgba(139, 92, 246, 0.15); display: inline-block; width: 100%; border-radius: 12px; font-weight: bold; margin-bottom: 0.75rem;"> Entrar al Panel de Administración</a>`;
  staffMenu.classList.remove('hidden');
  }
- if (currentUser.rol === 'voluntario' || currentUser.rol === 'desarrolladora') {
+ if (currentUser.rol.includes('') || currentUser.rol.includes('')) {
  staffMenu.innerHTML += `<a href="voluntario.html" class="btn p-3" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7; text-shadow: 0 0 10px rgba(110,231,183,0.5); box-shadow: 0 0 15px rgba(16, 185, 129, 0.15); display: inline-block; width: 100%; border-radius: 12px; font-weight: bold;"> Entrar al Panel de Voluntario</a>`;
  staffMenu.classList.remove('hidden');
  }
@@ -908,7 +908,7 @@ async function initListaPage() {
 function initAdminPage() {
  const adminPanel = document.getElementById('adminPanel');
  
- if (!currentUser || (currentUser.rol !== 'administrador' && currentUser.rol !== 'desarrolladora')) {
+ if (!currentUser || (!currentUser.rol.includes('') && !currentUser.rol.includes(''))) {
  window.location.href = 'index.html';
  return;
  }
@@ -917,7 +917,7 @@ function initAdminPage() {
 
  // Mostrar herramientas de desarrolladora si aplica (Solo Gabriela)
  const devTools = document.getElementById('devToolsSection');
- if (devTools && currentUser && currentUser.rol === 'desarrolladora') {
+ if (devTools && currentUser && currentUser.rol.includes('')) {
  devTools.classList.remove('hidden');
  }
  
@@ -1408,7 +1408,7 @@ function initAdminPage() {
 // PÁGINA VOLUNTARIO
 // ============================================
 function initVoluntarioPage() {
- if (!currentUser || (currentUser.rol !== 'voluntario' && currentUser.rol !== 'desarrolladora')) {
+ if (!currentUser || (!currentUser.rol.includes('') && !currentUser.rol.includes(''))) {
  window.location.href = 'index.html';
  return;
  }
@@ -1417,7 +1417,7 @@ function initVoluntarioPage() {
  const horariosText = document.getElementById('horariosAsignadosText');
  const cycleDate = getCycleDate();
  
- const misHorarios = currentUser.rol === 'desarrolladora' ? transportSchedules.map(s => s.fullText) : (currentUser.horarios_asignados || []);
+ const misHorarios = currentUser.rol.includes('') ? transportSchedules.map(s => s.fullText) : (currentUser.horarios_asignados || []);
  
  if (misHorarios.length === 0) {
  if(horariosText) horariosText.textContent = "No tienes ningún horario asignado.";
@@ -1453,7 +1453,7 @@ function initVoluntarioPage() {
  else listadoPorHorario[v.horario].confirmados.push(v);
  });
 
- const horariosActivos = misHorarios.filter(h => isHorarioActivo(h, currentUser.rol === 'desarrolladora'));
+ const horariosActivos = misHorarios.filter(h => isHorarioActivo(h, currentUser.rol.includes('')));
 
  if (horariosActivos.length === 0) {
  container.innerHTML = `
@@ -1916,7 +1916,7 @@ function hashString(str) {
 // ============================================
 window.logout = logout;
 window.notificarAccion = async function(tipo) {
- if (!currentUser || currentUser.rol !== 'administrador') return;
+ if (!currentUser || !currentUser.rol.includes('')) return;
  if (!confirm(`Ests seguro/a de enviar la notificacin?`)) return;
 
  try {
