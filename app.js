@@ -27,13 +27,12 @@ function refreshIcons() {
 // ============================================
 // INICIALIZACIN
 // ============================================
-document.addEventListener('DOMContentLoaded', async function() {
+async function initApp() {
   refreshIcons();
   checkSession();
 
   const page = document.body.dataset.page;
 
-  // Asignar logout de inmediato, sin esperar auth
   const logoutBtn = document.getElementById('logoutBtn');
   if (logoutBtn) {
     logoutBtn.onclick = () => {
@@ -42,13 +41,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     };
   }
 
-  // Si ya hay sesion en localStorage, inicializar de inmediato
   if (currentUser && page) {
     pageInitialized = true;
     initPage(page);
   }
 
-  // Escuchar cambios de autenticacion (Supabase)
   supabase.auth.onAuthStateChange(async (event, session) => {
     if (session) {
       const user = session.user;
@@ -70,7 +67,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         window.location.href = 'votar.html';
       }
 
-      // Inicializar pagina si aun no se hizo
       if (!pageInitialized && page) {
         pageInitialized = true;
         initPage(page);
@@ -82,7 +78,13 @@ document.addEventListener('DOMContentLoaded', async function() {
       }
     }
   });
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
 
 // ============================================
 // GESTIN DE SESIN
@@ -196,7 +198,28 @@ function initIndexPage() {
  });
  }
 
- if (typeof initPasswordToggle === 'function') initPasswordToggle();
+ // Implement password toggles
+ const toggleLogin = document.getElementById('togglePasswordLogin');
+ const passLogin = document.getElementById('passwordLogin');
+ if (toggleLogin && passLogin) {
+   toggleLogin.addEventListener('click', () => {
+     const isPass = passLogin.type === 'password';
+     passLogin.type = isPass ? 'text' : 'password';
+     toggleLogin.innerHTML = `<i data-lucide="${isPass ? 'eye-off' : 'eye'}"></i>`;
+     if (window.lucide) window.lucide.createIcons();
+   });
+ }
+
+ const toggleReg = document.getElementById('togglePasswordReg');
+ const passReg = document.getElementById('password');
+ if (toggleReg && passReg) {
+   toggleReg.addEventListener('click', () => {
+     const isPass = passReg.type === 'password';
+     passReg.type = isPass ? 'text' : 'password';
+     toggleReg.innerHTML = `<i data-lucide="${isPass ? 'eye-off' : 'eye'}"></i>`;
+     if (window.lucide) window.lucide.createIcons();
+   });
+ }
  
  const showError = (msg) => {
  if (errorDiv) {
