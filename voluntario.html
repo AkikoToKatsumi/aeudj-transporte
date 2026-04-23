@@ -657,7 +657,12 @@
       const se_monto = subio ? 1 : 0;
       try {
         // 1. Update votos.se_monto
-        await supabase.from('votos').update({ se_monto }).eq('id', p.id);
+        const { data, error } = await supabase.from('votos').update({ se_monto }).eq('id', p.id).select();
+        
+        if (error) throw error;
+        if (!data || data.length === 0) {
+          throw new Error('Bloqueado por RLS: No tienes permisos para modificar este registro en la base de datos.');
+        }
 
         if (!subio) {
           // 2. Register falta
