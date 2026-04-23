@@ -990,10 +990,13 @@ tr:last-child td {
 /* ============================================
    ADMIN SIDEBAR & DASHBOARD
    ============================================ */
+html, body {
+  height: 100%;
+}
+
 .admin-wrapper {
   display: flex;
-  min-height: 100vh;
-  min-height: 100dvh;
+  min-height: 100%;
   background: var(--bg-gradient);
 }
 
