@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -9,6 +10,7 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="js/custom-alert.js"></script>
 </head>
+
 <body data-page="index">
   <main class="login-container">
     <div class="card glass-card">
@@ -26,7 +28,7 @@
       <!-- INICIO DE SESION -->
       <form id="loginForm" class="space-y-5">
         <h3 class="text-lg font-semibold text-white">Iniciar sesion</h3>
-        
+
         <div class="input-wrapper">
           <i data-lucide="smartphone" class="input-icon"></i>
           <input type="text" id="userInput" class="premium-input" placeholder="Telefono o matricula" required>
@@ -41,13 +43,13 @@
         </div>
 
         <button type="submit" id="submitLogin" class="btn-premium btn-block">
-          Entrar 
+          Entrar
           <i data-lucide="arrow-right" class="btn-arrow"></i>
         </button>
-        
+
         <div class="text-center mt-6">
           <p class="text-gray-400 text-sm">
-            No tienes una cuenta? 
+            No tienes una cuenta?
             <a href="#" id="showRegisterBtn" class="text-blue-400 font-bold hover:underline">Registrate</a>
           </p>
         </div>
@@ -92,14 +94,15 @@
           <select id="universidad" class="premium-select" required>
             <option value="">-- Universidad --</option>
             <option value="UCATECI">UCATECI</option>
-            <option value="UAFAM">UAFAM</option>
+            <option value="UAFAM">UNPHU</option>
             <option value="UAPA">UAPA</option>
-            <option value="Otra">Otra</option>
+            <option value="Otra">UASD</option>
           </select>
         </div>
         <button type="submit" class="btn-premium btn-success btn-block">Registrar cuenta</button>
         <div class="text-center mt-4">
-          <a href="#" id="showLoginBtn" class="text-blue-400 font-medium hover:underline">Ya tienes cuenta? Inicia sesion</a>
+          <a href="#" id="showLoginBtn" class="text-blue-400 font-medium hover:underline">Ya tienes cuenta? Inicia
+            sesion</a>
         </div>
       </form>
     </div>
@@ -109,6 +112,7 @@
     </footer>
   </main>
 
-  <script type="module" src="app.js"></script>
+  <script type="module" src="app.js?v=406"></script>
 </body>
+
 </html>
