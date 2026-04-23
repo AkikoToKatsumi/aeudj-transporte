@@ -750,28 +750,42 @@
         actionModalDesc.textContent = '¿Cuál viaje deseas cambiar para irte más tarde?';
       }
 
-      initialVotes.forEach(v => {
-        const s = SCHEDULES.find(x => x.fullText === v.horario);
-        const dir = s ? s.dir : (v.horario.includes('Jarabacoa') ? 'ida' : 'vuelta');
-        const btn = document.createElement('button');
-        btn.className = 'trip-card';
-        btn.style.cursor = 'pointer';
-        btn.style.width = '100%';
-        btn.style.textAlign = 'left';
-        btn.style.background = 'rgba(59,130,246,0.1)';
-        btn.innerHTML = `
-          <div class="trip-icon ${dir}">
-            <i data-lucide="${dir === 'ida' ? 'arrow-right' : 'arrow-left'}"></i>
-          </div>
-          <div class="trip-info">
-            <div class="trip-label">${dir === 'ida' ? 'Salida' : 'Regreso'}</div>
-            <div class="trip-time">${v.horario.split(' ').slice(0,2).join(' ')}</div>
-            <div class="trip-route">${v.horario.split(' ').slice(2).join(' ')}</div>
-          </div>
-        `;
-        btn.onclick = () => executeAction(v.horario);
-        actionModalContent.appendChild(btn);
-      });
+      if (!initialVotes || initialVotes.length === 0) {
+        actionModalContent.innerHTML = '<p style="text-align:center;color:#f87171;">No se encontraron viajes.</p>';
+      } else {
+        initialVotes.forEach(v => {
+          let s = SCHEDULES.find(x => x.fullText === v.horario);
+          let dir = s ? s.dir : (v.horario.includes('Jarabacoa') ? 'ida' : 'vuelta');
+          let parts = v.horario.split(' ');
+          let time = parts.slice(0, 2).join(' ');
+          let route = parts.slice(2).join(' ');
+          
+          let btn = document.createElement('div');
+          btn.className = 'trip-card';
+          btn.style.cursor = 'pointer';
+          btn.style.width = '100%';
+          btn.style.transition = 'all 0.2s';
+          btn.style.background = 'rgba(59,130,246,0.1)';
+          btn.style.border = '1px solid rgba(59,130,246,0.3)';
+          
+          btn.onmouseover = () => { btn.style.background = 'rgba(59,130,246,0.2)'; btn.style.transform = 'translateY(-2px)'; };
+          btn.onmouseout = () => { btn.style.background = 'rgba(59,130,246,0.1)'; btn.style.transform = 'none'; };
+          
+          btn.innerHTML = `
+            <div class="trip-icon ${dir}">
+              <i data-lucide="${dir === 'ida' ? 'arrow-right' : 'arrow-left'}"></i>
+            </div>
+            <div class="trip-info">
+              <div class="trip-label" style="color:#93c5fd;">${dir === 'ida' ? 'Salida' : 'Regreso'}</div>
+              <div class="trip-time" style="color:white;">${time}</div>
+              <div class="trip-route" style="color:#cbd5e1;">${route}</div>
+            </div>
+          `;
+          btn.onclick = () => executeAction(v.horario);
+          actionModalContent.appendChild(btn);
+        });
+      }
+      
       if (window.lucide) window.lucide.createIcons();
       actionModal.classList.remove('hidden');
     }
@@ -785,6 +799,7 @@
         isEditing = true;
         selectedHorarios = initialVotes.map(v => v.horario).filter(h => h !== horarioToChange);
         showForm();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
 
