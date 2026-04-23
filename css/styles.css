@@ -57,6 +57,11 @@ body {
   overscroll-behavior-y: none;       /* Prevents rubber-band/bounce overshoot */
 }
 
+/* Evitar doble scroll en el panel de admin */
+body.admin-page {
+  overflow: hidden;
+}
+
 /* Fixed background layer — replaces background-attachment:fixed safely on mobile */
 body::after {
   content: '';
