@@ -1713,27 +1713,7 @@
       };
     }
 
-    window.updateUserRoleNew = async (id, newRole) => {
-      try {
-        await supabase.from('profiles').update({ rol: newRole }).eq('id', id);
-        window.showAdminToast('Rol actualizado correctamente');
-        loadStaffData();
-      } catch (e) {
-        window.showAdminToast('Error al actualizar rol', 'error');
-      }
-    };
-
-    window.deleteUserNew = async (id) => {
-      const confirmed = await window.aeudjConfirm('¿Estás seguro de que deseas eliminar este usuario?');
-      if(!confirmed) return;
-      try {
-        await supabase.from('profiles').delete().eq('id', id);
-        window.showAdminToast('Usuario eliminado');
-        loadStaffData();
-      } catch (e) {
-        window.showAdminToast('Error al eliminar', 'error');
-      }
-    };
+    // Removed duplicate updateUserRoleNew and deleteUserNew functions
 
     window.resetQuickAddForm = () => {
       document.getElementById('qa-edit-id').value = '';
@@ -1817,13 +1797,18 @@
 
         if (isEditing) {
           // ================= MODO EDICIÓN =================
-          await supabase.from('profiles').update({
+          const { data, error } = await supabase.from('profiles').update({
             nombre: nombre,
             telefono: telefono,
             matricula: matricula,
             email: email,
             rol: rol
-          }).eq('id', editId);
+          }).eq('id', editId).select();
+          
+          if (error) throw error;
+          if (!data || data.length === 0) {
+            throw new Error('Bloqueado por RLS: No tienes permisos para editar otros perfiles.');
+          }
           
           window.showAdminToast('Usuario actualizado correctamente', 'success');
           window.resetQuickAddForm();
