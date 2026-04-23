@@ -40,13 +40,33 @@ body {
   background: linear-gradient(rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.85)), url('../img/background.png');
   background-size: cover;
   background-position: center;
-  background-attachment: fixed;
+  /* 
+     background-attachment:fixed breaks scroll on iOS/Android Safari.
+     Using a fixed pseudo-element instead to achieve the same visual effect.
+  */
+  background-attachment: scroll;
   font-family: 'Inter', sans-serif;
   color: var(--text-primary);
   min-height: 100vh;
+  min-height: 100dvh;          /* Dynamic viewport height — respects mobile browser bars */
   line-height: 1.5;
   position: relative;
   overflow-x: hidden;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; /* Smooth momentum scroll on iOS */
+  overscroll-behavior-y: none;       /* Prevents rubber-band/bounce overshoot */
+}
+
+/* Fixed background layer — replaces background-attachment:fixed safely on mobile */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.85)), url('../img/background.png');
+  background-size: cover;
+  background-position: center;
+  z-index: -2;
+  pointer-events: none;
 }
 
 body::before {
@@ -983,12 +1003,14 @@ tr:last-child td {
 .admin-wrapper {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--bg-gradient);
 }
 
 .sidebar-wrapper {
   width: 280px;
   height: 100vh;
+  height: 100dvh;
   position: sticky;
   top: 0;
   display: flex;
@@ -999,6 +1021,7 @@ tr:last-child td {
   border-left: none !important;
   border-top: none !important;
   border-bottom: none !important;
+  flex-shrink: 0;
 }
 
 .sidebar-header {
@@ -1097,8 +1120,18 @@ tr:last-child td {
   padding: 2rem 3rem;
   overflow-y: auto;
   height: 100vh;
+  height: 100dvh;
+  /* Smooth inertia scroll on iOS */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  /* Custom scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59,130,246,0.3) transparent;
   background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.03), transparent 40%);
 }
+.content-wrapper::-webkit-scrollbar { width: 5px; }
+.content-wrapper::-webkit-scrollbar-track { background: transparent; }
+.content-wrapper::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.25); border-radius: 99px; }
 
 .admin-screen {
   animation: fadeIn 0.4s ease-out;
@@ -1131,27 +1164,74 @@ tr:last-child td {
 @media (max-width: 768px) {
   .admin-wrapper {
     flex-direction: column;
+    /* On mobile, content scrolls normally — sidebar is at bottom */
+    padding-bottom: 70px; /* space for bottom nav bar */
   }
 
   .sidebar-wrapper {
+    /* Fixed bottom navigation bar on mobile */
     width: 100%;
     height: auto;
-    position: relative;
-    padding: 1rem;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    padding: .5rem .75rem;
+    padding-bottom: calc(.5rem + env(safe-area-inset-bottom));
+    z-index: 100;
+    border-top: 1px solid rgba(255,255,255,0.08) !important;
+    border-bottom: none !important;
+    border-radius: 0 !important;
+  }
+
+  /* Hide logo/title in mobile bottom bar */
+  .sidebar-header {
+    display: none;
+  }
+  .sidebar-footer {
+    display: none;
   }
 
   .sidebar-nav {
     flex-direction: row;
     overflow-x: auto;
-    padding-bottom: 0.5rem;
+    gap: .25rem;
+    justify-content: space-around;
+    /* Hide scrollbar */
+    scrollbar-width: none;
   }
+  .sidebar-nav::-webkit-scrollbar { display: none; }
 
+  .nav-item {
+    flex-direction: column;
+    gap: .2rem;
+    padding: .4rem .6rem;
+    border-radius: .65rem;
+    font-size: .58rem;
+    min-width: 52px;
+    align-items: center;
+    text-align: center;
+  }
   .nav-item span {
-    display: none;
+    display: block; /* keep labels visible */
+    font-size: .58rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .nav-item i {
+    width: 18px;
+    height: 18px;
   }
 
+  /* Content takes full page height and scrolls naturally */
   .content-wrapper {
-    padding: 1.5rem;
+    height: auto;
+    min-height: calc(100dvh - 70px);
+    overflow-y: visible;
+    padding: 1rem;
+    padding-bottom: 1.5rem;
+    -webkit-overflow-scrolling: auto;
   }
 }
 
@@ -1546,47 +1626,28 @@ tr:last-child td {
   select,
   textarea,
   button {
-    font-size: 16px !important;
+    font-size: 16px !important; /* prevents iOS auto-zoom on form fields */
   }
 
   .content-wrapper {
-    padding: 1rem 0.75rem !important;
+    padding: 1rem 0.85rem !important;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom)) !important; /* clear bottom nav */
     height: auto !important;
+    overflow-y: visible !important;
     overflow-x: hidden;
   }
 
   .content-header {
     flex-direction: column;
     align-items: flex-start !important;
-    gap: 1rem;
-    margin-bottom: 1.5rem !important;
-  }
-
-  .sidebar-wrapper {
-    padding: 0.5rem !important;
-    border-radius: 0 !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-  }
-
-  .sidebar-header {
-    margin-bottom: 1rem !important;
-    justify-content: center;
-  }
-
-  .sidebar-nav {
-    gap: 0.25rem !important;
-    padding-bottom: 0.25rem;
-  }
-
-  .nav-item {
-    padding: 0.6rem 0.8rem !important;
-    border-radius: 0.75rem !important;
+    gap: .75rem;
+    margin-bottom: 1.25rem !important;
   }
 
   .glass-card {
     padding: 1.25rem !important;
-    margin: 1rem 0 !important;
-    border-radius: 1.5rem !important;
+    margin: .75rem 0 !important;
+    border-radius: 1.25rem !important;
     width: 100% !important;
     max-width: none !important;
   }
