@@ -580,12 +580,100 @@
         </div>
       </section>
 
-      <!-- Activity Logs (Future) -->
+      <!-- Activity Logs Screen -->
       <section id="screen-logs" class="admin-screen hidden">
-        <div class="glass-card p-10 text-center opacity-60">
-          <i data-lucide="construction" class="w-16 h-16 mx-auto mb-4 text-orange-400"></i>
-          <h3 class="text-xl font-bold text-white">Auditoría en Desarrollo</h3>
-          <p>Próximamente podrás ver quién cambió cada horario y cuándo.</p>
+        <style>
+          /* ── Audit Log Styles ── */
+          .audit-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:.75rem; margin-bottom:1.5rem; }
+          .audit-stat  { background:rgba(15,23,42,.7); border:1px solid rgba(255,255,255,.07); border-radius:1rem; padding:1.1rem 1.25rem; display:flex; align-items:center; gap:1rem; }
+          .audit-stat-icon { width:42px; height:42px; border-radius:.75rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+          .audit-stat-icon.blue   { background:rgba(59,130,246,.15); }
+          .audit-stat-icon.red    { background:rgba(248,113,113,.15); }
+          .audit-stat-icon.amber  { background:rgba(251,191,36,.15); }
+          .audit-stat-num  { font-size:1.7rem; font-weight:800; color:#fff; line-height:1; }
+          .audit-stat-lbl  { font-size:.65rem; text-transform:uppercase; color:#475569; font-weight:700; margin-top:.1rem; }
+
+          .audit-toolbar { display:flex; gap:.75rem; margin-bottom:1.25rem; flex-wrap:wrap; align-items:center; }
+          .audit-search  { flex:1; min-width:180px; background:rgba(15,23,42,.7); border:1px solid rgba(255,255,255,.08); border-radius:.65rem; padding:.55rem 1rem; color:#f1f5f9; font-size:.82rem; outline:none; }
+          .audit-search::placeholder { color:#475569; }
+          .audit-search:focus { border-color:rgba(59,130,246,.4); }
+          .audit-date    { background:rgba(15,23,42,.7); border:1px solid rgba(255,255,255,.08); border-radius:.65rem; padding:.55rem 1rem; color:#f1f5f9; font-size:.82rem; outline:none; }
+          .audit-date:focus { border-color:rgba(59,130,246,.4); }
+
+          .audit-tabs { display:flex; gap:.4rem; margin-bottom:1.25rem; flex-wrap:wrap; }
+          .audit-tab  { padding:.45rem 1.1rem; border-radius:999px; font-size:.78rem; font-weight:700; border:1px solid rgba(255,255,255,.08); background:rgba(30,41,59,.5); color:#64748b; cursor:pointer; transition:all .15s; }
+          .audit-tab.active { background:rgba(59,130,246,.2); border-color:rgba(59,130,246,.4); color:#60a5fa; }
+          .audit-tab:hover:not(.active) { border-color:rgba(255,255,255,.15); color:#94a3b8; }
+
+          .audit-table-wrap { background:rgba(15,23,42,.6); border:1px solid rgba(255,255,255,.07); border-radius:1rem; overflow:hidden; }
+          .audit-table { width:100%; border-collapse:collapse; font-size:.82rem; }
+          .audit-table thead tr { background:rgba(0,0,0,.3); }
+          .audit-table th { padding:.75rem 1rem; text-align:left; font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:#475569; font-weight:700; border-bottom:1px solid rgba(255,255,255,.05); white-space:nowrap; }
+          .audit-table tbody tr { border-bottom:1px solid rgba(255,255,255,.04); transition:background .12s; }
+          .audit-table tbody tr:last-child { border-bottom:none; }
+          .audit-table tbody tr:hover { background:rgba(255,255,255,.02); }
+          .audit-table td { padding:.72rem 1rem; color:#cbd5e1; vertical-align:middle; }
+          .audit-badge { font-size:.6rem; font-weight:700; padding:.15rem .5rem; border-radius:999px; text-transform:uppercase; white-space:nowrap; }
+          .audit-badge.voto      { background:rgba(59,130,246,.15); color:#60a5fa; border:1px solid rgba(59,130,246,.25); }
+          .audit-badge.falta     { background:rgba(248,113,113,.15); color:#f87171; border:1px solid rgba(248,113,113,.25); }
+          .audit-badge.penalidad { background:rgba(245,158,11,.15); color:#fbbf24; border:1px solid rgba(245,158,11,.25); }
+          .audit-badge.activo    { background:rgba(52,211,153,.15); color:#34d399; border:1px solid rgba(52,211,153,.25); }
+          .audit-name { font-weight:600; color:#f1f5f9; }
+          .audit-mat  { font-size:.7rem; font-family:monospace; color:#475569; }
+          .audit-time { font-size:.72rem; font-family:monospace; color:#475569; white-space:nowrap; }
+          .audit-horario { font-size:.75rem; color:#94a3b8; }
+          .audit-empty { text-align:center; padding:3rem 1.5rem; color:#475569; }
+          .audit-spinner { width:28px; height:28px; border:3px solid rgba(59,130,246,.2); border-top-color:#3b82f6; border-radius:50%; animation:auditSpin .8s linear infinite; margin:0 auto .75rem; }
+          @keyframes auditSpin { to { transform:rotate(360deg); } }
+          @media(max-width:600px) { .audit-stats { grid-template-columns:1fr; } }
+        </style>
+
+        <!-- Stat cards -->
+        <div class="audit-stats">
+          <div class="audit-stat">
+            <div class="audit-stat-icon blue"><i data-lucide="clipboard-list" class="text-blue-400 w-5 h-5"></i></div>
+            <div>
+              <div class="audit-stat-num" id="auditStatVotos">–</div>
+              <div class="audit-stat-lbl">Reservas hoy</div>
+            </div>
+          </div>
+          <div class="audit-stat">
+            <div class="audit-stat-icon red"><i data-lucide="x-circle" class="text-red-400 w-5 h-5"></i></div>
+            <div>
+              <div class="audit-stat-num" id="auditStatFaltas">–</div>
+              <div class="audit-stat-lbl">Faltas registradas</div>
+            </div>
+          </div>
+          <div class="audit-stat">
+            <div class="audit-stat-icon amber"><i data-lucide="alert-triangle" class="text-amber-400 w-5 h-5"></i></div>
+            <div>
+              <div class="audit-stat-num" id="auditStatPenalidades">–</div>
+              <div class="audit-stat-lbl">Penalizados activos</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="audit-toolbar">
+          <input type="search"  class="audit-search" id="auditSearch"   placeholder="🔍  Buscar por nombre o matrícula…" oninput="window.filterAuditTable()">
+          <input type="date"    class="audit-date"   id="auditDatePick" onchange="window.loadAuditData()">
+          <button type="button" class="audit-tab" style="margin:0;" onclick="window.loadAuditData()">
+            <i data-lucide="refresh-cw" style="width:13px;height:13px;display:inline;margin-right:4px;"></i> Actualizar
+          </button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="audit-tabs">
+          <button type="button" class="audit-tab active" data-audit-tab="votos">🗓 Reservas</button>
+          <button type="button" class="audit-tab" data-audit-tab="faltas">❌ Faltas</button>
+          <button type="button" class="audit-tab" data-audit-tab="penalidades">⚠️ Penalidades</button>
+        </div>
+
+        <!-- Table -->
+        <div class="audit-table-wrap">
+          <div id="auditTableContainer">
+            <div class="audit-empty"><div class="audit-spinner"></div><p>Cargando registros…</p></div>
+          </div>
         </div>
       </section>
 
@@ -704,7 +792,8 @@
         'staff': 'Gestión de Personal',
         'logs': 'Registro de Auditoría',
         'penalidades': 'Gestión de Penalidades',
-        'pasarlista': 'Pase de Lista Activo'
+        'pasarlista': 'Pase de Lista Activo',
+        'logs':        'Registro de Auditoría'
       };
       document.getElementById('screenTitle').textContent = titles[screenId] || 'Panel Administrativo';
 
@@ -715,6 +804,7 @@
       if (screenId === 'staff') loadStaffData();
       if (screenId === 'penalidades') loadPenalidadesData();
       if (screenId === 'pasarlista') loadAdminLista();
+      if (screenId === 'logs') window.loadAuditData();
       
       if (window.lucide) window.lucide.createIcons();
     }
@@ -1932,6 +2022,162 @@
         window.showAdminToast('Error al guardar asistencia', 'error');
       }
     };
+
+    // ==========================================
+    // REGISTRO DE AUDITORÍA
+    // ==========================================
+    let auditActiveTab = 'votos';
+    let auditAllRows   = [];
+
+    // Wire audit tabs (once)
+    document.querySelectorAll('[data-audit-tab]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        auditActiveTab = btn.dataset.auditTab;
+        document.querySelectorAll('[data-audit-tab]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        window.loadAuditData();
+      });
+    });
+
+    // Set today's date as default on the date picker
+    (function initAuditDate() {
+      const dp = document.getElementById('auditDatePick');
+      if (dp) dp.value = new Date().toISOString().split('T')[0];
+    })();
+
+    window.loadAuditData = async function() {
+      const container = document.getElementById('auditTableContainer');
+      if (!container) return;
+      container.innerHTML = '<div class="audit-empty"><div class="audit-spinner"></div><p>Cargando registros…</p></div>';
+
+      const dateVal = document.getElementById('auditDatePick')?.value || new Date().toISOString().split('T')[0];
+
+      try {
+        // Load all three counts in parallel for the stat cards
+        const [votosRes, faltasRes, penRes] = await Promise.all([
+          supabase.from('votos').select('id', { count: 'exact', head: true }).eq('fecha', dateVal).gt('id', 40),
+          supabase.from('faltas').select('id', { count: 'exact', head: true }).eq('fecha', dateVal),
+          supabase.from('penalidades').select('id', { count: 'exact', head: true }).eq('penalizado', true),
+        ]);
+
+        document.getElementById('auditStatVotos').textContent      = votosRes.count ?? '–';
+        document.getElementById('auditStatFaltas').textContent     = faltasRes.count ?? '–';
+        document.getElementById('auditStatPenalidades').textContent = penRes.count ?? '–';
+
+        // Load detail rows for active tab
+        let data = [];
+        if (auditActiveTab === 'votos') {
+          const { data: rows, error } = await supabase
+            .from('votos').select('*')
+            .eq('fecha', dateVal)
+            .gt('id', 40)
+            .order('created_at', { ascending: false });
+          if (error) throw error;
+          data = rows || [];
+        } else if (auditActiveTab === 'faltas') {
+          const { data: rows, error } = await supabase
+            .from('faltas').select('*')
+            .eq('fecha', dateVal)
+            .order('created_at', { ascending: false });
+          if (error) throw error;
+          data = rows || [];
+        } else if (auditActiveTab === 'penalidades') {
+          const { data: rows, error } = await supabase
+            .from('penalidades').select('*')
+            .order('updated_at', { ascending: false });
+          if (error) throw error;
+          data = rows || [];
+        }
+
+        auditAllRows = data;
+        window.filterAuditTable();
+        if (window.lucide) window.lucide.createIcons();
+
+      } catch(err) {
+        console.error('Error auditoría:', err);
+        container.innerHTML = `<div class="audit-empty" style="color:#f87171;">Error: ${err.message}</div>`;
+      }
+    };
+
+    window.filterAuditTable = function() {
+      const q = (document.getElementById('auditSearch')?.value || '').toLowerCase();
+      const filtered = auditAllRows.filter(r =>
+        (r.nombre    || '').toLowerCase().includes(q) ||
+        (r.matricula || '').toLowerCase().includes(q) ||
+        (r.email     || '').toLowerCase().includes(q)
+      );
+      renderAuditTable(filtered);
+    };
+
+    function renderAuditTable(rows) {
+      const container = document.getElementById('auditTableContainer');
+      if (!container) return;
+
+      if (!rows.length) {
+        container.innerHTML = '<div class="audit-empty"><p>No hay registros para este filtro.</p></div>';
+        return;
+      }
+
+      const fmtDateTime = (iso) => {
+        if (!iso) return '—';
+        const d = new Date(iso);
+        return d.toLocaleDateString('es-ES', { day:'2-digit', month:'short' }) +
+               ' ' + d.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
+      };
+
+      let html = '<table class="audit-table"><thead><tr>';
+
+      if (auditActiveTab === 'votos') {
+        html += `<th>#</th><th>Pasajero</th><th>Horario</th><th>Estado</th><th>Registrado</th>`;
+      } else if (auditActiveTab === 'faltas') {
+        html += `<th>#</th><th>Pasajero</th><th>Horario</th><th>Fecha Viaje</th><th>Registrado</th>`;
+      } else {
+        html += `<th>#</th><th>Pasajero</th><th>Total Faltas</th><th>Estado</th><th>Última Actualización</th>`;
+      }
+
+      html += '</tr></thead><tbody>';
+
+      rows.forEach((r, i) => {
+        html += '<tr>';
+        if (auditActiveTab === 'votos') {
+          const estado = r.subio === true ? '<span class="audit-badge activo">✓ Subió</span>'
+                       : r.subio === false ? '<span class="audit-badge falta">✗ No subió</span>'
+                       : '<span class="audit-badge voto">Pendiente</span>';
+          html += `
+            <td class="audit-time">${i + 1}</td>
+            <td><div class="audit-name">${r.nombre || '—'}</div><div class="audit-mat">${r.matricula || ''}</div></td>
+            <td class="audit-horario">${r.horario || '—'}</td>
+            <td>${estado}</td>
+            <td class="audit-time">${fmtDateTime(r.created_at)}</td>
+          `;
+        } else if (auditActiveTab === 'faltas') {
+          html += `
+            <td class="audit-time">${i + 1}</td>
+            <td><div class="audit-name">${r.nombre || '—'}</div><div class="audit-mat">${r.matricula || ''}</div></td>
+            <td class="audit-horario">${r.horario || '—'}</td>
+            <td class="audit-time">${r.fecha || '—'}</td>
+            <td class="audit-time">${fmtDateTime(r.created_at)}</td>
+          `;
+        } else {
+          const faltasNum = r.total_faltas || 0;
+          const color = faltasNum >= 3 ? '#f87171' : faltasNum >= 2 ? '#fbbf24' : '#34d399';
+          const penBadge = r.penalizado
+            ? '<span class="audit-badge penalidad">🚫 Penalizado</span>'
+            : '<span class="audit-badge activo">✅ Activo</span>';
+          html += `
+            <td class="audit-time">${i + 1}</td>
+            <td><div class="audit-name">${r.nombre || '—'}</div><div class="audit-mat">${r.matricula || ''}</div></td>
+            <td><span style="font-weight:800;color:${color};">${faltasNum}</span><span style="color:#475569;font-size:.7rem;"> / 3</span></td>
+            <td>${penBadge}</td>
+            <td class="audit-time">${fmtDateTime(r.updated_at)}</td>
+          `;
+        }
+        html += '</tr>';
+      });
+
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
   </script>
 </body>
 </html>
