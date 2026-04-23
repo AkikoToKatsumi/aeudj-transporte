@@ -1453,7 +1453,28 @@ function initVoluntarioPage() {
  return;
  }
 
- horariosActivos.forEach(horario => {
+ // Filtrar los horarios que ya están 100% completados
+ const horariosPendientes = horariosActivos.filter(horario => {
+   const data = listadoPorHorario[horario];
+   if (!data || data.confirmados.length === 0) return true; // Mostrar si está vacío para que vean que no hay nadie
+   const completado = data.confirmados.every(p => p.se_monto !== null);
+   return !completado;
+ });
+
+ if (horariosPendientes.length === 0) {
+   container.innerHTML = `
+   <div class="col-span-full text-center p-10 bg-emerald-900/20 rounded-3xl border border-emerald-500/20">
+     <div class="w-20 h-20 mx-auto bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mb-5 border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.15)]">
+       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/></svg>
+     </div>
+     <p class="text-2xl text-emerald-400 font-bold mb-2">¡Excelente trabajo!</p>
+     <p class="text-emerald-500/70 text-sm max-w-md mx-auto">Has completado el pase de lista para todos tus viajes activos. Ya no quedan pasajeros pendientes de confirmación.</p>
+   </div>
+   `;
+   return;
+ }
+
+ horariosPendientes.forEach(horario => {
  const data = listadoPorHorario[horario] || { confirmados: [], enEspera: [], precio: getPrecio(horario) };
  
  const card = document.createElement('div');
