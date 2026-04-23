@@ -189,180 +189,174 @@
         </div>
       </section>
 
-      <!-- Pasar Lista Screen (Voluntarios View inside Admin) -->
+      <!-- Pasar Lista Screen -->
       <section id="screen-pasarlista" class="admin-screen hidden">
 
         <style>
-          /* ── Pasar Lista: Voluntario-exact styles ── */
-          #screen-pasarlista .vl-stats-bar {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: .75rem;
-            margin-bottom: 1.25rem;
-          }
-          #screen-pasarlista .vl-stat-card {
-            background: rgba(15,23,42,.6);
-            border: 1px solid rgba(255,255,255,.06);
-            border-radius: .85rem;
-            padding: .85rem 1rem;
+          /* ── Pasar Lista Admin ── */
+          .pl-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:.75rem; margin-bottom:1.5rem; }
+          .pl-stat  {
+            background: rgba(15,23,42,0.8);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 1rem;
+            padding: 1.1rem 1.25rem;
             text-align: center;
-            backdrop-filter: blur(16px);
           }
-          #screen-pasarlista .vl-stat-num  { font-size: 1.7rem; font-weight: 800; }
-          #screen-pasarlista .vl-stat-lbl  { font-size: .65rem; text-transform: uppercase; color: #475569; font-weight: 700; }
-          #screen-pasarlista .vl-stat-blue   .vl-stat-num { color: #60a5fa; }
-          #screen-pasarlista .vl-stat-green  .vl-stat-num { color: #34d399; }
-          #screen-pasarlista .vl-stat-purple .vl-stat-num { color: #c4b5fd; }
+          .pl-stat-num { font-size: 2rem; font-weight: 900; line-height: 1; margin-bottom: .2rem; }
+          .pl-stat-lbl { font-size: .62rem; text-transform: uppercase; letter-spacing: .1em; color: #475569; font-weight: 700; }
 
-          #screen-pasarlista .vl-filter-bar {
-            display: flex;
-            gap: .6rem;
-            margin-bottom: 1.25rem;
-            flex-wrap: wrap;
-            align-items: center;
-          }
-          #screen-pasarlista .vl-filter-lbl { font-size: .75rem; text-transform: uppercase; color: #475569; font-weight: 700; margin-right: .25rem; }
-          #screen-pasarlista .vl-filter-btn {
-            padding: .4rem .85rem;
+          .pl-filters { display:flex; gap:.5rem; margin-bottom:1.25rem; flex-wrap:wrap; align-items:center; }
+          .pl-filter-lbl { font-size:.72rem; text-transform:uppercase; color:#475569; font-weight:700; margin-right:.25rem; }
+          .pl-filter-btn {
+            padding: .38rem .9rem;
             border-radius: 999px;
             font-size: .78rem;
-            font-weight: 600;
-            border: 1px solid rgba(255,255,255,.08);
-            background: rgba(30,41,59,.5);
+            font-weight: 700;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(30,41,59,0.6);
             color: #64748b;
             cursor: pointer;
             transition: all .15s;
           }
-          #screen-pasarlista .vl-filter-btn.active {
-            background: rgba(59,130,246,.2);
-            border-color: rgba(59,130,246,.4);
-            color: #60a5fa;
+          .pl-filter-btn.active {
+            background: rgba(59,130,246,0.2);
+            border-color: rgba(59,130,246,0.45);
+            color: #93c5fd;
           }
-          #screen-pasarlista .vl-filter-btn:hover:not(.active) { border-color: rgba(255,255,255,.15); color: #94a3b8; }
+          .pl-filter-btn:hover:not(.active) { color: #94a3b8; border-color: rgba(255,255,255,0.18); }
 
-          #screen-pasarlista .vl-section {
-            background: rgba(15,23,42,.6);
-            border: 1px solid rgba(255,255,255,.07);
-            border-radius: 1.1rem;
+          .pl-group {
+            background: rgba(15,23,42,0.7);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 1rem;
             overflow: hidden;
             margin-bottom: 1rem;
-            box-shadow: 0 8px 25px rgba(0,0,0,.15);
           }
-          #screen-pasarlista .vl-section-header {
+          .pl-group-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: .9rem 1.1rem;
-            border-bottom: 1px solid rgba(255,255,255,.05);
+            padding: .9rem 1.15rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
             cursor: pointer;
             user-select: none;
-          }
-          #screen-pasarlista .vl-section-header:hover { background: rgba(255,255,255,.02); }
-          #screen-pasarlista .vl-horario-title { font-size: .95rem; font-weight: 700; color: #60a5fa; }
-          #screen-pasarlista .vl-horario-meta  { display: flex; gap: .5rem; align-items: center; }
-          #screen-pasarlista .vl-dir-badge {
-            font-size: .62rem; font-weight: 700;
-            padding: .18rem .55rem;
-            border-radius: 999px;
-            text-transform: uppercase;
-          }
-          #screen-pasarlista .vl-dir-ida    { background: rgba(59,130,246,.15); color: #60a5fa; border: 1px solid rgba(59,130,246,.25); }
-          #screen-pasarlista .vl-dir-vuelta { background: rgba(139,92,246,.15); color: #c4b5fd; border: 1px solid rgba(139,92,246,.25); }
-          #screen-pasarlista .vl-count-badge {
-            font-size: .72rem; font-weight: 700;
-            background: rgba(30,41,59,.7); color: #64748b;
-            padding: .18rem .55rem; border-radius: 999px;
-          }
-          #screen-pasarlista .vl-chevron { color: #475569; transition: transform .2s; }
-          #screen-pasarlista .vl-chevron.open { transform: rotate(180deg); }
-
-          #screen-pasarlista .vl-table { display: flex; flex-direction: column; }
-          #screen-pasarlista .vl-row {
-            display: flex;
-            align-items: center;
-            padding: .75rem 1.1rem;
-            border-bottom: 1px solid rgba(255,255,255,.03);
-            gap: .85rem;
             transition: background .12s;
           }
-          #screen-pasarlista .vl-row:last-child { border-bottom: none; }
-          #screen-pasarlista .vl-row:hover { background: rgba(255,255,255,.02); }
-          #screen-pasarlista .vl-row-num {
-            width: 26px; height: 26px;
-            background: rgba(59,130,246,.15);
+          .pl-group-header:hover { background: rgba(255,255,255,0.025); }
+          .pl-group-title { font-size: .95rem; font-weight: 700; color: #93c5fd; }
+          .pl-group-meta  { display: flex; align-items: center; gap: .5rem; }
+          .pl-dir-pill {
+            font-size: .58rem; font-weight: 800;
+            padding: .18rem .6rem;
+            border-radius: 999px;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+          }
+          .pl-dir-ida    { background: rgba(59,130,246,.18); color: #93c5fd; border: 1px solid rgba(59,130,246,.3); }
+          .pl-dir-vuelta { background: rgba(139,92,246,.18); color: #c4b5fd; border: 1px solid rgba(139,92,246,.3); }
+          .pl-count-pill {
+            font-size: .68rem; font-weight: 700;
+            background: rgba(15,23,42,0.8); color: #64748b;
+            padding: .18rem .6rem; border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.06);
+          }
+          .pl-chevron { color: #475569; width: 16px; height: 16px; transition: transform .2s; }
+          .pl-chevron.open { transform: rotate(180deg); }
+
+          .pl-body { display: flex; flex-direction: column; }
+          .pl-row {
+            display: flex;
+            align-items: center;
+            gap: .85rem;
+            padding: .72rem 1.15rem;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            transition: background .12s;
+          }
+          .pl-row:last-child { border-bottom: none; }
+          .pl-row:hover { background: rgba(255,255,255,0.02); }
+
+          .pl-num {
+            width: 28px; height: 28px;
+            background: rgba(59,130,246,.12);
+            border: 1px solid rgba(59,130,246,.2);
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: .72rem; font-weight: 700; color: #60a5fa;
+            font-size: .7rem; font-weight: 800; color: #60a5fa;
             flex-shrink: 0;
           }
-          #screen-pasarlista .vl-row-info { flex: 1; min-width: 0; }
-          #screen-pasarlista .vl-row-name { font-size: .88rem; font-weight: 600; color: #f1f5f9; }
-          #screen-pasarlista .vl-row-mat  { font-size: .7rem; color: #475569; font-family: monospace; }
-          #screen-pasarlista .vl-row-time { font-size: .78rem; font-weight: 700; color: #60a5fa; font-family: monospace; flex-shrink: 0; }
+          .pl-info { flex: 1; min-width: 0; }
+          .pl-name { font-size: .87rem; font-weight: 700; color: #f1f5f9; }
+          .pl-mat  { font-size: .68rem; font-family: monospace; color: #475569; margin-top: .05rem; }
+          .pl-time { font-size: .75rem; font-weight: 700; color: #60a5fa; font-family: monospace; flex-shrink: 0; }
 
-          #screen-pasarlista .vl-att-btns { display: flex; gap: .35rem; flex-shrink: 0; }
-          #screen-pasarlista .vl-att-btn {
-            display: inline-flex; align-items: center; gap: .25rem;
-            padding: .3rem .7rem;
+          .pl-att-wrap { display: flex; gap: .35rem; flex-shrink: 0; }
+          .pl-att-btn {
+            display: inline-flex; align-items: center; gap: .3rem;
+            padding: .3rem .75rem;
             border-radius: 999px;
-            font-size: .72rem; font-weight: 700;
+            font-size: .7rem; font-weight: 700;
             border: 1px solid;
             cursor: pointer;
             background: transparent;
             transition: all .15s;
             white-space: nowrap;
           }
-          #screen-pasarlista .vl-att-btn.subio    { color: #34d399; border-color: rgba(52,211,153,.3); }
-          #screen-pasarlista .vl-att-btn.no-subio { color: #f87171; border-color: rgba(248,113,113,.3); }
-          #screen-pasarlista .vl-att-btn.subio.active    { background: rgba(52,211,153,.18); border-color: #34d399; }
-          #screen-pasarlista .vl-att-btn.no-subio.active { background: rgba(248,113,113,.18); border-color: #f87171; }
-          #screen-pasarlista .vl-att-btn.active  { opacity: 1; }
-          #screen-pasarlista .vl-att-btn:not(.active) { opacity: .6; }
+          .pl-att-btn.pl-subio    { color: #34d399; border-color: rgba(52,211,153,.25); }
+          .pl-att-btn.pl-nosubio  { color: #f87171; border-color: rgba(248,113,113,.25); }
+          .pl-att-btn.pl-subio.active   { background: rgba(52,211,153,.18); border-color: #34d399; }
+          .pl-att-btn.pl-nosubio.active { background: rgba(248,113,113,.18); border-color: #f87171; }
+          .pl-att-btn.active   { opacity: 1; }
+          .pl-att-btn:not(.active) { opacity: .55; }
+          .pl-att-btn:hover { opacity: 1; }
 
-          #screen-pasarlista .vl-empty {
-            text-align: center; padding: 3rem 1.5rem; color: #475569;
+          .pl-espera-tag {
+            font-size: .58rem; font-weight: 800; flex-shrink: 0;
+            background: rgba(251,146,60,.12); color: #fb923c;
+            border: 1px solid rgba(251,146,60,.25);
+            padding: .15rem .5rem; border-radius: 999px; text-transform: uppercase;
           }
-          #screen-pasarlista .vl-spinner {
-            width: 32px; height: 32px;
+          .pl-empty { text-align: center; padding: 3rem 1.5rem; color: #475569; }
+          .pl-spin  {
+            width: 30px; height: 30px; margin: 0 auto .75rem;
             border: 3px solid rgba(59,130,246,.2);
             border-top-color: #3b82f6;
             border-radius: 50%;
-            animation: vlSpin .8s linear infinite;
-            margin: 0 auto 1rem;
+            animation: plSpin .8s linear infinite;
           }
-          @keyframes vlSpin { to { transform: rotate(360deg); } }
+          @keyframes plSpin { to { transform: rotate(360deg); } }
+          @media (max-width:560px) {
+            .pl-stats { grid-template-columns: repeat(3,1fr); }
+            .pl-mat, .pl-time { display: none; }
+          }
         </style>
 
-        <!-- Stats -->
-        <div class="vl-stats-bar">
-          <div class="vl-stat-card vl-stat-blue">
-            <div class="vl-stat-num" id="adminListStatTotal">–</div>
-            <div class="vl-stat-lbl">Pasajeros</div>
+        <!-- Stats bar -->
+        <div class="pl-stats">
+          <div class="pl-stat">
+            <div class="pl-stat-num" id="adminListStatTotal" style="color:#60a5fa;">–</div>
+            <div class="pl-stat-lbl">Pasajeros</div>
           </div>
-          <div class="vl-stat-card vl-stat-green">
-            <div class="vl-stat-num" id="adminListStatPresentes">0</div>
-            <div class="vl-stat-lbl">Presentes</div>
+          <div class="pl-stat">
+            <div class="pl-stat-num" id="adminListStatPresentes" style="color:#34d399;">0</div>
+            <div class="pl-stat-lbl">Presentes</div>
           </div>
-          <div class="vl-stat-card vl-stat-purple">
-            <div class="vl-stat-num" id="adminListStatHorarios">–</div>
-            <div class="vl-stat-lbl">Horarios</div>
+          <div class="pl-stat">
+            <div class="pl-stat-num" id="adminListStatHorarios" style="color:#c4b5fd;">–</div>
+            <div class="pl-stat-lbl">Horarios</div>
           </div>
         </div>
 
         <!-- Filters -->
-        <div class="vl-filter-bar">
-          <span class="vl-filter-lbl">Filtrar:</span>
-          <button type="button" class="vl-filter-btn active" data-vl-filter="todos">Todos</button>
-          <button type="button" class="vl-filter-btn" data-vl-filter="ida">↗ Ida</button>
-          <button type="button" class="vl-filter-btn" data-vl-filter="vuelta">↙ Vuelta</button>
+        <div class="pl-filters">
+          <span class="pl-filter-lbl">Filtrar:</span>
+          <button type="button" class="pl-filter-btn active" data-vl-filter="todos">Todos</button>
+          <button type="button" class="pl-filter-btn" data-vl-filter="ida">↗ Ida</button>
+          <button type="button" class="pl-filter-btn" data-vl-filter="vuelta">↙ Vuelta</button>
         </div>
 
-        <!-- List -->
+        <!-- Passenger list container -->
         <div id="adminListContainer">
-          <div class="vl-empty">
-            <div class="vl-spinner"></div>
-            <p>Cargando datos...</p>
-          </div>
+          <div class="pl-empty"><div class="pl-spin"></div><p>Cargando datos...</p></div>
         </div>
 
       </section>
@@ -1890,21 +1884,23 @@
 
     function renderAdminLista() {
       const container = document.getElementById('adminListContainer');
-      if(!container) return;
-      
-      const IDA_KEYWORDS = ['Jarabacoa -> La Vega', 'Jarabacoa → La Vega'];
-      const isIda = (h) => IDA_KEYWORDS.some(k => h.includes(k));
+      if (!container) return;
+
+      const IDA_KEYWORDS = ['Jarabacoa -> La Vega', 'Jarabacoa \u2192 La Vega'];
+      const isIda = h => IDA_KEYWORDS.some(k => h.includes(k));
 
       let filtered = adminListaData;
-      if(adminListaFilter === 'ida') filtered = filtered.filter(v => isIda(v.horario));
-      if(adminListaFilter === 'vuelta') filtered = filtered.filter(v => !isIda(v.horario));
+      if (adminListaFilter === 'ida')    filtered = adminListaData.filter(v => isIda(v.horario));
+      if (adminListaFilter === 'vuelta') filtered = adminListaData.filter(v => !isIda(v.horario));
 
-      document.getElementById('adminListStatTotal').textContent = adminListaData.length;
-      document.getElementById('adminListStatPresentes').textContent = Object.values(adminAttendanceState).filter(v => v === 'subio').length;
-      document.getElementById('adminListStatHorarios').textContent = new Set(adminListaData.map(v=>v.horario)).size;
+      document.getElementById('adminListStatTotal').textContent     = adminListaData.length || '–';
+      document.getElementById('adminListStatPresentes').textContent  = Object.values(adminAttendanceState).filter(v => v === 'subio').length;
+      document.getElementById('adminListStatHorarios').textContent  = new Set(adminListaData.map(v => v.horario)).size || '–';
+
+      container.innerHTML = '';
 
       if (filtered.length === 0) {
-        container.innerHTML = '<div class="text-center py-10 text-gray-500 font-medium">No hay pasajeros en este filtro.</div>';
+        container.innerHTML = '<div class="pl-empty"><p>No hay pasajeros en este filtro.</p></div>';
         return;
       }
 
@@ -1914,26 +1910,25 @@
         groups[v.horario].push(v);
       });
 
-      container.innerHTML = '';
       Object.entries(groups).forEach(([horario, passengers]) => {
         const ida = isIda(horario);
 
-        const section = document.createElement('div');
-        section.className = 'vl-section';
+        const group = document.createElement('div');
+        group.className = 'pl-group';
 
-        const header = document.createElement('div');
-        header.className = 'vl-section-header';
-        header.innerHTML = `
-          <div class="vl-horario-title">${horario}</div>
-          <div class="vl-horario-meta">
-            <span class="vl-dir-badge ${ida ? 'vl-dir-ida' : 'vl-dir-vuelta'}">${ida ? '↗ IDA' : '↙ VUELTA'}</span>
-            <span class="vl-count-badge">${passengers.length} persona${passengers.length !== 1 ? 's' : ''}</span>
-            <i data-lucide="chevron-down" class="vl-chevron open" style="width:16px;height:16px;"></i>
+        const hdr = document.createElement('div');
+        hdr.className = 'pl-group-header';
+        hdr.innerHTML = `
+          <div class="pl-group-title">${horario}</div>
+          <div class="pl-group-meta">
+            <span class="pl-dir-pill ${ida ? 'pl-dir-ida' : 'pl-dir-vuelta'}">${ida ? '\u2197 IDA' : '\u2199 VUELTA'}</span>
+            <span class="pl-count-pill">${passengers.length} persona${passengers.length !== 1 ? 's' : ''}</span>
+            <i data-lucide="chevron-down" class="pl-chevron open"></i>
           </div>
         `;
 
-        const table = document.createElement('div');
-        table.className = 'vl-table';
+        const body = document.createElement('div');
+        body.className = 'pl-body';
 
         passengers.forEach((p, idx) => {
           const t    = new Date(p.created_at);
@@ -1942,23 +1937,22 @@
           const isNoSubio = adminAttendanceState[p.id] === 'no-subio';
 
           const row = document.createElement('div');
-          row.className = 'vl-row';
-
+          row.className = 'pl-row';
           row.innerHTML = `
-            <div class="vl-row-num">${idx + 1}</div>
-            <div class="vl-row-info">
-              <div class="vl-row-name">${p.nombre || 'Sin nombre'}</div>
-              <div class="vl-row-mat">${p.matricula || ''}</div>
+            <div class="pl-num">${idx + 1}</div>
+            <div class="pl-info">
+              <div class="pl-name">${p.nombre || 'Sin nombre'}</div>
+              <div class="pl-mat">${p.matricula || ''}</div>
             </div>
-            ${p.en_espera ? '<span style="font-size:.6rem;font-weight:700;background:rgba(251,146,60,.15);color:#fb923c;border:1px solid rgba(251,146,60,.3);padding:.1rem .5rem;border-radius:999px;flex-shrink:0;">Espera</span>' : ''}
-            <div class="vl-row-time">${time}</div>
-            <div class="vl-att-btns">
-              <button type="button" class="vl-att-btn subio ${isSubio ? 'active' : ''}" data-id="${p.id}" data-action="subio">✅ Subió</button>
-              <button type="button" class="vl-att-btn no-subio ${isNoSubio ? 'active' : ''}" data-id="${p.id}" data-action="no-subio">❌ No subió</button>
+            ${p.en_espera ? '<span class="pl-espera-tag">Espera</span>' : ''}
+            <div class="pl-time">${time}</div>
+            <div class="pl-att-wrap">
+              <button type="button" class="pl-att-btn pl-subio ${isSubio ? 'active' : ''}" data-id="${p.id}" data-action="subio">\u2705 Subi\u00f3</button>
+              <button type="button" class="pl-att-btn pl-nosubio ${isNoSubio ? 'active' : ''}" data-id="${p.id}" data-action="no-subio">\u274c No subi\u00f3</button>
             </div>
           `;
 
-          row.querySelectorAll('.vl-att-btn').forEach(btn => {
+          row.querySelectorAll('.pl-att-btn').forEach(btn => {
             btn.addEventListener('click', async e => {
               e.stopPropagation();
               const action = btn.dataset.action;
@@ -1969,19 +1963,19 @@
             });
           });
 
-          table.appendChild(row);
+          body.appendChild(row);
         });
 
-        header.addEventListener('click', () => {
-          const chevron = header.querySelector('.vl-chevron');
+        hdr.addEventListener('click', () => {
+          const chevron = hdr.querySelector('.pl-chevron');
           const isOpen  = chevron.classList.contains('open');
-          table.style.display = isOpen ? 'none' : 'flex';
+          body.style.display = isOpen ? 'none' : 'flex';
           chevron.classList.toggle('open', !isOpen);
         });
 
-        section.appendChild(header);
-        section.appendChild(table);
-        container.appendChild(section);
+        group.appendChild(hdr);
+        group.appendChild(body);
+        container.appendChild(group);
       });
 
       if (window.lucide) window.lucide.createIcons();
