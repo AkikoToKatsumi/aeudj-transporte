@@ -7,6 +7,7 @@
   <link rel="icon" href="img/comite.jpg" type="image/jpg">
   <link rel="stylesheet" href="css/styles.css">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="js/custom-alert.js"></script>
 </head>
 <body data-page="index">
   <main class="login-container">
@@ -82,6 +83,9 @@
         <div class="input-wrapper">
           <i data-lucide="lock" class="input-icon"></i>
           <input type="password" id="password" class="premium-input" placeholder="Contrasena" required>
+          <button type="button" id="togglePasswordReg" class="toggle-password">
+            <i data-lucide="eye"></i>
+          </button>
         </div>
         <div class="input-wrapper">
           <i data-lucide="school" class="input-icon"></i>
@@ -105,78 +109,6 @@
     </footer>
   </main>
 
-  <!-- Lógica Unificada (Sin archivos externos) -->
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-
-    const SUPABASE_URL = 'https://irjwxegepkznqrisbrys.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyand4ZWdlcGt6bnFyaXNicnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNjk0NDIsImV4cCI6MjA5MTc0NTQ0Mn0.TZOhsy0ghfmjK8rd4GWcgbtOLpERKRJ62mjqc5gaYOM';
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    console.log('--- RESCATE TOTAL ACTIVADO ---');
-
-    document.addEventListener('DOMContentLoaded', () => {
-      if (window.lucide) window.lucide.createIcons();
-      
-      const loginForm = document.getElementById('loginForm');
-      const registerForm = document.getElementById('registerForm');
-      const errorDiv = document.getElementById('errorMsg');
-
-      // Toggles
-      document.getElementById('showRegisterBtn')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        loginForm.classList.add('hidden');
-        registerForm.classList.remove('hidden');
-      });
-
-      document.getElementById('showLoginBtn')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        registerForm.classList.add('hidden');
-        loginForm.classList.remove('hidden');
-      });
-
-      // Login Logic
-      loginForm?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const userInput = document.getElementById('userInput').value.trim();
-        const pass = document.getElementById('passwordLogin').value;
-        const btn = document.getElementById('submitLogin');
-        
-        btn.disabled = true;
-        btn.textContent = 'Verificando...';
-        errorDiv.classList.add('hidden');
-
-        try {
-          // 1. Buscar perfil
-          const { data: profile } = await supabase.from('profiles')
-            .select('*').or(`matricula.eq.${userInput},telefono.eq.${userInput}`).maybeSingle();
-
-          const matricula = profile ? profile.matricula : userInput;
-          const pseudoEmail = `${matricula}@aeudj.com`;
-
-          // 2. Auth
-          const { data: auth, error: authErr } = await supabase.auth.signInWithPassword({
-            email: pseudoEmail, password: pass
-          });
-
-          if (authErr) throw authErr;
-
-          // 3. Obtener perfil completo
-          const { data: fullProfile } = await supabase.from('profiles')
-            .select('*').eq('id', auth.user.id).single();
-
-          localStorage.setItem('aeudj_user', JSON.stringify(fullProfile));
-          window.location.href = 'votar.html';
-
-        } catch (err) {
-          console.error(err);
-          errorDiv.textContent = 'Error al entrar. Revisa tus datos.';
-          errorDiv.classList.remove('hidden');
-          btn.disabled = false;
-          btn.textContent = 'Entrar';
-        }
-      });
-    });
-  </script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>

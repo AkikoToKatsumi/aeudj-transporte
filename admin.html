@@ -7,6 +7,7 @@
   <link rel="icon" href="img/comite.jpg" type="image/jpg">
   <link rel="stylesheet" href="css/styles.css">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="js/custom-alert.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body data-page="admin" class="admin-page">
@@ -73,6 +74,9 @@
           <p class="text-sm text-gray-500">Transporte activo para el <span id="fechaAdmin"></span></p>
         </div>
         <div class="flex gap-3">
+          <button class="btn-pill-outline btn-small text-green-400 hover:bg-green-500/10 transition-colors" style="border:1px solid rgba(16,185,129,0.3);background:rgba(16,185,129,0.05);" onclick="window.downloadCajaReport()">
+            <i data-lucide="download" class="icon-inline text-green-400"></i> Reporte Caja
+          </button>
           <button class="btn-pill-outline btn-small" onclick="window.refreshCurrentScreen()">
             <i data-lucide="refresh-cw" class="icon-inline"></i> Refrescar
           </button>
@@ -282,8 +286,15 @@
                 <input class="staff-qa-input" id="qa-matricula" type="text" placeholder="Ej. EF-2025">
               </div>
               <div class="staff-qa-field">
+                <label class="staff-qa-label">Correo Electrónico (Opcional)</label>
+                <input class="staff-qa-input" id="qa-email" type="email" placeholder="correo@ejemplo.com">
+              </div>
+              <div class="staff-qa-field">
                 <label class="staff-qa-label">Contraseña</label>
-                <input class="staff-qa-input" id="qa-password" type="password" placeholder="Mínimo 6 caracteres">
+                <div style="position:relative;display:flex;align-items:center;">
+                  <input class="staff-qa-input" id="qa-password" type="password" placeholder="Mínimo 6 caracteres" style="width:100%; padding-right:2.5rem;">
+                  <button type="button" onclick="const p=document.getElementById('qa-password'); p.type=p.type==='password'?'text':'password';" style="position:absolute; right:10px; background:none; border:none; cursor:pointer; color:#94a3b8; font-size:1.1rem; outline:none;">👁️</button>
+                </div>
               </div>
               <div class="staff-qa-field">
                 <label class="staff-qa-label">Rol</label>
@@ -891,8 +902,11 @@
             </td>
             <td><code style="font-size:.78rem;color:#94a3b8;background:rgba(0,0,0,.25);padding:.2rem .5rem;border-radius:.4rem;border:1px solid rgba(255,255,255,0.05);">${u.matricula || 'N/A'}</code></td>
             <td>
-              <div class="staff-row-actions">
-                <button class="staff-icon-btn danger" title="Eliminar Cuenta" onclick="window.deleteUserNew('${u.id}')" ${isSelf ? 'disabled style="opacity:0.2;cursor:not-allowed;"' : ''}>
+              <div class="staff-row-actions" style="display:flex;gap:0.5rem;justify-content:flex-end;">
+                <button class="staff-icon-btn" style="color:#60a5fa;border:1px solid rgba(96,165,250,0.3);background:rgba(96,165,250,0.1);padding:0.4rem;border-radius:0.4rem;cursor:pointer;" title="Editar Datos" onclick="window.editUserNew('${u.id}')">
+                  ✏️
+                </button>
+                <button class="staff-icon-btn danger" style="color:#ef4444;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.1);padding:0.4rem;border-radius:0.4rem;cursor:pointer;" title="Eliminar Cuenta" onclick="window.deleteUserNew('${u.id}')" ${isSelf ? 'disabled style="opacity:0.2;cursor:not-allowed;"' : ''}>
                   🗑️
                 </button>
               </div>
@@ -1263,6 +1277,140 @@
       };
     }
 
+    window.updateUserRoleNew = async (id, newRole) => {
+      try {
+        await supabase.from('profiles').update({ rol: newRole }).eq('id', id);
+        window.showAdminToast('Rol actualizado correctamente');
+        loadStaffData();
+      } catch (e) {
+        window.showAdminToast('Error al actualizar rol', 'error');
+      }
+    };
+
+    window.deleteUserNew = async (id) => {
+      const confirmed = await window.aeudjConfirm('¿Estás seguro de que deseas eliminar este usuario?');
+      if(!confirmed) return;
+      try {
+        await supabase.from('profiles').delete().eq('id', id);
+        window.showAdminToast('Usuario eliminado');
+        loadStaffData();
+      } catch (e) {
+        window.showAdminToast('Error al eliminar', 'error');
+      }
+    };
+
+    window.editUserNew = async (id) => {
+      const user = staffData.find(u => u.id === id);
+      if(!user) return;
+      const nuevoNombre = prompt("Nombre completo:", user.nombre || "");
+      if(nuevoNombre === null) return;
+      const nuevoTelefono = prompt("Teléfono:", user.telefono || "");
+      if(nuevoTelefono === null) return;
+      const nuevaMatricula = prompt("Matrícula:", user.matricula || "");
+      if(nuevaMatricula === null) return;
+      const nuevoEmail = prompt("Correo (Opcional):", user.email || "");
+      if(nuevoEmail === null) return;
+
+      try {
+        await supabase.from('profiles').update({
+          nombre: nuevoNombre,
+          telefono: nuevoTelefono,
+          matricula: nuevaMatricula,
+          email: nuevoEmail
+        }).eq('id', id);
+        window.showAdminToast('Datos actualizados');
+        loadStaffData();
+      } catch(e) {
+        window.showAdminToast('Error al editar', 'error');
+      }
+    };
+
+    window.handleQuickAddStaff = async () => {
+      const nombre = document.getElementById('qa-nombre').value.trim();
+      const telefono = document.getElementById('qa-telefono').value.trim();
+      const matricula = document.getElementById('qa-matricula').value.trim();
+      const password = document.getElementById('qa-password').value.trim();
+      const rol = document.getElementById('qa-rol').value;
+      const emailInput = document.getElementById('qa-email');
+      const email = emailInput ? emailInput.value.trim() : '';
+
+      if(!nombre || !matricula || !password) {
+        alert("Nombre, matrícula y contraseña son obligatorios.");
+        return;
+      }
+      if(password.length < 6) {
+        alert("La contraseña debe tener al menos 6 caracteres.");
+        return;
+      }
+
+      const correoUsar = email || `${matricula.replace(/\\s+/g, '')}@aeudj.com`;
+
+      try {
+        const { data: authData, error: authErr } = await supabase.auth.signUp({
+          email: correoUsar,
+          password: password
+        });
+
+        if (authErr) {
+          alert('Error creando cuenta auth: ' + authErr.message);
+          return;
+        }
+
+        const newUser = {
+          id: authData.user.id,
+          nombre,
+          telefono,
+          matricula,
+          email: correoUsar,
+          rol,
+          universidad: 'Indefinida'
+        };
+
+        const { error: profileErr } = await supabase.from('profiles').insert(newUser);
+        if (profileErr) throw profileErr;
+
+        window.showAdminToast('Usuario creado exitosamente');
+        
+        document.getElementById('qa-nombre').value = '';
+        document.getElementById('qa-telefono').value = '';
+        document.getElementById('qa-matricula').value = '';
+        document.getElementById('qa-password').value = '';
+        if(emailInput) emailInput.value = '';
+        
+        loadStaffData();
+      } catch (err) {
+        console.error(err);
+        alert('Error al crear el usuario.');
+      }
+    };
+
+    window.downloadCajaReport = () => {
+      const fecha = new Date().toLocaleDateString('es-ES');
+      const totalIngresos = document.getElementById('statIngresosReales').textContent;
+      const win = window.open('', '_blank');
+      win.document.write(`
+        <html><head><title>Reporte de Caja - AEUDJ</title>
+        <style>
+          body { font-family: sans-serif; padding: 2rem; color: #333; }
+          h1 { color: #2563eb; border-bottom: 2px solid #2563eb; padding-bottom: 0.5rem; }
+          .caja { border: 1px solid #e2e8f0; background: #f8fafc; padding: 1.5rem; margin-top: 2rem; border-radius: 8px; }
+          .valor { font-size: 2.5rem; font-weight: bold; color: #10b981; margin: 1rem 0; }
+        </style>
+        </head><body>
+          <h1>Reporte Diario de Caja - AEUDJ</h1>
+          <p><strong>Fecha:</strong> ${fecha}</p>
+          <div class="caja">
+            <p>Estimado de ingresos generados en los horarios matutinos y de 3:00 PM:</p>
+            <div class="valor">${totalIngresos}</div>
+            <p style="font-size:0.9rem;color:#64748b;">(Basado en los pasajeros que no están en lista de espera)</p>
+          </div>
+          <p style="margin-top:3rem; font-size:0.8rem; color:#94a3b8; text-align:center;">Documento generado automáticamente por el Panel Administrativo AEUDJ.</p>
+        </body></html>
+      `);
+      win.document.close();
+      setTimeout(() => { win.print(); }, 800);
+    };
+
     document.getElementById('logoutBtn').addEventListener('click', () => {
       localStorage.clear();
       window.location.href = 'index.html';
@@ -1367,7 +1515,8 @@
         btn.addEventListener('click', async () => {
           const uid    = btn.dataset.uid;
           const nombre = btn.dataset.nombre;
-          if (!confirm(`¿Confirmas que ${nombre} ya pagó la penalidad? Esto reiniciará su contador de faltas a 0.`)) return;
+          const confirmed = await window.aeudjConfirm(`¿Confirmas que ${nombre} ya pagó la penalidad? Esto reiniciará su contador de faltas a 0.`);
+          if (!confirmed) return;
           btn.disabled = true;
           btn.textContent = 'Procesando...';
           await levantarPenalidad(uid);

@@ -6,6 +6,7 @@
   <title>Lista de Pasajeros - AEUDJ</title>
   <link rel="icon" href="img/comite.jpg" type="image/jpg">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="js/custom-alert.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -214,6 +215,8 @@
       margin: 0 auto;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+    
+    .spin-animation { animation: spin 0.8s linear infinite; }
 
     /* Changes section */
     .changes-card {
@@ -427,7 +430,18 @@
       }
     }
 
-    document.getElementById('reloadBtn').onclick = loadData;
+    document.getElementById('reloadBtn').onclick = async (e) => {
+      const btn = e.currentTarget;
+      const icon = btn.querySelector('svg');
+      if(icon) icon.classList.add('spin-animation');
+      
+      const container = document.getElementById('listContainer');
+      container.innerHTML = `<div class="empty-state"><div class="spinner"></div><p style="margin-top:1rem;">Actualizando...</p></div>`;
+      
+      await loadData();
+      
+      if(icon) icon.classList.remove('spin-animation');
+    };
     if (window.lucide) window.lucide.createIcons();
     loadData();
 

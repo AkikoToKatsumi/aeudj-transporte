@@ -6,6 +6,7 @@
   <title>Selector de Horarios - AEUDJ</title>
   <link rel="icon" href="img/comite.jpg" type="image/jpg">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="js/custom-alert.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
@@ -400,6 +401,19 @@
       </div>
     </div>
 
+    <!-- Modal de Acciones -->
+    <div id="actionModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:100;display:flex;align-items:center;justify-content:center;padding:1rem;">
+      <div class="card" style="width:100%;max-width:400px;background:rgba(15,23,42,0.95);border:1px solid rgba(255,255,255,0.2);">
+        <h3 id="actionModalTitle" style="margin-bottom:1rem;text-align:center;font-size:1.2rem;font-weight:700;">Selecciona el viaje</h3>
+        <p id="actionModalDesc" style="text-align:center;color:#94a3b8;font-size:0.85rem;margin-bottom:1.5rem;"></p>
+        <div id="actionModalContent" style="display:flex;flex-direction:column;gap:0.75rem;"></div>
+        <div style="display:flex; gap:0.5rem; margin-top:1.5rem;">
+          <button id="btnActionModalBoth" class="btn-action btn-slate hidden" style="flex:1;">Ambos viajes</button>
+          <button id="closeActionModal" class="btn-action btn-rose" style="flex:1;">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Cerrar sesión -->
     <div class="logout-wrap">
       <button id="logoutBtn" class="btn-logout">Cerrar sesión</button>
@@ -419,6 +433,7 @@
       { time: '7:00 AM',  route: 'Jarabacoa → La Vega',  fullText: '7:00 AM Jarabacoa -> La Vega',  group: 'manana', dir: 'ida'    },
       { time: '9:00 AM',  route: 'Jarabacoa → La Vega',  fullText: '9:00 AM Jarabacoa -> La Vega',  group: 'manana', dir: 'ida'    },
       { time: '12:10 PM', route: 'La Vega → Jarabacoa',  fullText: '12:10 PM La Vega -> Jarabacoa', group: 'manana', dir: 'vuelta' },
+      { time: '12:10 PM', route: 'La Vega → Jarabacoa',  fullText: '12:10 PM La Vega -> Jarabacoa', group: 'tarde',  dir: 'vuelta' },
       { time: '1:00 PM',  route: 'Jarabacoa → La Vega',  fullText: '1:00 PM Jarabacoa -> La Vega',  group: 'tarde',  dir: 'ida'    },
       { time: '2:15 PM',  route: 'La Vega → Jarabacoa',  fullText: '2:15 PM La Vega -> Jarabacoa',  group: 'tarde',  dir: 'vuelta' },
       { time: '3:00 PM',  route: 'Jarabacoa → La Vega',  fullText: '3:00 PM Jarabacoa -> La Vega',  group: 'tarde',  dir: 'ida'    },
@@ -704,59 +719,93 @@
       }
     });
 
-    // ── ACTION BUTTONS ───────────────────────────────────────
-    document.getElementById('btnMeFuiAntes').onclick = async () => {
-      if(!confirm("¿Estás seguro de que quieres cancelar tu viaje de regreso? (Liberarás tu cupo de vuelta)")) return;
-      
-      const { group } = await getActiveGroup();
-      const cycleDate = getCycleDate(group);
-      
-      try {
-        document.getElementById('btnMeFuiAntes').disabled = true;
-        // El viaje de vuelta siempre contiene "La Vega -> Jarabacoa"
-        await supabase.from('votos').delete()
-          .eq('usuario_id', currentUser.id)
-          .eq('fecha', cycleDate)
-          .like('horario', '%La Vega -> Jarabacoa%');
-          
-        alert("Viaje de regreso cancelado exitosamente. ¡Gracias por avisar!");
-        checkVoteStatus(); // Refrescar la pantalla
-      } catch(e) {
-        console.error(e);
-        alert("Ocurrió un error al intentar cancelar.");
-      } finally {
-        document.getElementById('btnMeFuiAntes').disabled = false;
-      }
+    // ── ACTION MODAL LOGIC ──────────────────────────────────
+    const actionModal = document.getElementById('actionModal');
+    const actionModalTitle = document.getElementById('actionModalTitle');
+    const actionModalDesc = document.getElementById('actionModalDesc');
+    const actionModalContent = document.getElementById('actionModalContent');
+    const btnActionModalBoth = document.getElementById('btnActionModalBoth');
+    const closeActionModal = document.getElementById('closeActionModal');
+    let currentAction = null;
+
+    closeActionModal.onclick = () => {
+      actionModal.classList.add('hidden');
     };
 
-    document.getElementById('btnIreDespues').onclick = () => {
-      // Para ir después, la mejor opción es abrir el selector de horarios para que elija uno nuevo
-      isEditing = true;
-      selectedHorarios = [...initialVotes.map(v => v.horario)];
-      showForm();
-    };
-
-    document.getElementById('btnOtrosMedios').onclick = async () => {
-      if(!confirm("¿Estás seguro de que viajarás por otros medios? (Esto cancelará todos tus horarios confirmados para hoy)")) return;
+    function openActionModal(actionStr) {
+      currentAction = actionStr;
+      actionModalContent.innerHTML = '';
+      btnActionModalBoth.classList.add('hidden');
       
+      if (actionStr === 'antes') {
+        actionModalTitle.textContent = 'Me fui antes';
+        actionModalDesc.textContent = '¿Cuál de tus viajes de hoy realizaste antes de tiempo? (Esto liberará tu cupo para que otro lo use)';
+      } else if (actionStr === 'otros') {
+        actionModalTitle.textContent = 'Otros medios';
+        actionModalDesc.textContent = '¿En cuál de estos viajes te irás por otros medios?';
+        btnActionModalBoth.classList.remove('hidden');
+        btnActionModalBoth.onclick = () => executeAction('ambos');
+      } else if (actionStr === 'despues') {
+        actionModalTitle.textContent = 'Iré después';
+        actionModalDesc.textContent = '¿Cuál viaje deseas cambiar para irte más tarde?';
+      }
+
+      initialVotes.forEach(v => {
+        const s = SCHEDULES.find(x => x.fullText === v.horario);
+        const dir = s ? s.dir : (v.horario.includes('Jarabacoa') ? 'ida' : 'vuelta');
+        const btn = document.createElement('button');
+        btn.className = 'trip-card';
+        btn.style.cursor = 'pointer';
+        btn.style.width = '100%';
+        btn.style.textAlign = 'left';
+        btn.style.background = 'rgba(59,130,246,0.1)';
+        btn.innerHTML = `
+          <div class="trip-icon ${dir}">
+            <i data-lucide="${dir === 'ida' ? 'arrow-right' : 'arrow-left'}"></i>
+          </div>
+          <div class="trip-info">
+            <div class="trip-label">${dir === 'ida' ? 'Salida' : 'Regreso'}</div>
+            <div class="trip-time">${v.horario.split(' ').slice(0,2).join(' ')}</div>
+            <div class="trip-route">${v.horario.split(' ').slice(2).join(' ')}</div>
+          </div>
+        `;
+        btn.onclick = () => executeAction(v.horario);
+        actionModalContent.appendChild(btn);
+      });
+      if (window.lucide) window.lucide.createIcons();
+      actionModal.classList.remove('hidden');
+    }
+
+    async function executeAction(horarioToChange) {
+      actionModal.classList.add('hidden');
       const { group } = await getActiveGroup();
       const cycleDate = getCycleDate(group);
-      
-      try {
-        document.getElementById('btnOtrosMedios').disabled = true;
-        await supabase.from('votos').delete()
-          .eq('usuario_id', currentUser.id)
-          .eq('fecha', cycleDate);
-          
-        alert("Todos tus viajes de hoy han sido cancelados. ¡Gracias por liberar tus cupos!");
-        checkVoteStatus(); // Refrescar la pantalla
-      } catch(e) {
-        console.error(e);
-        alert("Ocurrió un error al intentar cancelar.");
-      } finally {
-        document.getElementById('btnOtrosMedios').disabled = false;
+
+      if (currentAction === 'despues') {
+        isEditing = true;
+        selectedHorarios = initialVotes.map(v => v.horario).filter(h => h !== horarioToChange);
+        showForm();
+        return;
       }
-    };
+
+      try {
+        let query = supabase.from('votos').delete().eq('usuario_id', currentUser.id).eq('fecha', cycleDate);
+        if (horarioToChange !== 'ambos') {
+           query = query.eq('horario', horarioToChange);
+        }
+        
+        await query;
+        alert(`Operación realizada con éxito. ${horarioToChange === 'ambos' ? 'Todos los viajes cancelados.' : 'El viaje ha sido cancelado.'}`);
+        await checkYaVotado(); 
+      } catch (e) {
+        console.error(e);
+        alert("Ocurrió un error.");
+      }
+    }
+
+    document.getElementById('btnMeFuiAntes').onclick = () => openActionModal('antes');
+    document.getElementById('btnIreDespues').onclick = () => openActionModal('despues');
+    document.getElementById('btnOtrosMedios').onclick = () => openActionModal('otros');
 
     document.getElementById('btnCambiarHorario').onclick = () => {
       isEditing = true;

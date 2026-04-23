@@ -17,6 +17,7 @@ const transportSchedules = [
   { time: "7:00 AM",  route: "Jarabacoa -> La Vega", fullText: "7:00 AM Jarabacoa -> La Vega", group: "manana" },
   { time: "9:00 AM",  route: "Jarabacoa -> La Vega", fullText: "9:00 AM Jarabacoa -> La Vega", group: "manana" },
   { time: "12:10 PM", route: "La Vega -> Jarabacoa", fullText: "12:10 PM La Vega -> Jarabacoa", group: "manana" },
+  { time: "12:10 PM", route: "La Vega -> Jarabacoa", fullText: "12:10 PM La Vega -> Jarabacoa", group: "tarde" },
   { time: "1:00 PM",  route: "Jarabacoa -> La Vega", fullText: "1:00 PM Jarabacoa -> La Vega", group: "tarde" },
   { time: "2:15 PM",  route: "La Vega -> Jarabacoa", fullText: "2:15 PM La Vega -> Jarabacoa", group: "tarde" },
   { time: "3:00 PM",  route: "Jarabacoa -> La Vega", fullText: "3:00 PM Jarabacoa -> La Vega", group: "tarde" },
