@@ -1724,18 +1724,40 @@
 
 
     // ── SESSION CONTROL ──────────────────────────────────────────────────────────
+    // ── RESET TOTAL DEL SISTEMA (PARA PRESENTACIÓN) ──────────────────────────────
     window.clearTodayVotes = async function() {
-      if (!confirm('¿Estás seguro de borrar TODOS los votos de hoy?')) return;
+      const isDeep = confirm('¿Quieres realizar una LIMPIEZA PROFUNDA?\n\n- "Aceptar": Borra Votos, Faltas y Penalidades (Reseteo Total).\n- "Cancelar": Solo borra los votos de hoy.');
+      
       try {
         const today = new Date().toISOString().split('T')[0];
-        const { error } = await supabase.from('votos').delete().eq('fecha', today);
-        if (error) throw error;
-        window.showAdminToast('Datos de hoy eliminados correctamente', 'success');
+        
+        // 1. Borrar Votos de hoy
+        const { error: err1 } = await supabase.from('votos').delete().eq('fecha', today);
+        if (err1) throw err1;
+
+        if (isDeep) {
+          // 2. Borrar todas las Faltas
+          const { error: err2 } = await supabase.from('faltas').delete().neq('id', 0); // Borra todo
+          if (err2) throw err2;
+
+          // 3. Borrar todas las Penalidades
+          const { error: err3 } = await supabase.from('penalidades').delete().neq('id', 0); // Borra todo
+          if (err3) throw err3;
+
+          window.showAdminToast('¡SISTEMA RESETEADO TOTALMENTE!', 'success');
+        } else {
+          window.showAdminToast('Votos de hoy eliminados correctamente', 'success');
+        }
+
+        // Refrescar todas las pantallas abiertas
         if (window.loadAdminData) window.loadAdminData();
         if (window.loadVotosDetail) window.loadVotosDetail();
+        if (window.loadPenalidadesData) window.loadPenalidadesData();
+        if (window.loadAuditData) window.loadAuditData();
+        
       } catch(e) {
-        console.error(e);
-        window.showAdminToast('Error al limpiar datos', 'error');
+        console.error("Reset error:", e);
+        window.showAdminToast('Error en el reseteo', 'error');
       }
     };
 
