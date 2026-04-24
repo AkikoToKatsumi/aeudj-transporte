@@ -587,9 +587,6 @@
         };
 
         console.log('Enviando a:', templateParams.to_email);
-        // Alerta de depuración para ver qué se va a enviar
-        alert('Preparando envío para: ' + templateParams.to_email);
-
         const response = await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, templateParams);
         
         if (response.status === 200) {
