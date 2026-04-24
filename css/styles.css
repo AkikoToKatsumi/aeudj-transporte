@@ -2674,3 +2674,87 @@ input:checked+.slider:before {
     padding: 0.5rem 0.75rem;
   }
 }
+
+/* ============================================
+   USER GREETING PILL
+   ============================================ */
+.user-greeting-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  animation: fadeInDown 0.6s ease-out;
+}
+
+.user-greeting-pill:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.greeting-icon {
+  font-size: 1.1rem;
+}
+
+.greeting-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.greeting-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.greeting-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.greeting-container-votar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+  padding: 0 1rem;
+}
+
+.greeting-container-voluntario {
+  margin-right: auto;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .greeting-container-votar {
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+  
+  .user-greeting-pill {
+    padding: 0.3rem 0.8rem;
+  }
+  
+  .greeting-name {
+    font-size: 0.8rem;
+  }
+}

@@ -141,15 +141,18 @@ function initPage(page) {
  initIndexPage();
  break;
  case 'votar':
+ renderUserGreeting();
  initVotarPage();
  break;
  case 'lista':
  initListaPage();
  break;
  case 'admin':
+ renderUserGreeting();
  initAdminPage();
  break;
  case 'voluntario':
+ renderUserGreeting();
  initVoluntarioPage();
  break;
  case 'gracias':
