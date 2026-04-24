@@ -2003,7 +2003,7 @@ window.notificarAccion = async function(tipo) {
  destinatarios: correos.join(',')
  };
 
- await emailjs.send('service_afofocu', 'template_e2cqbex', templateParams);
+ await emailjs.send('service_afofocu', 'template_ryyejnp', templateParams);
  alert(`Enviado a ${correos.length} personas.`);
  btn.disabled = false;
  } catch(error) {
