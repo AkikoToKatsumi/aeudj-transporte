@@ -1126,7 +1126,20 @@ function initAdminPage() {
  }
  }
  
- async function loadAdminData() {
+  window.clearTodayVotes = async function() {
+    if (!confirm('¿Estás seguro de borrar TODOS los votos de hoy? Esta acción no se puede deshacer.')) return;
+    try {
+      const { error } = await supabase.from('votos').delete().eq('fecha', cycleDate);
+      if (error) throw error;
+      alert('Datos de hoy eliminados correctamente.');
+      loadAdminData();
+    } catch(e) {
+      console.error(e);
+      alert('Error al limpiar datos.');
+    }
+  }
+
+  async function loadAdminData() {
  try {
  const { data: votos, error } = await supabase
  .from('votos')
