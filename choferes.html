@@ -541,14 +541,14 @@
          const cycleDate = getCycleDate();
          const { data: vs, error } = await supabase
            .from('votos')
-           .select('email')
+           .select('email, profiles(email)')
            .eq('fecha', cycleDate)
            .eq('horario', horario)
            .gt('id', 40);
  
          if (error) throw error;
  
-         const emails = (vs || []).map(v => v.email).filter(e => e && e.includes('@'));
+         const emails = (vs || []).map(v => v.email || (v.profiles && v.profiles.email)).filter(e => e && e.includes('@'));
          if (emails.length === 0) {
            throw new Error('No hay correos registrados para este viaje.');
          }

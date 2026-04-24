@@ -704,6 +704,7 @@
           fecha: cycleDate,
           nombre: currentUser.nombre,
           matricula: currentUser.matricula,
+          email: currentUser.email || `${currentUser.matricula}@aeudj.com`
         }));
 
         const { data, error } = await supabase.from('votos').insert(rows).select();
