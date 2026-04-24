@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Choferes - AEUDJ</title>
+  <link rel="icon" href="img/comite.jpg" type="image/jpg">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      min-height: 100vh;
+      background-image: url('img/jarabacoa.webp');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: rgba(10,15,30,0.84);
+      z-index: 0;
+    }
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 2rem 1rem 4rem;
+    }
+
+    /* Nav */
+    .top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.75rem;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 0.9rem;
+      border-radius: 0.6rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: 1px solid;
+      cursor: pointer;
+      background: transparent;
+      transition: all 0.2s;
+    }
+    .nav-btn svg { width: 14px; height: 14px; }
+    .nav-btn.red   { color: #f87171; border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.08); }
+    .nav-btn:hover { filter: brightness(1.2); transform: translateY(-1px); }
+
+    /* Header */
+    header { text-align: center; margin-bottom: 1.75rem; }
+    h1 { font-size: 1.9rem; font-weight: 800; color: #fbbf24; }
+    .subtitle { color: #94a3b8; font-size: 0.95rem; margin-top: 0.35rem; }
+    .date-badge {
+      display: inline-block;
+      margin-top: 0.75rem;
+      background: rgba(251,191,36,0.12);
+      border: 1px solid rgba(251,191,36,0.25);
+      color: #fbbf24;
+      padding: 0.3rem 1rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    /* Stats */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: rgba(15,23,42,0.6);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 0.85rem;
+      padding: 1rem;
+      text-align: center;
+      backdrop-filter: blur(16px);
+    }
+    .stat-num { font-size: 2rem; font-weight: 800; }
+    .stat-label { font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-top: 0.25rem; }
+    .stat-blue   .stat-num { color: #60a5fa; }
+    .stat-orange .stat-num { color: #fb923c; }
+
+    /* Horario section */
+    .horario-section {
+      background: rgba(15,23,42,0.6);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 1.1rem;
+      overflow: hidden;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+      transition: transform 0.2s;
+    }
+    .horario-section:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,0.15);
+    }
+    .horario-header {
+      padding: 1.25rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .horario-title { font-size: 1.1rem; font-weight: 800; color: #f8fafc; margin-bottom: 0.5rem; }
+    
+    .horario-stats {
+      display: flex;
+      gap: 1rem;
+      margin-top: 0.75rem;
+    }
+    
+    .h-stat {
+      flex: 1;
+      background: rgba(0,0,0,0.2);
+      padding: 0.75rem;
+      border-radius: 0.75rem;
+      text-align: center;
+    }
+    .h-stat-num { font-size: 1.5rem; font-weight: 800; }
+    .h-stat-label { font-size: 0.65rem; text-transform: uppercase; font-weight: 700; color: #94a3b8; margin-top: 0.25rem; }
+    
+    .h-stat.confirmados .h-stat-num { color: #34d399; }
+    .h-stat.espera { border: 1px solid rgba(245,158,11,0.2); background: rgba(245,158,11,0.05); }
+    .h-stat.espera .h-stat-num { color: #fbbf24; }
+    
+    .dir-badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    .dir-ida    { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.25); }
+    .dir-vuelta { background: rgba(139,92,246,0.15); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.25); }
+
+    /* Passenger list */
+    .passenger-list-btn {
+      width: 100%;
+      background: rgba(255,255,255,0.03);
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      color: #94a3b8;
+      padding: 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+    .passenger-list-btn:hover {
+      background: rgba(255,255,255,0.06);
+      color: #f8fafc;
+    }
+    .passenger-list-btn svg { transition: transform 0.2s; }
+    .passenger-list-btn.open svg { transform: rotate(180deg); }
+
+    .passenger-list-content {
+      display: none;
+      padding: 0;
+      background: rgba(0,0,0,0.2);
+    }
+    .passenger-list-content.open {
+      display: block;
+    }
+    
+    .p-row {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1.25rem;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      gap: 0.75rem;
+    }
+    .p-row:last-child { border-bottom: none; }
+    .p-num {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; font-weight: 700; color: #94a3b8;
+    }
+    .p-name { flex: 1; font-size: 0.85rem; font-weight: 600; }
+    .badge-espera {
+      font-size: 0.65rem; font-weight: 700;
+      background: rgba(245,158,11,0.15); color: #fbbf24;
+      padding: 0.2rem 0.5rem; border-radius: 999px;
+      border: 1px solid rgba(245,158,11,0.3);
+    }
+
+    /* Empty */
+    .empty-state { text-align: center; padding: 3rem 1.5rem; color: #94a3b8; }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid rgba(251,191,36,0.2);
+      border-top-color: #fbbf24;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .reload-fab {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 10;
+      background: #fbbf24;
+      color: #0f172a;
+      border: none;
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 20px rgba(251,191,36,0.4);
+      transition: all 0.2s;
+    }
+    .reload-fab:hover { transform: scale(1.1); }
+    .reload-fab svg { width: 24px; height: 24px; stroke-width: 2.5; }
+
+  </style>
+</head>
+<body data-page="chofer">
+  <main>
+    <!-- Nav -->
+    <nav class="top-nav">
+      <div></div>
+      <button class="nav-btn red" id="logoutBtn">
+        <i data-lucide="log-out"></i> Cerrar sesión
+      </button>
+    </nav>
+
+    <!-- Header -->
+    <header>
+      <h1>🚌 Panel de Choferes</h1>
+      <p class="subtitle">Resumen de viajes y pasajeros</p>
+      <div class="date-badge" id="fechaBadge">Cargando...</div>
+    </header>
+
+    <!-- Stats -->
+    <div class="stats-bar">
+      <div class="stat-card stat-blue">
+        <div class="stat-num" id="statTotal">0</div>
+        <div class="stat-label">Total Viajeros</div>
+      </div>
+      <div class="stat-card stat-orange">
+        <div class="stat-num" id="statEspera">0</div>
+        <div class="stat-label">En Lista de Espera</div>
+      </div>
+    </div>
+
+    <!-- List -->
+    <div id="listContainer">
+      <div class="empty-state">
+        <div class="spinner"></div>
+        <p style="margin-top:1rem;">Cargando información de viajes...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Reload FAB -->
+  <button class="reload-fab" id="reloadFab" title="Actualizar">
+    <i data-lucide="refresh-cw"></i>
+  </button>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    const SUPABASE_URL = 'https://irjwxegepkznqrisbrys.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyand4ZWdlcGt6bnFyaXNicnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNjk0NDIsImV4cCI6MjA5MTc0NTQ0Mn0.TZOhsy0ghfmjK8rd4GWcgbtOLpERKRJ62mjqc5gaYOM';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const IDA_KEYWORDS = ['Jarabacoa -> La Vega', 'Jarabacoa → La Vega'];
+    function isIda(h) { return IDA_KEYWORDS.some(k => h.includes(k)); }
+    
+    function getCycleDate() {
+      const now = new Date();
+      if (now.getHours() >= 22) {
+        const t = new Date(now); t.setDate(t.getDate()+1);
+        return t.toISOString().split('T')[0];
+      }
+      return now.toISOString().split('T')[0];
+    }
+    
+    function formatDate(d) {
+      const [y,m,day] = d.split('-');
+      const months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+      return `${parseInt(day)} de ${months[parseInt(m)-1]} de ${y}`;
+    }
+
+    // Helper for sorting horarios
+    function horarioAMinutos(horarioStr) {
+      const timeMatch = horarioStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+      if (!timeMatch) return 0;
+      let hours = parseInt(timeMatch[1]);
+      const minutes = parseInt(timeMatch[2]);
+      const period = timeMatch[3].toUpperCase();
+      if (period === 'PM' && hours !== 12) hours += 12;
+      if (period === 'AM' && hours === 12) hours = 0;
+      return hours * 60 + minutes;
+    }
+
+    let currentUser = null;
+    try {
+      const raw = localStorage.getItem('aeudj_user');
+      if (raw && raw !== 'undefined') currentUser = JSON.parse(raw);
+    } catch(e) {}
+
+    if (!currentUser || (currentUser.rol !== 'chofer' && currentUser.rol !== 'admin_chofer' && currentUser.rol !== 'administrador' && currentUser.rol !== 'desarrolladora')) {
+      window.location.href = 'index.html';
+    }
+
+    document.getElementById('logoutBtn').onclick = () => { 
+      localStorage.clear(); 
+      window.location.href = 'index.html'; 
+    };
+
+    async function loadData() {
+      const cycleDate = getCycleDate();
+      document.getElementById('fechaBadge').textContent = formatDate(cycleDate);
+      const container = document.getElementById('listContainer');
+      container.innerHTML = '<div class="empty-state"><div class="spinner"></div><p style="margin-top:1rem;">Actualizando...</p></div>';
+
+      try {
+        const { data: votos, error } = await supabase
+          .from('votos')
+          .select('*')
+          .eq('fecha', cycleDate)
+          .gt('id', 40)
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
+        
+        let totalViajeros = 0;
+        let totalEspera = 0;
+        const groups = {};
+
+        (votos || []).forEach(v => {
+          totalViajeros++;
+          if (v.en_espera) totalEspera++;
+          
+          if (!groups[v.horario]) {
+            groups[v.horario] = { confirmados: [], espera: [] };
+          }
+          if (v.en_espera) {
+            groups[v.horario].espera.push(v);
+          } else {
+            groups[v.horario].confirmados.push(v);
+          }
+        });
+
+        document.getElementById('statTotal').textContent = totalViajeros;
+        document.getElementById('statEspera').textContent = totalEspera;
+
+        container.innerHTML = '';
+
+        if (Object.keys(groups).length === 0) {
+          container.innerHTML = '<div class="empty-state"><p>No hay pasajeros registrados para hoy.</p></div>';
+          return;
+        }
+
+        // Ordenar horarios
+        const sortedHorarios = Object.keys(groups).sort((a, b) => horarioAMinutos(a) - horarioAMinutos(b));
+
+        sortedHorarios.forEach(horario => {
+          const group = groups[horario];
+          const ida = isIda(horario);
+          
+          const section = document.createElement('div');
+          section.className = 'horario-section';
+
+          const numConfirmados = group.confirmados.length;
+          const numEspera = group.espera.length;
+          const totalInHorario = numConfirmados + numEspera;
+
+          // Combine and sort passengers if expanded
+          const allPassengers = [...group.confirmados, ...group.espera];
+
+          let passengerHtml = '';
+          allPassengers.forEach((p, idx) => {
+            passengerHtml += `
+              <div class="p-row">
+                <div class="p-num">${idx + 1}</div>
+                <div class="p-name ${p.en_espera ? 'text-amber-400' : 'text-slate-200'}">${p.nombre || 'Sin nombre'}</div>
+                ${p.en_espera ? '<div class="badge-espera">Lista de Espera</div>' : ''}
+              </div>
+            `;
+          });
+
+          section.innerHTML = `
+            <div class="horario-header">
+              <span class="dir-badge ${ida ? 'dir-ida' : 'dir-vuelta'}">${ida ? '↗ Salida' : '↙ Regreso'}</span>
+              <div class="horario-title">${horario}</div>
+              
+              <div class="horario-stats">
+                <div class="h-stat confirmados">
+                  <div class="h-stat-num">${numConfirmados}</div>
+                  <div class="h-stat-label">Confirmados</div>
+                </div>
+                <div class="h-stat ${numEspera > 0 ? 'espera' : ''}">
+                  <div class="h-stat-num">${numEspera}</div>
+                  <div class="h-stat-label">En Espera</div>
+                </div>
+              </div>
+            </div>
+            ${allPassengers.length > 0 ? `
+            <button class="passenger-list-btn" onclick="this.classList.toggle('open'); this.nextElementSibling.classList.toggle('open');">
+              Ver Pasajeros <i data-lucide="chevron-down"></i>
+            </button>
+            <div class="passenger-list-content">
+              ${passengerHtml}
+            </div>
+            ` : ''}
+          `;
+
+          container.appendChild(section);
+        });
+
+        if (window.lucide) window.lucide.createIcons();
+      } catch(err) {
+        container.innerHTML = `<div class="empty-state"><p style="color:#f87171;">Error: ${err.message}</p></div>`;
+      }
+    }
+
+    document.getElementById('reloadFab').onclick = loadData;
+
+    // Realtime
+    supabase
+      .channel('votos-chofer')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'votos' },
+        () => { loadData(); }
+      )
+      .subscribe();
+
+    if (window.lucide) window.lucide.createIcons();
+    loadData();
+  </script>
+</body>
+</html>

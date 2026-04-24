@@ -64,7 +64,10 @@ async function initApp() {
       }
 
       if (page === 'index' && currentUser) {
-        window.location.href = 'votar.html';
+        if (currentUser.rol === 'chofer' || currentUser.rol === 'admin_chofer') {
+        } else {
+          window.location.href = 'votar.html';
+        }
       }
 
       if (!pageInitialized && page) {
@@ -73,7 +76,7 @@ async function initApp() {
       }
     } else {
       clearSession();
-      if (['votar', 'cambios', 'admin', 'voluntario'].includes(page)) {
+      if (['votar', 'cambios', 'admin', 'voluntario', 'chofer'].includes(page)) {
         window.location.href = 'index.html';
       }
     }
@@ -173,8 +176,12 @@ function initPage(page) {
 function initIndexPage() {
  refreshIcons();
  if (currentUser) {
- window.location.href = 'votar.html';
- return;
+   if (currentUser.rol === 'chofer' || currentUser.rol === 'admin_chofer') {
+     window.location.href = 'chofer.html';
+   } else {
+     window.location.href = 'votar.html';
+   }
+   return;
  }
  
  const loginForm = document.getElementById('loginForm');
@@ -316,8 +323,17 @@ function initIndexPage() {
  supabase.from('profiles').update({ rol: 'desarrolladora' }).eq('id', user.id).then();
  }
  
+ if (userData.matricula === '1111' && userData.rol !== 'chofer') {
+ userData.rol = 'chofer';
+ supabase.from('profiles').update({ rol: 'chofer' }).eq('id', user.id).then();
+ }
+ 
  setSession(userData);
- window.location.href = 'votar.html';
+ if (userData.rol === 'chofer' || userData.rol === 'admin_chofer') {
+   window.location.href = 'chofer.html';
+ } else {
+   window.location.href = 'votar.html';
+ }
  } else {
  showError('Credenciales correctas, pero no se encontraron datos de usuario en la base de datos.');
  }
@@ -396,7 +412,7 @@ function initIndexPage() {
  telefono,
  email,
  universidad,
- rol: matricula === '0000' ? 'administrador' : (matricula === '20230105' ? 'desarrolladora' : 'estudiante')
+ rol: matricula === '0000' ? 'administrador' : (matricula === '20230105' ? 'desarrolladora' : (matricula === '1111' ? 'chofer' : 'estudiante'))
  };
  
  // Guardar en tabla de perfiles
@@ -404,7 +420,11 @@ function initIndexPage() {
  if (profileErr) throw profileErr;
  
  setSession(newUser);
- window.location.href = 'votar.html';
+ if (newUser.rol === 'chofer' || newUser.rol === 'admin_chofer') {
+   window.location.href = 'chofer.html';
+ } else {
+   window.location.href = 'votar.html';
+ }
  
  } catch (error) {
  console.error('Error:', error);
