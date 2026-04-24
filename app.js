@@ -1976,8 +1976,7 @@ function hashString(str) {
 window.logout = logout;
 window.notificarAccion = async function(tipo) {
  if (!currentUser || !currentUser.rol.includes('')) return;
- if (!confirm(`Ests seguro/a de enviar la notificacin?`)) return;
-
+ 
  try {
  const btn = event.target;
  btn.disabled = true;
@@ -2004,7 +2003,7 @@ window.notificarAccion = async function(tipo) {
  };
 
  await emailjs.send('service_afofocu', 'template_ryyejnp', templateParams);
- alert(`Enviado a ${correos.length} personas.`);
+ console.log(`Enviado a ${correos.length} personas.`);
  btn.disabled = false;
  } catch(error) {
  console.error(error);
