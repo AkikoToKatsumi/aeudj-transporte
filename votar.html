@@ -667,9 +667,17 @@
         if (error) throw error;
 
         if (data && data.length > 0) {
-          initialVotes = data;
-          selectedHorarios = data.map(v => v.horario);
-          showConfirmed(data);
+          // Filtrar solo los viajes que aún no se han pasado (donde se_monto es null)
+          const pendingVotes = data.filter(v => v.se_monto === null);
+          
+          if (pendingVotes.length > 0) {
+            initialVotes = data;
+            selectedHorarios = data.map(v => v.horario);
+            showConfirmed(pendingVotes);
+          } else {
+            // Si ya viajó en todos sus horarios, mostrar el formulario (para el próximo ciclo)
+            showForm();
+          }
         } else {
           showForm();
         }
