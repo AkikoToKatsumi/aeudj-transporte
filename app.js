@@ -65,6 +65,7 @@ async function initApp() {
 
       if (page === 'index' && currentUser) {
         if (currentUser.rol === 'chofer' || currentUser.rol === 'admin_chofer') {
+          window.location.href = 'choferes.html';
         } else {
           window.location.href = 'votar.html';
         }
@@ -76,7 +77,7 @@ async function initApp() {
       }
     } else {
       clearSession();
-      if (['votar', 'cambios', 'admin', 'voluntario', 'chofer'].includes(page)) {
+      if (['votar', 'cambios', 'admin', 'voluntario', 'choferes'].includes(page)) {
         window.location.href = 'index.html';
       }
     }
@@ -177,7 +178,7 @@ function initIndexPage() {
  refreshIcons();
  if (currentUser) {
    if (currentUser.rol === 'chofer' || currentUser.rol === 'admin_chofer') {
-     window.location.href = 'chofer.html';
+     window.location.href = 'choferes.html';
    } else {
      window.location.href = 'votar.html';
    }
@@ -290,17 +291,40 @@ function initIndexPage() {
  password: pass
  });
 
- if (authResult.error) {
- // Intentar con email real si existe en el perfil
- if (userDataLocal && userDataLocal.email) {
- authResult = await supabase.auth.signInWithPassword({
- email: userDataLocal.email,
- password: pass
- });
- }
- }
-
- if (authResult.error) throw authResult.error;
+  if (authResult.error) {
+    // CASO ESPECIAL: Si es la cuenta maestra de choferes y falla el login, intentamos crearla automáticamente
+    if (userInput.toLowerCase() === 'choferes' && pass === 'choferes2025') {
+      const pseudoEmail = 'choferes@aeudj.com';
+      const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
+        email: pseudoEmail,
+        password: pass
+      });
+      
+      if (!signUpErr && signUpData.user) {
+        const newUser = {
+          id: signUpData.user.id,
+          matricula: 'choferes',
+          nombre: 'Choferes',
+          rol: 'chofer',
+          universidad: 'General'
+        };
+        await supabase.from('profiles').insert(newUser);
+        authResult = { data: signUpData, error: null };
+      } else {
+        throw authResult.error;
+      }
+    } else {
+      // Intentar con email real si existe en el perfil
+      if (userDataLocal && userDataLocal.email) {
+        authResult = await supabase.auth.signInWithPassword({
+          email: userDataLocal.email,
+          password: pass
+        });
+      }
+      
+      if (authResult.error) throw authResult.error;
+    }
+  }
  
  const user = authResult.data.user;
  
@@ -323,14 +347,14 @@ function initIndexPage() {
  supabase.from('profiles').update({ rol: 'desarrolladora' }).eq('id', user.id).then();
  }
  
- if (userData.matricula === '1111' && userData.rol !== 'chofer') {
+ if ((userData.matricula.toLowerCase() === 'choferes' || userData.nombre.toLowerCase() === 'choferes' || pass === 'choferes2025') && userData.rol !== 'chofer') {
  userData.rol = 'chofer';
  supabase.from('profiles').update({ rol: 'chofer' }).eq('id', user.id).then();
  }
  
  setSession(userData);
  if (userData.rol === 'chofer' || userData.rol === 'admin_chofer') {
-   window.location.href = 'chofer.html';
+   window.location.href = 'choferes.html';
  } else {
    window.location.href = 'votar.html';
  }
@@ -412,7 +436,7 @@ function initIndexPage() {
  telefono,
  email,
  universidad,
- rol: matricula === '0000' ? 'administrador' : (matricula === '20230105' ? 'desarrolladora' : (matricula === '1111' ? 'chofer' : 'estudiante'))
+ rol: (matricula.toLowerCase() === 'choferes') ? 'chofer' : (matricula === '0000' ? 'administrador' : (matricula === '20230105' ? 'desarrolladora' : 'estudiante'))
  };
  
  // Guardar en tabla de perfiles
@@ -421,7 +445,7 @@ function initIndexPage() {
  
  setSession(newUser);
  if (newUser.rol === 'chofer' || newUser.rol === 'admin_chofer') {
-   window.location.href = 'chofer.html';
+   window.location.href = 'choferes.html';
  } else {
    window.location.href = 'votar.html';
  }

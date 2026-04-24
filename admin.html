@@ -450,6 +450,13 @@
               <div class="staff-stat-lbl">Estudiantes</div>
             </div>
           </div>
+          <div class="staff-stat-card">
+            <div class="staff-stat-icon indigo">🚌</div>
+            <div>
+              <div class="staff-stat-num" id="staff-count-chofer">0</div>
+              <div class="staff-stat-lbl">Choferes</div>
+            </div>
+          </div>
         </div>
 
         <!-- CONTENT GRID -->
@@ -470,6 +477,7 @@
               <button class="staff-filter-tab" id="tab-administrador" onclick="window.setStaffFilterNew('administrador')">Admins <span style="opacity:.6;margin-left:4px" id="tab-count-admin">0</span></button>
               <button class="staff-filter-tab" id="tab-voluntario" onclick="window.setStaffFilterNew('voluntario')">Voluntarios <span style="opacity:.6;margin-left:4px" id="tab-count-voluntario">0</span></button>
               <button class="staff-filter-tab" id="tab-estudiante" onclick="window.setStaffFilterNew('estudiante')">Estudiantes <span style="opacity:.6;margin-left:4px" id="tab-count-estudiante">0</span></button>
+              <button class="staff-filter-tab" id="tab-chofer" onclick="window.setStaffFilterNew('chofer')">Choferes <span style="opacity:.6;margin-left:4px" id="tab-count-chofer">0</span></button>
             </div>
 
             <div class="staff-table-container custom-scroll">
@@ -528,6 +536,7 @@
                   <option value="voluntario, comité">Voluntario (Miembro del Comité)</option>
                   <option value="administrador">Administrador</option>
                   <option value="administrador, comité">Administrador (Miembro del Comité)</option>
+                  <option value="chofer">Chofer</option>
                 </select>
               </div>
 
@@ -596,6 +605,7 @@
                   <option value="voluntario, comité">Voluntario (Miembro del Comité)</option>
                   <option value="administrador">Administrador</option>
                   <option value="administrador, comité">Administrador (Miembro del Comité)</option>
+                  <option value="chofer">Chofer</option>
                 </select>
               </div>
             </div>
@@ -1218,14 +1228,16 @@
         if (elTab) elTab.textContent = count;
       };
 
-      const admins = staffData.filter(u => u.rol === 'administrador').length;
-      const vols = staffData.filter(u => u.rol === 'voluntario').length;
-      const ests = staffData.filter(u => u.rol === 'estudiante').length;
+      const admins = staffData.filter(u => (u.rol || '').toLowerCase().includes('administrador')).length;
+      const vols = staffData.filter(u => (u.rol || '').toLowerCase().includes('voluntario')).length;
+      const ests = staffData.filter(u => (u.rol || '').toLowerCase().includes('estudiante')).length;
+      const choferes = staffData.filter(u => (u.rol || '').toLowerCase().includes('chofer')).length;
 
       setTotal('staff-count-todos', 'tab-count-todos', staffData.length);
       setTotal('staff-count-admin', 'tab-count-admin', admins);
       setTotal('staff-count-voluntario', 'tab-count-voluntario', vols);
       setTotal('staff-count-estudiante', 'tab-count-estudiante', ests);
+      setTotal('staff-count-chofer', 'tab-count-chofer', choferes);
       
       const dateLbl = document.getElementById('staff-current-date');
       if(dateLbl) {
@@ -1295,6 +1307,7 @@
         const rolText = (u.rol || '').toLowerCase();
         if(rolText.includes('administrador')) { badgeClass = 'staff-badge-amber'; badgeLabel = 'Admin'; icon = '🛡️'; }
         else if(rolText.includes('voluntario')) { badgeClass = 'staff-badge-blue'; badgeLabel = 'Voluntario'; icon = '🙋'; }
+        else if(rolText.includes('chofer')) { badgeClass = 'staff-badge-indigo'; badgeLabel = 'Chofer'; icon = '🚌'; }
 
         const esComite = rolText.includes('comité') || rolText.includes('comite') || rolText.includes('miembro');
         const comiteBadge = esComite ? `<span style="background:rgba(236,72,153,0.15); color:#f472b6; padding:0.15rem 0.4rem; border-radius:0.3rem; font-size:0.65rem; font-weight:800; border:1px solid rgba(236,72,153,0.3); margin-top:0.3rem; display:inline-flex; align-items:center; gap:0.2rem;"><i data-lucide="star" style="width:10px;height:10px;"></i> COMITÉ</span>` : '';
@@ -1335,6 +1348,7 @@
                    <option value="voluntario, comité" ${rolText.includes('comit') && rolText.includes('voluntario') ? 'selected' : ''}>Voluntario (Comité)</option>
                    <option value="administrador" ${!rolText.includes('comit') && rolText.includes('administrador') ? 'selected' : ''}>Administrador</option>
                    <option value="administrador, comité" ${rolText.includes('comit') && rolText.includes('administrador') ? 'selected' : ''}>Administrador (Comité)</option>
+                   <option value="chofer" ${rolText.includes('chofer') ? 'selected' : ''}>Chofer</option>
                  </select>
               </div>
             </td>
