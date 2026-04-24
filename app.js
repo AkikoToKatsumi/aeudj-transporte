@@ -598,18 +598,28 @@ function initVotarPage() {
   });
 
  
- function renderHorarios() {
- scheduleGrid.innerHTML = '';
- 
- // Nueva lgica de visibilidad por grupos
- const ahora = new Date();
- const hora = ahora.getHours();
- 
- // Grupo Manana: 10 PM a 9:59 AM
- // Grupo Tarde: 10 AM a 9:59 PM
- const currentGroup = (hora >= 22 || hora < 10) ? 'manana' : 'tarde';
- 
- const visibleSchedules = transportSchedules.filter(s => s.group === currentGroup);
+  async function renderHorarios() {
+    if (!scheduleGrid) return;
+    scheduleGrid.innerHTML = '<div class="col-span-full text-center py-10 opacity-50">Cargando horarios...</div>';
+    
+    // Nueva lógica de visibilidad por grupos
+    const ahora = new Date();
+    const hora = ahora.getHours();
+    
+    // 1. Intentar obtener configuración forzada desde Supabase
+    let currentGroup = (hora >= 22 || hora < 10) ? 'manana' : 'tarde';
+    try {
+      const { data: config } = await supabase.from('voting_config').select('*').eq('id', 1).single();
+      if (config && config.manual_override) {
+        currentGroup = config.active_session;
+        console.log("Sesión forzada por Admin:", currentGroup);
+      }
+    } catch(e) {
+      console.warn("Usando detección automática de sesión");
+    }
+
+    scheduleGrid.innerHTML = '';
+    const visibleSchedules = transportSchedules.filter(s => s.group === currentGroup);
  
   visibleSchedules.forEach(schedule => {
   const direction = schedule.route.includes('Jarabacoa -> La Vega') ? 'ida' : 'vuelta';
@@ -1126,6 +1136,37 @@ function initAdminPage() {
  }
  }
  
+  // --- LÓGICA DE CONTROL DE SESIÓN (FORZADO) ---
+  window.initAdminPage = function() {
+    initSessionToggle(); // Inicializar el interruptor
+    loadAdminData();
+    refreshIcons();
+  };
+  
+  window.initSessionToggle = function() {
+    const toggle = document.getElementById('sessionOverrideToggle');
+    if (!toggle) return;
+
+    // Cargar estado inicial
+    const override = localStorage.getItem('aeudj_session_override');
+    toggle.checked = (override === 'tarde');
+    updateSessionUI(toggle.checked);
+
+    toggle.addEventListener('change', (e) => {
+      const isTarde = e.target.checked;
+      localStorage.setItem('aeudj_session_override', isTarde ? 'tarde' : 'manana');
+      updateSessionUI(isTarde);
+      showAdminToast(`Sesión forzada a: ${isTarde ? 'Vespertina' : 'Matutina'}`, 'info');
+    });
+  };
+
+  function updateSessionUI(isTarde) {
+    const display = document.getElementById('sessionDisplay');
+    const status = document.getElementById('sessionStatusText');
+    if (display) display.innerHTML = isTarde ? '🌙 Vespertina' : '☀️ Matutina';
+    if (status) status.innerHTML = 'MODO MANUAL (FORZADO)';
+  }
+
   window.clearTodayVotes = async function() {
     if (!confirm('¿Estás seguro de borrar TODOS los votos de hoy? Esta acción no se puede deshacer.')) return;
     try {
@@ -1137,7 +1178,7 @@ function initAdminPage() {
       console.error(e);
       alert('Error al limpiar datos.');
     }
-  }
+  };
 
   async function loadAdminData() {
  try {

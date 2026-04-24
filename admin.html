@@ -916,11 +916,31 @@
     };
 
     async function loadDashboardData() {
-      const today = new Date().toISOString().split('T')[0];
-      const { data: votos, error } = await supabase.from('votos').select('*').eq('fecha', today).gt('id', 40).order('horario');
-      
-      if (error) { console.error(error); return; }
-      currentVotos = votos;
+      try {
+        const today = new Date().toISOString().split('T')[0];
+
+        // --- LÓGICA DE SESIÓN (Banner) ---
+        const { data: config } = await supabase.from('voting_config').select('*').eq('id', 1).single();
+        const ahora = new Date();
+        const hora = ahora.getHours();
+        
+        let currentSession = (hora >= 22 || hora < 10) ? 'manana' : 'tarde';
+        let isManual = false;
+        
+        if (config && config.manual_override) {
+          currentSession = config.active_session;
+          isManual = true;
+        }
+
+        const display = document.getElementById('sessionDisplay');
+        const statusText = document.getElementById('sessionStatusText');
+        if (display) display.innerHTML = (currentSession === 'tarde') ? '🌙 Vespertina' : '☀️ Matutina';
+        if (statusText) statusText.textContent = isManual ? 'MODO: MANUAL (FORZADO)' : 'MODO: AUTOMÁTICO';
+        // -------------------------------
+
+        const { data: votos, error } = await supabase.from('votos').select('*').eq('fecha', today).gt('id', 40).order('horario');
+        if (error) throw error;
+        currentVotos = votos;
 
       let total = 0;
       let espera = 0;
@@ -1010,6 +1030,9 @@
         });
       }
       if (window.lucide) window.lucide.createIcons();
+      } catch(e) {
+        console.error("Dashboard Load Error:", e);
+      }
     }
 
     function renderDashboardChart(timeGroups) {
@@ -1698,39 +1721,63 @@
       });
     }
 
+
+
     // ── SESSION CONTROL ──────────────────────────────────────────────────────────
+    window.clearTodayVotes = async function() {
+      if (!confirm('¿Estás seguro de borrar TODOS los votos de hoy?')) return;
+      try {
+        const today = new Date().toISOString().split('T')[0];
+        const { error } = await supabase.from('votos').delete().eq('fecha', today);
+        if (error) throw error;
+        window.showAdminToast('Datos de hoy eliminados correctamente', 'success');
+        if (window.loadAdminData) window.loadAdminData();
+        if (window.loadVotosDetail) window.loadVotosDetail();
+      } catch(e) {
+        console.error(e);
+        window.showAdminToast('Error al limpiar datos', 'error');
+      }
+    };
+
     async function initSessionControl() {
       const toggle = document.getElementById('sessionOverrideToggle');
-      const select = document.getElementById('sessionManualSelect');
-      const status = document.getElementById('sessionStatusText');
+      const display = document.getElementById('sessionDisplay');
+      const statusText = document.getElementById('sessionStatusText');
 
-      try {
-        const { data } = await supabase.from('voting_config').select('*').eq('id', 1).single();
-        if (data) {
-          toggle.checked = data.manual_override;
-          select.value = data.active_session || 'manana';
-          select.disabled = !data.manual_override;
-          status.textContent = data.manual_override ? 'Modo: MANUAL (Forzado)' : 'Modo: AUTOMÁTICO (Hora)';
-          status.className = `text-[10px] mt-2 ${data.manual_override ? 'text-purple-400' : 'text-gray-500'}`;
-        }
-      } catch(e) { console.error('Error loading session config:', e); }
+      if (!toggle) return;
+
+      // Cargar estado desde Supabase o LocalStorage como respaldo para la demo
+      const { data } = await supabase.from('voting_config').select('*').eq('id', 1).single();
+      
+      const isManual = data ? data.manual_override : (localStorage.getItem('aeudj_manual_session') === 'true');
+      const session = data ? data.active_session : (localStorage.getItem('aeudj_active_session') || 'manana');
+
+      toggle.checked = (session === 'tarde');
+      if (statusText) statusText.textContent = isManual ? 'MODO: MANUAL (FORZADO)' : 'MODO: AUTOMÁTICO';
+      if (display) display.innerHTML = (session === 'tarde') ? '🌙 Vespertina' : '☀️ Matutina';
 
       toggle.onchange = async () => {
-        const manual = toggle.checked;
-        select.disabled = !manual;
-        status.textContent = manual ? 'Modo: MANUAL (Forzado)' : 'Modo: AUTOMÁTICO (Hora)';
-        status.className = `text-[10px] mt-2 ${manual ? 'text-purple-400' : 'text-gray-500'}`;
+        const isTarde = toggle.checked;
+        const newSession = isTarde ? 'tarde' : 'manana';
         
-        await supabase.from('voting_config').update({ 
-          manual_override: manual,
-          active_session: select.value 
-        }).eq('id', 1);
-      };
+        if (display) display.innerHTML = isTarde ? '🌙 Vespertina' : '☀️ Matutina';
+        if (statusText) statusText.textContent = 'MODO: MANUAL (FORZADO)';
+        
+        // Guardar localmente para efecto inmediato en el mismo navegador (demo)
+        localStorage.setItem('aeudj_manual_session', 'true');
+        localStorage.setItem('aeudj_active_session', newSession);
 
-      select.onchange = async () => {
-        await supabase.from('voting_config').update({ 
-          active_session: select.value 
-        }).eq('id', 1);
+        // Guardar en Supabase para todos los estudiantes
+        try {
+          await supabase.from('voting_config').upsert({ 
+            id: 1,
+            manual_override: true,
+            active_session: newSession 
+          });
+          window.showAdminToast(`Sesión forzada a ${isTarde ? 'Vespertina' : 'Matutina'}`, 'info');
+        } catch(e) {
+          console.error("Error saving config:", e);
+        }
       };
     }
 
