@@ -552,8 +552,10 @@
         // 2. Coleccionar emails de los votos
         let emails = (vs || []).map(v => v.email).filter(e => e && e.includes('@'));
 
-        // 3. Si faltan emails, buscarlos en perfiles por usuario_id
-        const missingUserIds = (vs || []).filter(v => !v.email || !v.email.includes('@')).map(v => v.usuario_id);
+        // 3. Si faltan emails, buscarlos en perfiles por usuario_id (solo si el ID es válido)
+        const missingUserIds = (vs || [])
+          .filter(v => (!v.email || !v.email.includes('@')) && v.usuario_id)
+          .map(v => v.usuario_id);
         
         if (missingUserIds.length > 0) {
           const { data: profs } = await supabase
@@ -569,32 +571,40 @@
         }
 
         if (emails.length === 0) {
-          throw new Error('No se encontraron correos para este viaje.');
+          throw new Error('No se encontraron correos para este viaje. Verifica que los estudiantes tengan su correo en su perfil.');
         }
- 
-         const messages = {
-           camino: { titulo: "🚌 El autobús va hacia la parada", msg: "Te informamos que el autobús ya está en camino hacia el punto de recogida para el viaje de las " + horario + "." },
-           llego:  { titulo: "📍 El autobús ha llegado", msg: "¡Atención! El autobús del horario " + horario + " ya se encuentra en la parada. Por favor, acércate." },
-           sale:   { titulo: "🚀 El autobús está saliendo", msg: "Última llamada: El autobús del horario " + horario + " está por salir o acaba de salir de la parada." }
-         };
- 
-         const templateParams = {
-           titulo: messages[tipo].titulo,
-           mensaje: messages[tipo].msg,
-           destinatarios: emails.join(',')
-         };
- 
-         await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, templateParams);
-         showToast(`Notificación enviada a ${emails.length} estudiantes`);
- 
-       } catch(err) {
-         console.error(err);
-         showToast(err.message, 'error');
-       } finally {
-         btn.innerHTML = ogText;
-         btn.disabled = false;
-         if (window.lucide) window.lucide.createIcons();
-       }
+
+        const messages = {
+          camino: { titulo: "🚌 El autobús va hacia la parada", msg: "Te informamos que el autobús ya está en camino hacia el punto de recogida para el viaje de las " + horario + "." },
+          llego:  { titulo: "📍 El autobús ha llegado", msg: "¡Atención! El autobús del horario " + horario + " ya se encuentra en la parada. Por favor, acércate." },
+          sale:   { titulo: "🚀 El autobús está saliendo", msg: "Última llamada: El autobús del horario " + horario + " está por salir o acaba de salir de la parada." }
+        };
+
+        const templateParams = {
+          titulo: messages[tipo].titulo,
+          mensaje: messages[tipo].msg,
+          destinatarios: emails.join(',')
+        };
+
+        console.log('Enviando a:', emails.join(','));
+        const response = await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, templateParams);
+        
+        if (response.status === 200) {
+          showToast(`✅ Enviado a ${emails.length} personas`);
+        } else {
+          throw new Error('Respuesta inesperada de EmailJS');
+        }
+
+      } catch(err) {
+        console.error('Error detallado:', err);
+        const errorMsg = err.text || err.message || 'Error desconocido';
+        alert('Detalle del error: ' + errorMsg);
+        showToast('Error en el envío', 'error');
+      } finally {
+        btn.innerHTML = ogText;
+        btn.disabled = false;
+        if (window.lucide) window.lucide.createIcons();
+      }
     };
  
     window.sendWhatsAppNotification = (horario, btn) => {
