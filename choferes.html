@@ -538,20 +538,39 @@
        if (window.lucide) window.lucide.createIcons();
  
        try {
-         const cycleDate = getCycleDate();
-         const { data: vs, error } = await supabase
-           .from('votos')
-           .select('email, profiles(email)')
-           .eq('fecha', cycleDate)
-           .eq('horario', horario)
-           .gt('id', 40);
- 
-         if (error) throw error;
- 
-         const emails = (vs || []).map(v => v.email || (v.profiles && v.profiles.email)).filter(e => e && e.includes('@'));
-         if (emails.length === 0) {
-           throw new Error('No hay correos registrados para este viaje.');
-         }
+        const cycleDate = getCycleDate();
+        // 1. Obtener votos del horario
+        const { data: vs, error: errVotos } = await supabase
+          .from('votos')
+          .select('email, usuario_id')
+          .eq('fecha', cycleDate)
+          .eq('horario', horario)
+          .gt('id', 40);
+
+        if (errVotos) throw errVotos;
+
+        // 2. Coleccionar emails de los votos
+        let emails = (vs || []).map(v => v.email).filter(e => e && e.includes('@'));
+
+        // 3. Si faltan emails, buscarlos en perfiles por usuario_id
+        const missingUserIds = (vs || []).filter(v => !v.email || !v.email.includes('@')).map(v => v.usuario_id);
+        
+        if (missingUserIds.length > 0) {
+          const { data: profs } = await supabase
+            .from('profiles')
+            .select('email')
+            .in('id', missingUserIds);
+          
+          if (profs) {
+            profs.forEach(p => {
+              if (p.email && !emails.includes(p.email)) emails.push(p.email);
+            });
+          }
+        }
+
+        if (emails.length === 0) {
+          throw new Error('No se encontraron correos para este viaje.');
+        }
  
          const messages = {
            camino: { titulo: "🚌 El autobús va hacia la parada", msg: "Te informamos que el autobús ya está en camino hacia el punto de recogida para el viaje de las " + horario + "." },
