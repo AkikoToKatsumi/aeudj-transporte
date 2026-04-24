@@ -69,6 +69,11 @@ body::after {
   pointer-events: none;
 }
 
+/* Fondo personalizado para el Login */
+body[data-page="index"]::after {
+  background: linear-gradient(rgba(15, 23, 42, 0.5), rgba(15, 23, 42, 0.7)), url('../img/login-bg.png');
+}
+
 body::before {
   content: '';
   position: absolute;
