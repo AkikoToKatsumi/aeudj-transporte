@@ -6,6 +6,7 @@
   <title>Panel de Choferes - AEUDJ</title>
   <link rel="icon" href="img/comite.jpg" type="image/jpg">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -236,6 +237,62 @@
     .reload-fab:hover { transform: scale(1.1); }
     .reload-fab svg { width: 24px; height: 24px; stroke-width: 2.5; }
 
+    /* Notification Buttons */
+    .notify-bar {
+       display: flex;
+       gap: 0.5rem;
+       padding: 0.75rem 1.25rem;
+       background: rgba(16, 185, 129, 0.05);
+       border-top: 1px solid rgba(255, 255, 255, 0.05);
+       overflow-x: auto;
+       scrollbar-width: none;
+    }
+    .notify-bar::-webkit-scrollbar { display: none; }
+    .notify-btn {
+       white-space: nowrap;
+       padding: 0.4rem 0.8rem;
+       border-radius: 999px;
+       font-size: 0.7rem;
+       font-weight: 700;
+       border: 1px solid rgba(52, 211, 153, 0.3);
+       background: rgba(52, 211, 153, 0.1);
+       color: #34d399;
+       cursor: pointer;
+       transition: all 0.2s;
+       display: flex;
+       align-items: center;
+       gap: 0.3rem;
+    }
+    .notify-btn:hover { background: rgba(52, 211, 153, 0.2); transform: translateY(-1px); }
+    .notify-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    .notify-btn.whatsapp {
+       background: rgba(37, 211, 102, 0.1);
+       border-color: rgba(37, 211, 102, 0.3);
+       color: #25d366;
+    }
+    .notify-btn.whatsapp:hover { background: rgba(37, 211, 102, 0.2); }
+     
+    .toast {
+       position: fixed;
+       top: 1.5rem;
+       left: 50%;
+       transform: translateX(-50%) translateY(-20px);
+       background: #10b981;
+       color: white;
+       padding: 0.75rem 1.5rem;
+       border-radius: 999px;
+       font-weight: 700;
+       font-size: 0.9rem;
+       box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+       z-index: 1000;
+       opacity: 0;
+       transition: all 0.3s;
+       pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.error { background: #ef4444; }
+
   </style>
 </head>
 <body data-page="choferes">
@@ -275,6 +332,8 @@
       </div>
     </div>
   </main>
+  
+  <div class="toast" id="toast"></div>
 
   <!-- Reload FAB -->
   <button class="reload-fab" id="reloadFab" title="Actualizar">
@@ -286,6 +345,12 @@
     const SUPABASE_URL = 'https://irjwxegepkznqrisbrys.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyand4ZWdlcGt6bnFyaXNicnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNjk0NDIsImV4cCI6MjA5MTc0NTQ0Mn0.TZOhsy0ghfmjK8rd4GWcgbtOLpERKRJ62mjqc5gaYOM';
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // EmailJS
+    const EMAILJS_SERVICE  = 'service_afofocu';
+    const EMAILJS_TEMPLATE = 'template_e2cqbex';
+    const EMAILJS_PUBLIC   = 'nFSfa8vIE5hozX8Ok';
+    if (window.emailjs) emailjs.init(EMAILJS_PUBLIC);
 
     const IDA_KEYWORDS = ['Jarabacoa -> La Vega', 'Jarabacoa → La Vega'];
     function isIda(h) { return IDA_KEYWORDS.some(k => h.includes(k)); }
@@ -303,6 +368,13 @@
       const [y,m,day] = d.split('-');
       const months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
       return `${parseInt(day)} de ${months[parseInt(m)-1]} de ${y}`;
+    }
+
+    function showToast(msg, type = 'success') {
+       const t = document.getElementById('toast');
+       t.textContent = msg;
+       t.className = `toast show ${type === 'error' ? 'error' : ''}`;
+       setTimeout(() => t.classList.remove('show'), 3000);
     }
 
     // Helper for sorting horarios
@@ -353,17 +425,26 @@
         const groups = {};
 
         (votos || []).forEach(v => {
-          totalViajeros++;
-          if (v.en_espera) totalEspera++;
-          
           if (!groups[v.horario]) {
-            groups[v.horario] = { confirmados: [], espera: [] };
+            groups[v.horario] = { confirmados: [], espera: [], todos_pasados: true };
           }
+          
           if (v.en_espera) {
             groups[v.horario].espera.push(v);
           } else {
             groups[v.horario].confirmados.push(v);
           }
+
+          if (v.se_monto === null) {
+            groups[v.horario].todos_pasados = false;
+          }
+        });
+
+        const activeHorarios = Object.keys(groups).filter(h => !groups[h].todos_pasados);
+
+        activeHorarios.forEach(h => {
+          totalViajeros += groups[h].confirmados.length + groups[h].espera.length;
+          totalEspera += groups[h].espera.length;
         });
 
         document.getElementById('statTotal').textContent = totalViajeros;
@@ -376,8 +457,7 @@
           return;
         }
 
-        // Ordenar horarios
-        const sortedHorarios = Object.keys(groups).sort((a, b) => horarioAMinutos(a) - horarioAMinutos(b));
+        const sortedHorarios = activeHorarios.sort((a, b) => horarioAMinutos(a) - horarioAMinutos(b));
 
         sortedHorarios.forEach(horario => {
           const group = groups[horario];
@@ -388,9 +468,6 @@
 
           const numConfirmados = group.confirmados.length;
           const numEspera = group.espera.length;
-          const totalInHorario = numConfirmados + numEspera;
-
-          // Combine and sort passengers if expanded
           const allPassengers = [...group.confirmados, ...group.espera];
 
           let passengerHtml = '';
@@ -427,6 +504,21 @@
             <div class="passenger-list-content">
               ${passengerHtml}
             </div>
+            <div class="notify-bar">
+               <button class="notify-btn" onclick="window.sendTripNotification('${horario}', 'camino', this)">
+                 <i data-lucide="send"></i> En camino
+               </button>
+               <button class="notify-btn" onclick="window.sendTripNotification('${horario}', 'llego', this)">
+                 <i data-lucide="map-pin"></i> Llegó
+               </button>
+               <button class="notify-btn" onclick="window.sendTripNotification('${horario}', 'sale', this)">
+                 <i data-lucide="clock"></i> Saliendo
+               </button>
+               <div style="width:1px; background:rgba(255,255,255,0.1); margin:0 0.2rem;"></div>
+               <button class="notify-btn whatsapp" onclick="window.sendWhatsAppNotification('${horario}', this)">
+                 <i data-lucide="message-circle"></i> WhatsApp
+               </button>
+            </div>
             ` : ''}
           `;
 
@@ -438,6 +530,69 @@
         container.innerHTML = `<div class="empty-state"><p style="color:#f87171;">Error: ${err.message}</p></div>`;
       }
     }
+
+    window.sendTripNotification = async (horario, tipo, btn) => {
+       const ogText = btn.innerHTML;
+       btn.disabled = true;
+       btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Enviando...';
+       if (window.lucide) window.lucide.createIcons();
+ 
+       try {
+         const cycleDate = getCycleDate();
+         const { data: vs, error } = await supabase
+           .from('votos')
+           .select('email')
+           .eq('fecha', cycleDate)
+           .eq('horario', horario)
+           .gt('id', 40);
+ 
+         if (error) throw error;
+ 
+         const emails = (vs || []).map(v => v.email).filter(e => e && e.includes('@'));
+         if (emails.length === 0) {
+           throw new Error('No hay correos registrados para este viaje.');
+         }
+ 
+         const messages = {
+           camino: { titulo: "🚌 El autobús va hacia la parada", msg: "Te informamos que el autobús ya está en camino hacia el punto de recogida para el viaje de las " + horario + "." },
+           llego:  { titulo: "📍 El autobús ha llegado", msg: "¡Atención! El autobús del horario " + horario + " ya se encuentra en la parada. Por favor, acércate." },
+           sale:   { titulo: "🚀 El autobús está saliendo", msg: "Última llamada: El autobús del horario " + horario + " está por salir o acaba de salir de la parada." }
+         };
+ 
+         const templateParams = {
+           titulo: messages[tipo].titulo,
+           mensaje: messages[tipo].msg,
+           destinatarios: emails.join(',')
+         };
+ 
+         await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, templateParams);
+         showToast(`Notificación enviada a ${emails.length} estudiantes`);
+ 
+       } catch(err) {
+         console.error(err);
+         showToast(err.message, 'error');
+       } finally {
+         btn.innerHTML = ogText;
+         btn.disabled = false;
+         if (window.lucide) window.lucide.createIcons();
+       }
+    };
+ 
+    window.sendWhatsAppNotification = (horario, btn) => {
+       const options = [
+         { id: 'camino', text: '🚌 *AEUDJ:* El bus de las ' + horario + ' va en camino.' },
+         { id: 'llego',  text: '📍 *AEUDJ:* El bus de las ' + horario + ' ya llegó a la parada.' },
+         { id: 'sale',   text: '🚀 *AEUDJ:* El bus de las ' + horario + ' está saliendo. ¡Última llamada!' }
+       ];
+       
+       // Por ahora, como es un botón simple, abriremos un prompt o simplemente enviaremos uno general.
+       // Para hacerlo más pro, podemos mostrar un pequeño menú, pero para rapidez, 
+       // usaremos el que el usuario elija en un prompt simple o simplemente el estado "Llegó" que es el más común.
+       
+       const msg = `🚌 *AEUDJ Transporte*\n\nInformamos que el autobús del horario *${horario}* ya se encuentra en proceso.\n\n¡Por favor estar atentos a la parada!`;
+       const encoded = encodeURIComponent(msg);
+       window.open(`https://wa.me/?text=${encoded}`, '_blank');
+    };
 
     document.getElementById('reloadFab').onclick = loadData;
 

@@ -177,11 +177,11 @@ function initPage(page) {
 function initIndexPage() {
  refreshIcons();
  if (currentUser) {
-   if (currentUser.rol === 'chofer' || currentUser.rol === 'admin_chofer') {
-     window.location.href = 'choferes.html';
-   } else {
-     window.location.href = 'votar.html';
-   }
+    if (currentUser.rol === 'chofer' || currentUser.rol === 'admin_chofer') {
+      window.location.href = 'choferes.html';
+    } else {
+      window.location.href = 'votar.html';
+    }
    return;
  }
  
@@ -353,11 +353,11 @@ function initIndexPage() {
  }
  
  setSession(userData);
- if (userData.rol === 'chofer' || userData.rol === 'admin_chofer') {
-   window.location.href = 'choferes.html';
- } else {
-   window.location.href = 'votar.html';
- }
+  if (userData.rol === 'chofer' || userData.rol === 'admin_chofer') {
+    window.location.href = 'choferes.html';
+  } else {
+    window.location.href = 'votar.html';
+  }
  } else {
  showError('Credenciales correctas, pero no se encontraron datos de usuario en la base de datos.');
  }
