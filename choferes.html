@@ -357,11 +357,16 @@
     
     function getCycleDate() {
       const now = new Date();
-      if (now.getHours() >= 22) {
-        const t = new Date(now); t.setDate(t.getDate()+1);
-        return t.toISOString().split('T')[0];
+      const hora = now.getHours();
+      let targetDate = now;
+      if (hora >= 22) {
+        targetDate = new Date(now);
+        targetDate.setDate(targetDate.getDate() + 1);
       }
-      return now.toISOString().split('T')[0];
+      const y = targetDate.getFullYear();
+      const m = String(targetDate.getMonth() + 1).padStart(2, '0');
+      const d = String(targetDate.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
     }
     
     function formatDate(d) {

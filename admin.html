@@ -800,6 +800,20 @@
       window.location.href = 'index.html';
     }
     
+    function getCycleDate() {
+      const now = new Date();
+      const hora = now.getHours();
+      let targetDate = now;
+      if (hora >= 22) {
+        targetDate = new Date(now);
+        targetDate.setDate(targetDate.getDate() + 1);
+      }
+      const y = targetDate.getFullYear();
+      const m = String(targetDate.getMonth() + 1).padStart(2, '0');
+      const d = String(targetDate.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+    
     // State management
     let currentVotos = [];
     let currentStaff = [];
@@ -917,7 +931,7 @@
 
     async function loadDashboardData() {
       try {
-        const today = new Date().toISOString().split('T')[0];
+        const today = getCycleDate();
 
         // --- LÓGICA DE SESIÓN (Banner) ---
         const { data: config } = await supabase.from('voting_config').select('*').eq('id', 1).single();
@@ -1127,7 +1141,7 @@
         });
       });
 
-      const today = new Date().toISOString().split('T')[0];
+      const today = getCycleDate();
       const { data: votos, error } = await supabase
         .from('votos').select('*')
         .eq('fecha', today).gt('id', 40)
@@ -1729,7 +1743,7 @@
       const isDeep = confirm('¿Quieres realizar una LIMPIEZA PROFUNDA?\n\n- "Aceptar": Borra Votos, Faltas y Penalidades (Reseteo Total).\n- "Cancelar": Solo borra los votos de hoy.');
       
       try {
-        const today = new Date().toISOString().split('T')[0];
+        const today = getCycleDate();
         
         // 1. Borrar Votos de hoy
         const { error: err1 } = await supabase.from('votos').delete().eq('fecha', today);
@@ -2157,7 +2171,7 @@
       if(!container) return;
       container.innerHTML = '<div class="flex flex-col items-center justify-center py-10 opacity-50"><div class="spinner-small mb-4"></div><p class="text-sm font-bold uppercase tracking-widest text-white">Sincronizando...</p></div>';
 
-      const today = new Date().toISOString().split('T')[0];
+      const today = getCycleDate();
       const { data, error } = await supabase
         .from('votos').select('*')
         .eq('fecha', today)
@@ -2333,7 +2347,7 @@
             email:           p.email || '',
             total_faltas:    count,
             penalizado,
-            fecha_penalidad: penalizado ? new Date().toISOString().split('T')[0] : null,
+            fecha_penalidad: penalizado ? getCycleDate() : null,
             updated_at:      new Date().toISOString(),
           }, { onConflict: 'usuario_id' });
           window.showAdminToast(`Falta registrada a ${p.nombre}. Total: ${count}/3`, count >= 3 ? 'warning' : 'error');
@@ -2365,7 +2379,7 @@
     // Set today's date as default on the date picker
     (function initAuditDate() {
       const dp = document.getElementById('auditDatePick');
-      if (dp) dp.value = new Date().toISOString().split('T')[0];
+      if (dp) dp.value = getCycleDate();
     })();
 
     window.loadAuditData = async function() {
@@ -2373,7 +2387,7 @@
       if (!container) return;
       container.innerHTML = '<div class="audit-empty"><div class="audit-spinner"></div><p>Cargando registros…</p></div>';
 
-      const dateVal = document.getElementById('auditDatePick')?.value || new Date().toISOString().split('T')[0];
+      const dateVal = document.getElementById('auditDatePick')?.value || getCycleDate();
 
       try {
         // Load all three counts in parallel for the stat cards

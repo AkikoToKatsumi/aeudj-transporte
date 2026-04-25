@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -328,6 +328,20 @@
       window.location.href = 'index.html';
     }
     
+    function getCycleDate() {
+      const now = new Date();
+      const hora = now.getHours();
+      let targetDate = now;
+      if (hora >= 22) {
+        targetDate = new Date(now);
+        targetDate.setDate(targetDate.getDate() + 1);
+      }
+      const y = targetDate.getFullYear();
+      const m = String(targetDate.getMonth() + 1).padStart(2, '0');
+      const d = String(targetDate.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+    
     // State management
     let currentVotos = [];
     let currentStaff = [];
@@ -398,7 +412,7 @@
     }
 
     async function loadDashboardData() {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getCycleDate();
       const { data: votos, error } = await supabase.from('votos').select('*').eq('fecha', today).gt('id', 40).order('horario');
       
       if (error) { console.error(error); return; }
@@ -494,7 +508,7 @@
       const container = document.getElementById('passengerListDetail');
       container.innerHTML = '<div class="spinner mx-auto"></div>';
       
-      const today = new Date().toISOString().split('T')[0];
+      const today = getCycleDate();
       const { data: votos } = await supabase.from('votos').select('*').eq('fecha', today).gt('id', 40).order('horario');
       
       if (!votos || votos.length === 0) {
