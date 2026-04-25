@@ -414,6 +414,13 @@
       </div>
     </div>
 
+    <!-- Lista Pública Button (shown after confirmation) -->
+    <div id="publicListContainer" class="hidden" style="text-align: center; margin-top: 1rem;">
+      <a href="lista.html" class="btn-action btn-blue" style="width: 200px; margin: 0 auto; text-decoration: none;">
+        <i data-lucide="list"></i> Ver Lista Pública
+      </a>
+    </div>
+
     <!-- Cerrar sesión -->
     <div class="logout-wrap">
       <button id="logoutBtn" class="btn-logout">Cerrar sesión</button>
@@ -646,12 +653,14 @@
       showSessionBanner(group, override);
       horarioForm.style.display = 'block';
       confirmedView.classList.remove('visible');
+      document.getElementById('publicListContainer').classList.add('hidden');
       renderHorarios(group);
     }
 
     function showConfirmed(votes) {
       horarioForm.style.display = 'none';
       confirmedView.classList.add('visible');
+      document.getElementById('publicListContainer').classList.remove('hidden');
       renderConfirmedView(votes);
     }
 

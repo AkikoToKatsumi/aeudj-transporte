@@ -327,6 +327,42 @@
       .stats-bar { grid-template-columns: repeat(3,1fr); }
       .row-tel { display: none; }
     }
+
+    /* Notification Buttons */
+    .notify-bar {
+       display: flex;
+       gap: 0.5rem;
+       padding: 0.75rem 1.1rem;
+       background: rgba(16, 185, 129, 0.05);
+       border-top: 1px solid rgba(255, 255, 255, 0.05);
+       overflow-x: auto;
+       scrollbar-width: none;
+    }
+    .notify-bar::-webkit-scrollbar { display: none; }
+    .notify-btn {
+       white-space: nowrap;
+       padding: 0.4rem 0.8rem;
+       border-radius: 999px;
+       font-size: 0.7rem;
+       font-weight: 700;
+       border: 1px solid rgba(52, 211, 153, 0.3);
+       background: rgba(52, 211, 153, 0.1);
+       color: #34d399;
+       cursor: pointer;
+       transition: all 0.2s;
+       display: flex;
+       align-items: center;
+       gap: 0.3rem;
+    }
+    .notify-btn:hover { background: rgba(52, 211, 153, 0.2); transform: translateY(-1px); }
+    .notify-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    .notify-btn.whatsapp {
+       background: rgba(37, 211, 102, 0.1);
+       border-color: rgba(37, 211, 102, 0.3);
+       color: #25d366;
+    }
+    .notify-btn.whatsapp:hover { background: rgba(37, 211, 102, 0.2); }
   </style>
 </head>
 <body>
@@ -462,7 +498,7 @@
     }
 
     // Show admin link if developer/admin
-    if (currentUser && (currentUser.rol.includes('') || currentUser.rol.includes(''))) {
+    if (currentUser && (currentUser.rol.includes('admin') || currentUser.rol.includes('desarrolladora'))) {
       document.getElementById('adminLink').style.display = 'inline-flex';
     }
 
@@ -483,7 +519,7 @@
         if (error) throw error;
         
         let fetchedVotos = data || [];
-        const isAdmin = currentUser && (currentUser.rol.includes('') || currentUser.rol.includes(''));
+        const isAdmin = currentUser && (currentUser.rol.includes('admin') || currentUser.rol.includes('desarrolladora'));
         
         if (!isAdmin && currentUser) {
           // Determinar qué día de la semana es (Lunes, Martes, etc.)
@@ -542,7 +578,7 @@
         groups[v.horario].push(v);
       });
 
-      const isAdmin = currentUser && (currentUser.rol.includes('') || currentUser.rol.includes(''));
+      const isAdmin = currentUser && (currentUser.rol.includes('admin') || currentUser.rol.includes('desarrolladora'));
       let pendingGroupsCount = 0;
 
       Object.entries(groups).forEach(([horario, passengers]) => {
@@ -621,8 +657,27 @@
           chevron.classList.toggle('open', !isOpen);
         });
 
+        const notifyBar = document.createElement('div');
+        notifyBar.className = 'notify-bar';
+        notifyBar.innerHTML = `
+           <button class="notify-btn" onclick="window.sendTripNotification('${horario}', 'camino', this)">
+             <i data-lucide="send"></i> En camino
+           </button>
+           <button class="notify-btn" onclick="window.sendTripNotification('${horario}', 'llego', this)">
+             <i data-lucide="map-pin"></i> Llegó
+           </button>
+           <button class="notify-btn" onclick="window.sendTripNotification('${horario}', 'sale', this)">
+             <i data-lucide="clock"></i> Saliendo
+           </button>
+           <div style="width:1px; background:rgba(255,255,255,0.1); margin:0 0.2rem;"></div>
+           <button class="notify-btn whatsapp" onclick="window.sendWhatsAppNotification('${horario}', this)">
+             <i data-lucide="message-circle"></i> WhatsApp
+           </button>
+        `;
+
         section.appendChild(header);
         section.appendChild(table);
+        section.appendChild(notifyBar);
         container.appendChild(section);
       });
 
@@ -735,7 +790,81 @@
       }
     }
 
-    // ── TIEMPO REAL ────────────────────────
+    // ── NOTIFICACIONES ─────────────────────────────
+    window.sendTripNotification = async (horario, tipo, btn) => {
+       const ogText = btn.innerHTML;
+       btn.disabled = true;
+       btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Enviando...';
+       if (window.lucide) window.lucide.createIcons();
+ 
+       try {
+        const cycleDate = getCycleDate();
+        const { data: vs, error: errVotos } = await supabase
+          .from('votos')
+          .select('email, usuario_id')
+          .eq('fecha', cycleDate)
+          .eq('horario', horario)
+          .gt('id', 40);
+
+        if (errVotos) throw errVotos;
+
+        let emails = (vs || []).map(v => v.email).filter(e => e && e.includes('@'));
+        const missingUserIds = (vs || [])
+          .filter(v => (!v.email || !v.email.includes('@')) && v.usuario_id)
+          .map(v => v.usuario_id);
+        
+        if (missingUserIds.length > 0) {
+          const { data: profs } = await supabase
+            .from('profiles')
+            .select('email')
+            .in('id', missingUserIds);
+          
+          if (profs) {
+            profs.forEach(p => {
+              if (p.email && !emails.includes(p.email)) emails.push(p.email);
+            });
+          }
+        }
+
+        if (emails.length === 0) {
+          throw new Error('No se encontraron correos para este viaje.');
+        }
+
+        const messages = {
+          camino: { titulo: "🚌 El autobús va hacia la parada", msg: "Te informamos que el autobús ya está en camino hacia el punto de recogida para el viaje de las " + horario + "." },
+          llego:  { titulo: "📍 El autobús ha llegado", msg: "¡Atención! El autobús del horario " + horario + " ya se encuentra en la parada. Por favor, acércate." },
+          sale:   { titulo: "🚀 El autobús está saliendo", msg: "Última llamada: El autobús del horario " + horario + " está por salir o acaba de salir de la parada." }
+        };
+
+        const templateParams = {
+          titulo: messages[tipo].titulo,
+          mensaje: messages[tipo].msg,
+          to_email: emails.join(',')
+        };
+
+        const response = await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, templateParams);
+        if (response.status === 200) {
+          showToast(`✅ Enviado a ${emails.length} personas`);
+        } else {
+          throw new Error('Error en EmailJS');
+        }
+      } catch(err) {
+        console.error(err);
+        showToast(err.message || 'Error en el envío', 'error');
+      } finally {
+        btn.innerHTML = ogText;
+        btn.disabled = false;
+        if (window.lucide) window.lucide.createIcons();
+      }
+    };
+
+    window.sendWhatsAppNotification = (horario, btn) => {
+       const msg = `🚌 *AEUDJ Transporte*\n\nInformamos que el autobús del horario *${horario}* ya se encuentra en proceso.\n\n¡Por favor estar atentos a la parada!`;
+       const encoded = encodeURIComponent(msg);
+       window.open(`https://wa.me/?text=${encoded}`, '_blank');
+    };
+
+    // Realtime
     supabase
       .channel('votos-voluntario')
       .on('postgres_changes',
