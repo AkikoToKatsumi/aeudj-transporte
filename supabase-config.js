@@ -34,12 +34,15 @@ const transportSchedules = [
 function getCycleDate() {
   const ahora = new Date();
   const hora = ahora.getHours();
+  let targetDate = ahora;
   if (hora >= 22) {
-    const manana = new Date(ahora);
-    manana.setDate(manana.getDate() + 1);
-    return manana.toISOString().split('T')[0];
+    targetDate = new Date(ahora);
+    targetDate.setDate(targetDate.getDate() + 1);
   }
-  return ahora.toISOString().split('T')[0];
+  const y = targetDate.getFullYear();
+  const m = String(targetDate.getMonth() + 1).padStart(2, '0');
+  const d = String(targetDate.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 function formatDate(dateStr) {
