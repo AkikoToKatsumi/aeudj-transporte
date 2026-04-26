@@ -417,6 +417,11 @@
             const time = t.getHours().toString().padStart(2,'0') + ':' + t.getMinutes().toString().padStart(2,'0');
             const row = document.createElement('div');
             row.className = 'passenger-row';
+            const esperaBadge = p.punto_espera === 'camino'
+              ? '<span style="font-size:0.6rem;font-weight:800;background:rgba(52,211,153,0.12);color:#34d399;border:1px solid rgba(52,211,153,0.3);padding:0.12rem 0.5rem;border-radius:999px;flex-shrink:0;">🚶 Camino</span>'
+              : p.punto_espera === 'parada'
+              ? '<span style="font-size:0.6rem;font-weight:800;background:rgba(59,130,246,0.12);color:#93c5fd;border:1px solid rgba(59,130,246,0.3);padding:0.12rem 0.5rem;border-radius:999px;flex-shrink:0;">📍 Parada</span>'
+              : '';
             row.innerHTML = `
               <div class="passenger-num">${idx + 1}</div>
               <div class="passenger-info">
@@ -424,6 +429,7 @@
                 ${p.universidad ? `<div class="passenger-uni">${p.universidad}</div>` : ''}
               </div>
               ${p.en_espera ? '<span class="badge-espera">En espera</span>' : ''}
+              ${esperaBadge}
               <div class="passenger-time">${time}</div>
             `;
             listEl.appendChild(row);

@@ -414,6 +414,33 @@
       </div>
     </div>
 
+    <!-- Modal ¿Dónde Esperas? -->
+    <div id="esperaModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem;">
+      <div class="card" style="width:100%;max-width:380px;background:rgba(10,15,30,0.98);border:1px solid rgba(59,130,246,0.3);text-align:center;padding:2rem;">
+        <div style="width:64px;height:64px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
+          <i data-lucide="map-pin" style="width:28px;height:28px;color:#60a5fa;"></i>
+        </div>
+        <h3 style="font-size:1.35rem;font-weight:800;color:#f8fafc;margin-bottom:0.4rem;">¿Dónde esperas?</h3>
+        <p style="color:#64748b;font-size:0.85rem;margin-bottom:1.75rem;line-height:1.5;">Indica tu punto de espera para que el chofer y los voluntarios puedan ubicarte.</p>
+        <div style="display:flex;flex-direction:column;gap:0.75rem;">
+          <button id="btnEsperaCamino" style="display:flex;align-items:center;gap:0.9rem;padding:1rem 1.25rem;border-radius:0.85rem;border:2px solid rgba(52,211,153,0.3);background:rgba(52,211,153,0.08);color:#6ee7b7;font-size:1rem;font-weight:700;cursor:pointer;transition:all 0.2s;">
+            <span style="font-size:1.4rem;">🚶</span>
+            <div style="text-align:left;">
+              <div>En el camino</div>
+              <div style="font-size:0.72rem;opacity:0.7;font-weight:500;">El chofer te buscará en la ruta</div>
+            </div>
+          </button>
+          <button id="btnEsperaParada" style="display:flex;align-items:center;gap:0.9rem;padding:1rem 1.25rem;border-radius:0.85rem;border:2px solid rgba(59,130,246,0.3);background:rgba(59,130,246,0.08);color:#93c5fd;font-size:1rem;font-weight:700;cursor:pointer;transition:all 0.2s;">
+            <span style="font-size:1.4rem;">📍</span>
+            <div style="text-align:left;">
+              <div>En la parada</div>
+              <div style="font-size:0.72rem;opacity:0.7;font-weight:500;">Estaré esperando en el punto fijo</div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Lista Pública Button (shown after confirmation) -->
     <div id="publicListContainer" class="hidden" style="text-align: center; margin-top: 1rem;">
       <a href="lista.html" class="btn-action btn-blue" style="width: 200px; margin: 0 auto; text-decoration: none;">
@@ -701,6 +728,48 @@
       }
     }
 
+    // ── PUNTO DE ESPERA ─────────────────────────────────────
+    let pendingPuntoEspera = null; // 'camino' | 'parada'
+    let pendingSubmitData = null;  // { group, cycleDate }
+
+    document.getElementById('btnEsperaCamino').addEventListener('click', () => confirmarConEspera('camino'));
+    document.getElementById('btnEsperaParada').addEventListener('click',  () => confirmarConEspera('parada'));
+
+    async function confirmarConEspera(puntoEspera) {
+      document.getElementById('esperaModal').classList.add('hidden');
+      const { group, cycleDate } = pendingSubmitData;
+
+      try {
+        // Delete old votes for today
+        await supabase.from('votos').delete()
+          .eq('usuario_id', currentUser.id)
+          .eq('fecha', cycleDate);
+
+        // Insert new votes WITH punto_espera
+        const rows = selectedHorarios.map(h => ({
+          usuario_id: currentUser.id,
+          horario: h,
+          fecha: cycleDate,
+          nombre: currentUser.nombre,
+          matricula: currentUser.matricula,
+          email: currentUser.email || `${currentUser.matricula}@aeudj.com`,
+          punto_espera: puntoEspera
+        }));
+
+        const { data, error } = await supabase.from('votos').insert(rows).select();
+        if (error) throw error;
+
+        initialVotes = data;
+        setStatus('✅ ¡Horarios confirmados!', '#34d399');
+        setTimeout(() => showConfirmed(data), 800);
+
+      } catch(err) {
+        console.error('Error guardando voto:', err);
+        setStatus('Error al guardar. Intenta de nuevo.', '#f87171');
+        submitBtn.disabled = false;
+      }
+    }
+
     // ── SUBMIT ───────────────────────────────────────────────
     submitBtn.addEventListener('click', async (e) => {
       e.preventDefault();
@@ -713,35 +782,10 @@
       const { group } = await getActiveGroup();
       const cycleDate = getCycleDate(group);
 
-      try {
-        // Delete old votes for today
-        await supabase.from('votos').delete()
-          .eq('usuario_id', currentUser.id)
-          .eq('fecha', cycleDate);
-
-        // Insert new votes
-        const rows = selectedHorarios.map(h => ({
-          usuario_id: currentUser.id,
-          horario: h,
-          fecha: cycleDate,
-          nombre: currentUser.nombre,
-          matricula: currentUser.matricula,
-          email: currentUser.email || `${currentUser.matricula}@aeudj.com`
-        }));
-
-        const { data, error } = await supabase.from('votos').insert(rows).select();
-        if (error) throw error;
-
-        initialVotes = data;
-
-        setStatus('✅ ¡Horarios confirmados!', '#34d399');
-        setTimeout(() => showConfirmed(data), 800);
-
-      } catch(err) {
-        console.error('Error guardando voto:', err);
-        setStatus('Error al guardar. Intenta de nuevo.', '#f87171');
-        submitBtn.disabled = false;
-      }
+      // Guardar datos pendientes y mostrar modal de espera
+      pendingSubmitData = { group, cycleDate };
+      document.getElementById('esperaModal').classList.remove('hidden');
+      if (window.lucide) window.lucide.createIcons();
     });
 
     // ── ACTION MODAL LOGIC ──────────────────────────────────

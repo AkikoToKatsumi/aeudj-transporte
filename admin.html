@@ -1212,12 +1212,18 @@
           const time = t.getHours().toString().padStart(2,'0') + ':' + t.getMinutes().toString().padStart(2,'0');
           const row  = document.createElement('div');
           row.className = 'pv-row';
+          const esperaBadge = p.punto_espera === 'camino'
+            ? '<span style="font-size:0.58rem;font-weight:800;background:rgba(52,211,153,0.12);color:#34d399;border:1px solid rgba(52,211,153,0.3);padding:0.1rem 0.45rem;border-radius:999px;">🚶 Camino</span>'
+            : p.punto_espera === 'parada'
+            ? '<span style="font-size:0.58rem;font-weight:800;background:rgba(59,130,246,0.12);color:#93c5fd;border:1px solid rgba(59,130,246,0.3);padding:0.1rem 0.45rem;border-radius:999px;">📍 Parada</span>'
+            : '';
           row.innerHTML =
             '<div class="pv-num">' + (idx + 1) + '</div>' +
             '<div class="pv-info">' +
               '<div class="pv-name">' + (p.nombre || 'Sin nombre') + '</div>' +
               '<div class="pv-mat">' + (p.matricula || '') + '</div>' +
             '</div>' +
+            esperaBadge +
             '<div class="pv-time">' + time + '</div>' +
             '<span class="pv-badge ' + (p.en_espera ? 'pv-badge-espera' : 'pv-badge-ok') + '">' + (p.en_espera ? 'Espera' : 'Confirmado') + '</span>';
           body.appendChild(row);
