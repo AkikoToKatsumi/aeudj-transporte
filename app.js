@@ -1168,6 +1168,8 @@ function initAdminPage() {
   }
 
   window.clearTodayVotes = async function() {
+    return; // Función anulada temporalmente
+
     if (!confirm('¿Estás seguro de borrar TODOS los votos de hoy? Esta acción no se puede deshacer.')) return;
     try {
       const { error } = await supabase.from('votos').delete().eq('fecha', cycleDate);

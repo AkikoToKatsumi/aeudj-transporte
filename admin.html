@@ -145,7 +145,7 @@
               <h3 class="text-lg font-bold text-white flex items-center gap-2">
                 <i data-lucide="bar-chart-3" class="text-blue-400 w-5 h-5"></i> Demanda por Horario
               </h3>
-              <button type="button" class="btn-pill-outline btn-small text-red-400 hover:bg-red-500/10 transition-colors" style="border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.05);" onclick="window.clearTodayVotes()">
+              <button type="button" class="btn-pill-outline btn-small text-red-400 hover:bg-red-500/10 transition-colors" style="border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.05); display: none;" onclick="window.clearTodayVotes()">
                 <i data-lucide="trash-2" class="icon-inline text-red-400"></i> Limpiar Hoy
               </button>
             </div>
@@ -1740,6 +1740,8 @@
     // ── SESSION CONTROL ──────────────────────────────────────────────────────────
     // ── RESET TOTAL DEL SISTEMA (PARA PRESENTACIÓN) ──────────────────────────────
     window.clearTodayVotes = async function() {
+      return; // Función anulada temporalmente
+
       const isDeep = confirm('¿Quieres realizar una LIMPIEZA PROFUNDA?\n\n- "Aceptar": Borra Votos, Faltas y Penalidades (Reseteo Total).\n- "Cancelar": Solo borra los votos de hoy.');
       
       try {
