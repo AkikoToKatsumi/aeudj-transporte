@@ -473,7 +473,7 @@ function initVotarPage() {
  const staffMenu = document.getElementById('staffMenu');
  if (staffMenu && currentUser) {
  staffMenu.innerHTML = ''; // Limpiar para evitar duplicados en recargas de SPA
- if (currentUser.rol.includes('admin') || currentUser.rol.includes('desarrolladora') || currentUser.rol.includes('comité')) {
+ if (currentUser.rol.includes('admin') || currentUser.rol.includes('desarrolladora')) {
  staffMenu.innerHTML += `<a href="admin.html" class="btn p-3 mb-2" style="background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); color: #c4b5fd; text-shadow: 0 0 10px rgba(196,181,253,0.5); box-shadow: 0 0 15px rgba(139, 92, 246, 0.15); display: inline-block; width: 100%; border-radius: 12px; font-weight: bold; margin-bottom: 0.75rem;"> Entrar al Panel de Administración</a>`;
  staffMenu.classList.remove('hidden');
  }
@@ -977,7 +977,7 @@ async function initListaPage() {
 function initAdminPage() {
  const adminPanel = document.getElementById('adminPanel');
  
- if (!currentUser || (!currentUser.rol.includes('admin') && !currentUser.rol.includes('desarrolladora') && !currentUser.rol.includes('comité'))) {
+ if (!currentUser || (!currentUser.rol.includes('admin') && !currentUser.rol.includes('desarrolladora'))) {
  window.location.href = 'index.html';
  return;
  }
@@ -2032,7 +2032,7 @@ function hashString(str) {
 // ============================================
 window.logout = logout;
 window.notificarAccion = async function(tipo) {
- if (!currentUser || (!currentUser.rol.includes('admin') && !currentUser.rol.includes('desarrolladora') && !currentUser.rol.includes('comité'))) return;
+ if (!currentUser || (!currentUser.rol.includes('admin') && !currentUser.rol.includes('desarrolladora'))) return;
  
  try {
  const btn = event.target;

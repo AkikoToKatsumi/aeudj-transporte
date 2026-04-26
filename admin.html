@@ -796,7 +796,7 @@
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const currentUser = JSON.parse(localStorage.getItem('aeudj_user') || 'null');
-    if (!currentUser || (!currentUser.rol.includes('admin') && !currentUser.rol.includes('desarrolladora') && !currentUser.rol.includes('comité'))) {
+    if (!currentUser || (!currentUser.rol.includes('admin') && !currentUser.rol.includes('desarrolladora'))) {
       window.location.href = 'index.html';
     }
     
@@ -820,7 +820,7 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
       // 1. Security Check
-      if (!currentUser || (!currentUser.rol.includes('admin') && !currentUser.rol.includes('desarrolladora') && !currentUser.rol.includes('comité'))) {
+      if (!currentUser || (!currentUser.rol.includes('admin') && !currentUser.rol.includes('desarrolladora'))) {
         window.location.href = 'index.html';
         return;
       }

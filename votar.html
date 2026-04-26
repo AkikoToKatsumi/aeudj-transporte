@@ -545,7 +545,7 @@
     function buildStaffMenu(user) {
       if (!user || !user.rol) return;
       const rol = user.rol;
-      const isAdmin = rol.includes('admin') || rol.includes('desarrolladora') || rol.includes('comité');
+      const isAdmin = rol.includes('admin') || rol.includes('desarrolladora');
       const isVol   = rol.includes('voluntario') || rol.includes('desarrolladora') || rol.includes('comité');
       if (!isAdmin && !isVol) return;
       staffMenu.classList.add('visible');
