@@ -1080,9 +1080,10 @@ function initAdminPage() {
  </tr></thead><tbody>`;
  
  users.forEach(u => {
- if (u.rol === 'administrador') return;
+ const rol = u.rol || '';
+ if (rol.includes('admin')) return;
  
- const isVoluntario = u.rol === 'voluntario';
+ const isVoluntario = rol.includes('voluntario') || rol.includes('comité');
  let optHorarios = transportSchedules.map(h => {
  const selected = (u.horarios_asignados && u.horarios_asignados.includes(h.fullText)) ? 'selected' : '';
  return `<option value="${h.fullText}" ${selected}>${h.fullText}</option>`;

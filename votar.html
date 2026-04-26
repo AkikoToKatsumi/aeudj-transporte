@@ -543,9 +543,10 @@
 
     // ── STAFF MENU ──────────────────────────────────────────
     function buildStaffMenu(user) {
-      if (!user) return;
-      const isAdmin = user.rol === 'administrador' || user.rol === 'desarrolladora';
-      const isVol   = user.rol === 'voluntario'    || user.rol === 'desarrolladora';
+      if (!user || !user.rol) return;
+      const rol = user.rol;
+      const isAdmin = rol.includes('admin') || rol.includes('desarrolladora') || rol.includes('comité');
+      const isVol   = rol.includes('voluntario') || rol.includes('desarrolladora') || rol.includes('comité');
       if (!isAdmin && !isVol) return;
       staffMenu.classList.add('visible');
       if (isAdmin) {
@@ -854,21 +855,35 @@
 
     // ── INIT ─────────────────────────────────────────────────
     async function init() {
-      // Load from localStorage first (instant)
-      currentUser = loadSession();
+      // 1. Get current session from Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        localStorage.clear();
+        window.location.href = 'index.html';
+        return;
+      }
 
-      if (!currentUser) {
-        // Try Supabase auth
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          window.location.href = 'index.html';
-          return;
+      // 2. Fetch LATEST profile to reflect any role changes
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+          
+        if (error || !profile) {
+          // If profile not found but session exists, try using local storage as fallback or redirect
+          const local = loadSession();
+          if (!local) { window.location.href = 'index.html'; return; }
+          currentUser = local;
+        } else {
+          currentUser = profile;
+          localStorage.setItem('aeudj_user', JSON.stringify(profile));
         }
-        const { data: profile } = await supabase
-          .from('profiles').select('*').eq('id', session.user.id).single();
-        if (!profile) { window.location.href = 'index.html'; return; }
-        currentUser = profile;
-        localStorage.setItem('aeudj_user', JSON.stringify(profile));
+      } catch (e) {
+        currentUser = loadSession();
+        if (!currentUser) { window.location.href = 'index.html'; return; }
       }
 
       buildStaffMenu(currentUser);
