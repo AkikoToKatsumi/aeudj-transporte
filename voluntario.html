@@ -498,7 +498,7 @@
     }
 
     // Show admin link if developer/admin
-    if (currentUser && (currentUser.rol.includes('admin') || currentUser.rol.includes('desarrolladora'))) {
+    if (currentUser && (currentUser.rol.includes('admin') || currentUser.rol.includes('desarrolladora') || currentUser.rol.includes('comité'))) {
       document.getElementById('adminLink').style.display = 'inline-flex';
     }
 
@@ -519,7 +519,7 @@
         if (error) throw error;
         
         let fetchedVotos = data || [];
-        const isAdmin = currentUser && (currentUser.rol.includes('admin') || currentUser.rol.includes('desarrolladora'));
+        const isAdmin = currentUser && (currentUser.rol.includes('admin') || currentUser.rol.includes('desarrolladora') || currentUser.rol.includes('comité'));
         
         if (!isAdmin && currentUser) {
           // Determinar qué día de la semana es (Lunes, Martes, etc.)
@@ -578,7 +578,7 @@
         groups[v.horario].push(v);
       });
 
-      const isAdmin = currentUser && (currentUser.rol.includes('admin') || currentUser.rol.includes('desarrolladora'));
+      const isAdmin = currentUser && (currentUser.rol.includes('admin') || currentUser.rol.includes('desarrolladora') || currentUser.rol.includes('comité'));
       let pendingGroupsCount = 0;
 
       Object.entries(groups).forEach(([horario, passengers]) => {
