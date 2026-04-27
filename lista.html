@@ -218,31 +218,7 @@
     
     .spin-animation { animation: spin 0.8s linear infinite; }
 
-    /* Changes section */
-    .changes-card {
-      background: rgba(15,23,42,0.6);
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 1.25rem;
-      padding: 1.5rem;
-      margin-top: 1.5rem;
-      text-align: center;
-      backdrop-filter: blur(20px);
-    }
-    .changes-card h3 { font-size: 0.85rem; text-transform: uppercase; color: #475569; font-weight: 700; margin-bottom: 1rem; }
-    .changes-btns { display: flex; gap: 0.65rem; flex-wrap: wrap; justify-content: center; }
-    .change-btn {
-      padding: 0.6rem 1.1rem;
-      border-radius: 0.65rem;
-      font-size: 0.82rem;
-      font-weight: 600;
-      text-decoration: none;
-      transition: all 0.2s;
-      border: 1px solid;
-    }
-    .change-btn.amber { background: rgba(245,158,11,0.12); color: #fbbf24; border-color: rgba(245,158,11,0.3); }
-    .change-btn.blue  { background: rgba(59,130,246,0.12); color: #60a5fa; border-color: rgba(59,130,246,0.3); }
-    .change-btn.slate { background: rgba(100,116,139,0.12); color: #94a3b8; border-color: rgba(100,116,139,0.3); }
-    .change-btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+
 
     @media (max-width: 500px) {
       .summary-bar { gap: 0.5rem; }
@@ -295,15 +271,7 @@
       </div>
     </div>
 
-    <!-- Changes (only if logged in) -->
-    <div id="changesSection" style="display:none;" class="changes-card">
-      <h3>¿Cambios en tu viaje?</h3>
-      <div class="changes-btns">
-        <a href="cambios.html?tipo=antes"   class="change-btn amber">Me fui antes</a>
-        <a href="cambios.html?tipo=despues" class="change-btn blue">Iré después</a>
-        <a href="cambios.html?tipo=otros"   class="change-btn slate">Otros medios</a>
-      </div>
-    </div>
+
 
   </main>
 
@@ -378,13 +346,7 @@
         document.getElementById('statVuelta').textContent = vueltaCount;
         document.getElementById('summaryBar').style.display = 'flex';
 
-        // Check login for changes section
-        try {
-          const raw = localStorage.getItem('aeudj_user');
-          if (raw && raw !== 'undefined') {
-            document.getElementById('changesSection').style.display = 'block';
-          }
-        } catch(e) {}
+
 
         // Group by horario
         const groups = {};
