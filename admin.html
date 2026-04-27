@@ -2277,6 +2277,12 @@
           const isSubio   = adminAttendanceState[p.id] === 'subio';
           const isNoSubio = adminAttendanceState[p.id] === 'no-subio';
 
+          const puntoEsperaBadge = p.punto_espera === 'camino'
+            ? '<span style="font-size:0.58rem;font-weight:800;background:rgba(52,211,153,0.12);color:#34d399;border:1px solid rgba(52,211,153,0.3);padding:0.1rem 0.45rem;border-radius:999px;flex-shrink:0;">🚶 Camino</span>'
+            : p.punto_espera === 'parada'
+            ? '<span style="font-size:0.58rem;font-weight:800;background:rgba(59,130,246,0.12);color:#93c5fd;border:1px solid rgba(59,130,246,0.3);padding:0.1rem 0.45rem;border-radius:999px;flex-shrink:0;">📍 Parada</span>'
+            : '';
+
           const row = document.createElement('div');
           row.className = 'pl-row';
           row.innerHTML = `
@@ -2286,6 +2292,7 @@
               <div class="pl-mat">${p.matricula || ''}</div>
             </div>
             ${p.en_espera ? '<span class="pl-espera-tag">Espera</span>' : ''}
+            ${puntoEsperaBadge}
             <div class="pl-time">${time}</div>
             <div class="pl-att-wrap">
               <button type="button" class="pl-att-btn pl-subio ${isSubio ? 'active' : ''}" data-id="${p.id}" data-action="subio">\u2705 Subi\u00f3</button>
