@@ -12,7 +12,6 @@ let isEditing = false;
 let initialVotes = [];
 let pageInitialized = false;
 let currentAdminStats = null;
-let currentCaptchaResult = null;
 let horarioForm, scheduleGrid, statusMsg, confirmedView;
 
 function refreshIcons() {
@@ -193,7 +192,6 @@ function initIndexPage() {
   e.preventDefault();
   loginForm.classList.add('hidden');
   registerForm.classList.remove('hidden');
-  generateCaptcha();
   if (window.lucide) window.lucide.createIcons();
   });
   }
@@ -291,26 +289,8 @@ function initIndexPage() {
 
   if (authResult.error) {
     // CASO ESPECIAL: Si es la cuenta maestra de choferes y falla el login, intentamos crearla automáticamente
-    if (userInput.toLowerCase() === 'choferes' && pass === 'choferes2025') {
-      const pseudoEmail = 'choferes@aeudj.com';
-      const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
-        email: pseudoEmail,
-        password: pass
-      });
-      
-      if (!signUpErr && signUpData.user) {
-        const newUser = {
-          id: signUpData.user.id,
-          matricula: 'choferes',
-          nombre: 'Choferes',
-          rol: 'chofer',
-          universidad: 'General'
-        };
-        await supabase.from('profiles').insert(newUser);
-        authResult = { data: signUpData, error: null };
-      } else {
-        throw authResult.error;
-      }
+    if (false) {
+      // Bloque de cuenta maestra eliminado por seguridad.
     } else {
       // Intentar con email real si existe en el perfil
       if (userDataLocal && userDataLocal.email) {
@@ -352,29 +332,11 @@ function initIndexPage() {
  });
   }
 
-  function generateCaptcha() {
-    const a = Math.floor(Math.random() * 9) + 1;
-    const b = Math.floor(Math.random() * 9) + 1;
-    currentCaptchaResult = a + b;
-    const qEl = document.getElementById('captchaQuestion');
-    if (qEl) qEl.textContent = `${a} + ${b}`;
-    const ansEl = document.getElementById('captchaAnswer');
-    if (ansEl) ansEl.value = '';
-  }
-
   if (registerForm) {
   
   registerForm.addEventListener('submit', async function(e) {
   e.preventDefault();
   if (errorDiv) errorDiv.classList.add('hidden');
-  
-  // Verificar CAPTCHA
-  const userAns = parseInt(document.getElementById('captchaAnswer').value);
-  if (userAns !== currentCaptchaResult) {
-    showError('La respuesta del CAPTCHA es incorrecta. Inténtalo de nuevo.');
-    generateCaptcha();
-    return;
-  }
  
  const matricula = document.getElementById('matricula').value.trim();
  const nombre = document.getElementById('nombre').value.trim();
