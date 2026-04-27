@@ -1208,8 +1208,12 @@
         body.className = 'pv-body';
 
         passengers.forEach((p, idx) => {
-          const t    = new Date(p.created_at);
-          const time = t.getHours().toString().padStart(2,'0') + ':' + t.getMinutes().toString().padStart(2,'0');
+          const t = new Date(p.created_at);
+          let hours = t.getHours();
+          const minutes = t.getMinutes().toString().padStart(2, '0');
+          const ampm = hours >= 12 ? 'PM' : 'AM';
+          hours = hours % 12 || 12;
+          const time = `${hours}:${minutes} ${ampm}`;
           const row  = document.createElement('div');
           row.className = 'pv-row';
           const esperaBadge = p.punto_espera === 'camino'
@@ -2264,8 +2268,12 @@
         body.className = 'pl-body';
 
         passengers.forEach((p, idx) => {
-          const t    = new Date(p.created_at);
-          const time = t.getHours().toString().padStart(2,'0') + ':' + t.getMinutes().toString().padStart(2,'0');
+          const t = new Date(p.created_at);
+          let hours = t.getHours();
+          const minutes = t.getMinutes().toString().padStart(2, '0');
+          const ampm = hours >= 12 ? 'PM' : 'AM';
+          hours = hours % 12 || 12;
+          const time = `${hours}:${minutes} ${ampm}`;
           const isSubio   = adminAttendanceState[p.id] === 'subio';
           const isNoSubio = adminAttendanceState[p.id] === 'no-subio';
 

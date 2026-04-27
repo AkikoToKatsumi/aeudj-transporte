@@ -608,7 +608,11 @@
 
         passengers.forEach((p, idx) => {
           const t = new Date(p.created_at);
-          const time = t.getHours().toString().padStart(2,'0') + ':' + t.getMinutes().toString().padStart(2,'0');
+          let hours = t.getHours();
+          const minutes = t.getMinutes().toString().padStart(2, '0');
+          const ampm = hours >= 12 ? 'PM' : 'AM';
+          hours = hours % 12 || 12;
+          const time = `${hours}:${minutes} ${ampm}`;
           const isSubio   = attendanceState[p.id] === 'subio';
           const isNoSubio = attendanceState[p.id] === 'no-subio';
 
