@@ -626,11 +626,13 @@
           row.innerHTML = `
             <div class="row-num">${idx+1}</div>
             <div class="row-info">
-              <div class="row-name">${p.nombre || 'Sin nombre'}</div>
+              <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                <div class="row-name">${p.nombre || 'Sin nombre'}</div>
+                ${p.en_espera ? '<span class="badge-espera">Espera</span>' : ''}
+                ${esperaBadge}
+              </div>
               <div class="row-mat">${p.matricula || ''}</div>
             </div>
-            ${p.en_espera ? '<span class="badge-espera">Espera</span>' : ''}
-            ${esperaBadge}
             <div class="row-time">${time}</div>
             <div class="attendance-btns">
               <button class="att-btn subio ${isSubio ? 'active' : ''}" data-id="${p.id}" data-action="subio">✅ Subió</button>

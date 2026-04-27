@@ -2288,11 +2288,13 @@
           row.innerHTML = `
             <div class="pl-num">${idx + 1}</div>
             <div class="pl-info">
-              <div class="pl-name">${p.nombre || 'Sin nombre'}</div>
+              <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                <div class="pl-name">${p.nombre || 'Sin nombre'}</div>
+                ${p.en_espera ? '<span class="pl-espera-tag">Espera</span>' : ''}
+                ${puntoEsperaBadge}
+              </div>
               <div class="pl-mat">${p.matricula || ''}</div>
             </div>
-            ${p.en_espera ? '<span class="pl-espera-tag">Espera</span>' : ''}
-            ${puntoEsperaBadge}
             <div class="pl-time">${time}</div>
             <div class="pl-att-wrap">
               <button type="button" class="pl-att-btn pl-subio ${isSubio ? 'active' : ''}" data-id="${p.id}" data-action="subio">\u2705 Subi\u00f3</button>

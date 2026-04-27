@@ -391,11 +391,13 @@
             row.innerHTML = `
               <div class="passenger-num">${idx + 1}</div>
               <div class="passenger-info">
-                <div class="passenger-name">${p.nombre || 'Sin nombre'}</div>
+                <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                  <div class="passenger-name">${p.nombre || 'Sin nombre'}</div>
+                  ${p.en_espera ? '<span class="badge-espera">En espera</span>' : ''}
+                  ${esperaBadge}
+                </div>
                 ${p.universidad ? `<div class="passenger-uni">${p.universidad}</div>` : ''}
               </div>
-              ${p.en_espera ? '<span class="badge-espera">En espera</span>' : ''}
-              ${esperaBadge}
               <div class="passenger-time">${time}</div>
             `;
             listEl.appendChild(row);
