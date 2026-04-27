@@ -12,6 +12,7 @@ let isEditing = false;
 let initialVotes = [];
 let pageInitialized = false;
 let currentAdminStats = null;
+let currentCaptchaResult = null;
 let horarioForm, scheduleGrid, statusMsg, confirmedView;
 
 function refreshIcons() {
@@ -187,14 +188,15 @@ function initIndexPage() {
  const showRegisterBtn = document.getElementById('showRegisterBtn');
  const showLoginBtn = document.getElementById('showLoginBtn');
 
- if(showRegisterBtn && loginForm && registerForm) {
- showRegisterBtn.addEventListener('click', (e) => {
- e.preventDefault();
- loginForm.classList.add('hidden');
- registerForm.classList.remove('hidden');
- if (window.lucide) window.lucide.createIcons();
- });
- }
+  if(showRegisterBtn && loginForm && registerForm) {
+  showRegisterBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  loginForm.classList.add('hidden');
+  registerForm.classList.remove('hidden');
+  generateCaptcha();
+  if (window.lucide) window.lucide.createIcons();
+  });
+  }
 
  if(showLoginBtn && loginForm && registerForm) {
  showLoginBtn.addEventListener('click', (e) => {
@@ -350,11 +352,29 @@ function initIndexPage() {
  });
   }
 
+  function generateCaptcha() {
+    const a = Math.floor(Math.random() * 9) + 1;
+    const b = Math.floor(Math.random() * 9) + 1;
+    currentCaptchaResult = a + b;
+    const qEl = document.getElementById('captchaQuestion');
+    if (qEl) qEl.textContent = `${a} + ${b}`;
+    const ansEl = document.getElementById('captchaAnswer');
+    if (ansEl) ansEl.value = '';
+  }
+
   if (registerForm) {
- 
- registerForm.addEventListener('submit', async function(e) {
- e.preventDefault();
- errorDiv.classList.add('hidden');
+  
+  registerForm.addEventListener('submit', async function(e) {
+  e.preventDefault();
+  if (errorDiv) errorDiv.classList.add('hidden');
+  
+  // Verificar CAPTCHA
+  const userAns = parseInt(document.getElementById('captchaAnswer').value);
+  if (userAns !== currentCaptchaResult) {
+    showError('La respuesta del CAPTCHA es incorrecta. Inténtalo de nuevo.');
+    generateCaptcha();
+    return;
+  }
  
  const matricula = document.getElementById('matricula').value.trim();
  const nombre = document.getElementById('nombre').value.trim();

@@ -99,6 +99,16 @@
             <option value="Otra">UASD</option>
           </select>
         </div>
+
+        <!-- CAPTCHA -->
+        <div class="captcha-container bg-slate-800/40 border border-slate-700/50 rounded-xl p-4 mt-2">
+          <p class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-2">Verificación de seguridad</p>
+          <div class="flex items-center gap-3">
+            <div id="captchaQuestion" class="bg-slate-900/80 px-4 py-2 rounded-lg font-bold text-white text-lg border border-slate-700">...</div>
+            <input type="number" id="captchaAnswer" class="premium-input text-center" style="width: 80px;" placeholder="?" required>
+          </div>
+          <p class="text-[10px] text-gray-500 mt-2">Resuelve esta suma para confirmar que eres humano.</p>
+        </div>
         <button type="submit" class="btn-premium btn-success btn-block">Registrar cuenta</button>
         <div class="text-center mt-4">
           <a href="#" id="showLoginBtn" class="text-blue-400 font-medium hover:underline">¿Ya tienes cuenta? Inicia
