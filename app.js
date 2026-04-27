@@ -54,10 +54,6 @@ async function initApp() {
           const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
           if (data) {
             currentUser = data;
-            if (currentUser.matricula === '20230105' && !currentUser.rol.includes('desarrolladora')) {
-              currentUser.rol = 'desarrolladora';
-              supabase.from('profiles').update({ rol: 'desarrolladora' }).eq('id', user.id).then();
-            }
             setSession(currentUser);
           }
         } catch(e) { console.error('Error fetching profile:', e); }
@@ -335,23 +331,6 @@ function initIndexPage() {
  .single();
 
  if (userData) {
- // Auto-promover a administradora/desarrolladora (ejemplo del código original)
- if (userData.matricula === '0000' && userData.rol !== 'administrador') {
- userData.rol = 'administrador';
- await supabase.from('profiles').update({ rol: 'administrador' }).eq('id', user.id);
- }
- 
- if (userData.matricula === '20230105' && userData.rol !== 'desarrolladora') {
- userData.rol = 'desarrolladora';
- // Actualización silenciosa (si el RLS lo bloquea, aún retendrá el rol en su sesión actual)
- supabase.from('profiles').update({ rol: 'desarrolladora' }).eq('id', user.id).then();
- }
- 
- if ((userData.matricula.toLowerCase() === 'choferes' || userData.nombre.toLowerCase() === 'choferes' || pass === 'choferes2025') && userData.rol !== 'chofer') {
- userData.rol = 'chofer';
- supabase.from('profiles').update({ rol: 'chofer' }).eq('id', user.id).then();
- }
- 
  setSession(userData);
   if (userData.rol === 'chofer' || userData.rol === 'admin_chofer') {
     window.location.href = 'choferes.html';
@@ -436,7 +415,7 @@ function initIndexPage() {
  telefono,
  email,
  universidad,
- rol: (matricula.toLowerCase() === 'choferes') ? 'chofer' : (matricula === '0000' ? 'administrador' : (matricula === '20230105' ? 'desarrolladora' : 'estudiante'))
+ rol: 'estudiante'
  };
  
  // Guardar en tabla de perfiles

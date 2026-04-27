@@ -493,9 +493,23 @@
       if (raw && raw !== 'undefined') currentUser = JSON.parse(raw);
     } catch(e) {}
 
-    if (!currentUser) {
-      window.location.href = 'index.html';
+    async function checkSecurity() {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error || !user) {
+        localStorage.clear();
+        window.location.href = 'index.html';
+        return;
+      }
+      
+      const { data: profile } = await supabase.from('profiles').select('rol').eq('id', user.id).single();
+      const isAdmin = profile && (profile.rol.includes('admin') || profile.rol.includes('desarrolladora') || profile.rol.includes('comité'));
+      
+      if (!profile || !isAdmin) {
+        window.location.href = 'votar.html';
+        return;
+      }
     }
+    checkSecurity();
 
     // Show admin link if developer/admin
     if (currentUser && (currentUser.rol.includes('admin') || currentUser.rol.includes('desarrolladora'))) {
@@ -627,18 +641,35 @@
             <div class="row-num">${idx+1}</div>
             <div class="row-info">
               <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
-                <div class="row-name">${p.nombre || 'Sin nombre'}</div>
-                ${p.en_espera ? '<span class="badge-espera">Espera</span>' : ''}
-                ${esperaBadge}
+                <div class="row-name"></div>
+                <div class="badges-area" style="display:flex; gap:0.3rem;"></div>
               </div>
-              <div class="row-mat">${p.matricula || ''}</div>
+              <div class="row-mat"></div>
             </div>
-            <div class="row-time">${time}</div>
+            <div class="row-time"></div>
             <div class="attendance-btns">
               <button class="att-btn subio ${isSubio ? 'active' : ''}" data-id="${p.id}" data-action="subio">✅ Subió</button>
               <button class="att-btn no-subio ${isNoSubio ? 'active' : ''}" data-id="${p.id}" data-action="no-subio">❌ No subió</button>
             </div>
           `;
+          
+          row.querySelector('.row-name').textContent = p.nombre || 'Sin nombre';
+          row.querySelector('.row-mat').textContent = p.matricula || '';
+          row.querySelector('.row-time').textContent = time;
+          
+          const badgesArea = row.querySelector('.badges-area');
+          if (p.en_espera) {
+            const span = document.createElement('span');
+            span.className = 'badge-espera';
+            span.textContent = 'Espera';
+            badgesArea.appendChild(span);
+          }
+          if (p.punto_espera === 'camino' || p.punto_espera === 'parada') {
+            const pointSpan = document.createElement('span');
+            pointSpan.style.cssText = 'font-size:0.6rem;font-weight:800;background:rgba(52,211,153,0.12);color:#34d399;border:1px solid rgba(52,211,153,0.3);padding:0.12rem 0.5rem;border-radius:999px;flex-shrink:0;';
+            pointSpan.textContent = p.punto_espera === 'camino' ? '🚶 Camino' : '📍 Parada';
+            badgesArea.appendChild(pointSpan);
+          }
 
 
           // Attendance events

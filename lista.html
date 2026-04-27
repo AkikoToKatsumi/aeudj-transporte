@@ -392,14 +392,30 @@
               <div class="passenger-num">${idx + 1}</div>
               <div class="passenger-info">
                 <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
-                  <div class="passenger-name">${p.nombre || 'Sin nombre'}</div>
-                  ${p.en_espera ? '<span class="badge-espera">En espera</span>' : ''}
-                  ${esperaBadge}
+                  <div class="passenger-name"></div>
+                  <div class="badges-area" style="display:flex; gap:0.3rem;"></div>
                 </div>
-                ${p.universidad ? `<div class="passenger-uni">${p.universidad}</div>` : ''}
+                <div class="passenger-uni"></div>
               </div>
               <div class="passenger-time">${time}</div>
             `;
+            
+            row.querySelector('.passenger-name').textContent = p.nombre || 'Sin nombre';
+            row.querySelector('.passenger-uni').textContent = p.universidad || '';
+            
+            const badgesArea = row.querySelector('.badges-area');
+            if (p.en_espera) {
+              const span = document.createElement('span');
+              span.className = 'badge-espera';
+              span.textContent = 'En espera';
+              badgesArea.appendChild(span);
+            }
+            if (p.punto_espera === 'camino' || p.punto_espera === 'parada') {
+              const pointSpan = document.createElement('span');
+              pointSpan.style.cssText = 'font-size:0.6rem;font-weight:800;background:rgba(52,211,153,0.12);color:#34d399;border:1px solid rgba(52,211,153,0.3);padding:0.12rem 0.5rem;border-radius:999px;flex-shrink:0;';
+              pointSpan.textContent = p.punto_espera === 'camino' ? '🚶 Camino' : '📍 Parada';
+              badgesArea.appendChild(pointSpan);
+            }
             listEl.appendChild(row);
           });
         });

@@ -394,15 +394,21 @@
       return hours * 60 + minutes;
     }
 
-    let currentUser = null;
-    try {
-      const raw = localStorage.getItem('aeudj_user');
-      if (raw && raw !== 'undefined') currentUser = JSON.parse(raw);
-    } catch(e) {}
-
-    if (!currentUser || (currentUser.rol !== 'chofer' && currentUser.rol !== 'admin_chofer' && currentUser.rol !== 'administrador' && currentUser.rol !== 'desarrolladora')) {
-      window.location.href = 'index.html';
+    async function checkSecurity() {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error || !user) {
+        localStorage.clear();
+        window.location.href = 'index.html';
+        return;
+      }
+      
+      const { data: profile } = await supabase.from('profiles').select('rol').eq('id', user.id).single();
+      if (!profile || (!profile.rol.includes('chofer') && !profile.rol.includes('admin_chofer') && !profile.rol.includes('desarrolladora'))) {
+        window.location.href = 'votar.html';
+        return;
+      }
     }
+    checkSecurity();
 
     document.getElementById('logoutBtn').onclick = () => { 
       localStorage.clear(); 
@@ -474,16 +480,31 @@
           const numConfirmados = group.confirmados.length;
           const numEspera = group.espera.length;
           const allPassengers = [...group.confirmados, ...group.espera];
+          const passengerHtmlNodes = [];
 
-          let passengerHtml = '';
           allPassengers.forEach((p, idx) => {
-            passengerHtml += `
-              <div class="p-row">
-                <div class="p-num">${idx + 1}</div>
-                <div class="p-name ${p.en_espera ? 'text-amber-400' : 'text-slate-200'}">${p.nombre || 'Sin nombre'}</div>
-                ${p.en_espera ? '<div class="badge-espera">Lista de Espera</div>' : ''}
-              </div>
-            `;
+            const row = document.createElement('div');
+            row.className = 'p-row';
+            
+            const num = document.createElement('div');
+            num.className = 'p-num';
+            num.textContent = idx + 1;
+            
+            const name = document.createElement('div');
+            name.className = `p-name ${p.en_espera ? 'text-amber-400' : 'text-slate-200'}`;
+            name.textContent = p.nombre || 'Sin nombre';
+            
+            row.appendChild(num);
+            row.appendChild(name);
+            
+            if (p.en_espera) {
+              const badge = document.createElement('div');
+              badge.className = 'badge-espera';
+              badge.textContent = 'Lista de Espera';
+              row.appendChild(badge);
+            }
+            
+            passengerHtmlNodes.push(row);
           });
 
           section.innerHTML = `
@@ -507,7 +528,6 @@
               Ver Pasajeros <i data-lucide="chevron-down"></i>
             </button>
             <div class="passenger-list-content">
-              ${passengerHtml}
             </div>
             <div class="notify-bar">
                <button class="notify-btn" onclick="window.sendTripNotification('${horario}', 'camino', this)">
@@ -526,6 +546,11 @@
             </div>
             ` : ''}
           `;
+
+          if (allPassengers.length > 0) {
+            const listContent = section.querySelector('.passenger-list-content');
+            passengerHtmlNodes.forEach(node => listContent.appendChild(node));
+          }
 
           container.appendChild(section);
         });

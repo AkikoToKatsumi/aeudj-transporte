@@ -795,9 +795,42 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyand4ZWdlcGt6bnFyaXNicnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNjk0NDIsImV4cCI6MjA5MTc0NTQ0Mn0.TZOhsy0ghfmjK8rd4GWcgbtOLpERKRJ62mjqc5gaYOM';
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const currentUser = JSON.parse(localStorage.getItem('aeudj_user') || 'null');
-    if (!currentUser || (!currentUser.rol.includes('admin') && !currentUser.rol.includes('desarrolladora'))) {
-      window.location.href = 'index.html';
+    let currentUser = null;
+    try {
+      const raw = localStorage.getItem('aeudj_user');
+      if (raw && raw !== 'undefined') currentUser = JSON.parse(raw);
+    } catch(e) {}
+
+    // Verificación de sesión más robusta
+    async function checkSecurity() {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      
+      if (error || !user) {
+        localStorage.clear();
+        window.location.href = 'index.html';
+        return;
+      }
+
+      // Volver a verificar el rol desde la base de datos (más seguro que localStorage)
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('rol')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile || (!profile.rol.includes('admin') && !profile.rol.includes('desarrolladora'))) {
+        window.location.href = 'votar.html';
+        return;
+      }
+    }
+    
+    checkSecurity();
+
+    function sanitize(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
     }
     
     function getCycleDate() {
@@ -1015,12 +1048,26 @@
           const hdr = document.createElement('div');
           hdr.className = 'pv-group-hdr';
           hdr.style.cursor = 'pointer';
-          hdr.innerHTML =
-            '<div class="pv-group-title">' + horario + '</div>' +
-            '<div class="pv-group-meta">' +
-              '<span class="pv-dir-pill ' + (ida ? 'pv-dir-ida' : 'pv-dir-vuelta') + '">' + (ida ? '\u2197 IDA' : '\u2199 VUELTA') + '</span>' +
-              '<span class="pv-count-pill">' + paxList.length + ' persona' + (paxList.length !== 1 ? 's' : '') + '</span>' +
-            '</div>';
+          const titleDiv = document.createElement('div');
+          titleDiv.className = 'pv-group-title';
+          titleDiv.textContent = horario;
+
+          const metaDiv = document.createElement('div');
+          metaDiv.className = 'pv-group-meta';
+          
+          const dirPill = document.createElement('span');
+          dirPill.className = `pv-dir-pill ${ida ? 'pv-dir-ida' : 'pv-dir-vuelta'}`;
+          dirPill.textContent = ida ? '\u2197 IDA' : '\u2199 VUELTA';
+          
+          const countPill = document.createElement('span');
+          countPill.className = 'pv-count-pill';
+          countPill.textContent = `${paxList.length} persona${paxList.length !== 1 ? 's' : ''}`;
+          
+          metaDiv.appendChild(dirPill);
+          metaDiv.appendChild(countPill);
+          
+          hdr.appendChild(titleDiv);
+          hdr.appendChild(metaDiv);
 
           const body = document.createElement('div');
           body.style.cssText = 'padding:.6rem 1.15rem;display:flex;gap:.75rem;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.04);';
@@ -1215,21 +1262,30 @@
           hours = hours % 12 || 12;
           const time = `${hours}:${minutes} ${ampm}`;
           const row  = document.createElement('div');
-          row.className = 'pv-row';
-          const esperaBadge = p.punto_espera === 'camino'
-            ? '<span style="font-size:0.58rem;font-weight:800;background:rgba(52,211,153,0.12);color:#34d399;border:1px solid rgba(52,211,153,0.3);padding:0.1rem 0.45rem;border-radius:999px;">🚶 Camino</span>'
-            : p.punto_espera === 'parada'
-            ? '<span style="font-size:0.58rem;font-weight:800;background:rgba(59,130,246,0.12);color:#93c5fd;border:1px solid rgba(59,130,246,0.3);padding:0.1rem 0.45rem;border-radius:999px;">📍 Parada</span>'
-            : '';
           row.innerHTML =
             '<div class="pv-num">' + (idx + 1) + '</div>' +
             '<div class="pv-info">' +
-              '<div class="pv-name">' + (p.nombre || 'Sin nombre') + '</div>' +
-              '<div class="pv-mat">' + (p.matricula || '') + '</div>' +
+              '<div class="pv-name"></div>' +
+              '<div class="pv-mat"></div>' +
             '</div>' +
-            esperaBadge +
-            '<div class="pv-time">' + time + '</div>' +
-            '<span class="pv-badge ' + (p.en_espera ? 'pv-badge-espera' : 'pv-badge-ok') + '">' + (p.en_espera ? 'Espera' : 'Confirmado') + '</span>';
+            '<div class="pv-point"></div>' +
+            '<div class="pv-time"></div>' +
+            '<span class="pv-badge"></span>';
+            
+          row.querySelector('.pv-name').textContent = p.nombre || 'Sin nombre';
+          row.querySelector('.pv-mat').textContent = p.matricula || '';
+          row.querySelector('.pv-time').textContent = time;
+          
+          const badge = row.querySelector('.pv-badge');
+          badge.className = 'pv-badge ' + (p.en_espera ? 'pv-badge-espera' : 'pv-badge-ok');
+          badge.textContent = p.en_espera ? 'Espera' : 'Confirmado';
+
+          const pointDiv = row.querySelector('.pv-point');
+          if (p.punto_espera === 'camino') {
+            pointDiv.innerHTML = '<span style="font-size:0.58rem;font-weight:800;background:rgba(52,211,153,0.12);color:#34d399;border:1px solid rgba(52,211,153,0.3);padding:0.1rem 0.45rem;border-radius:999px;">🚶 Camino</span>';
+          } else if (p.punto_espera === 'parada') {
+            pointDiv.innerHTML = '<span style="font-size:0.58rem;font-weight:800;background:rgba(59,130,246,0.12);color:#93c5fd;border:1px solid rgba(59,130,246,0.3);padding:0.1rem 0.45rem;border-radius:999px;">📍 Parada</span>';
+          }
           body.appendChild(row);
         });
 
@@ -1376,8 +1432,8 @@
               <div style="display:flex;align-items:center;gap:.75rem">
                 <div class="staff-avatar-new" style="background:${avatarBg}">${initials}</div>
                 <div>
-                  <div class="staff-name-new">${u.nombre}</div>
-                  <div class="staff-meta-new">${u.telefono ? `📞 ${u.telefono}` : 'Sin teléfono'}</div>
+                  <div class="staff-name-new">${sanitize(u.nombre)}</div>
+                  <div class="staff-meta-new">${u.telefono ? `📞 ${sanitize(u.telefono)}` : 'Sin teléfono'}</div>
                 </div>
               </div>
             </td>
@@ -1399,7 +1455,7 @@
                  </select>
               </div>
             </td>
-            <td><code style="font-size:.78rem;color:#94a3b8;background:rgba(0,0,0,.25);padding:.2rem .5rem;border-radius:.4rem;border:1px solid rgba(255,255,255,0.05);">${u.matricula || 'N/A'}</code></td>
+            <td><code style="font-size:.78rem;color:#94a3b8;background:rgba(0,0,0,.25);padding:.2rem .5rem;border-radius:.4rem;border:1px solid rgba(255,255,255,0.05);">${sanitize(u.matricula) || 'N/A'}</code></td>
             <td>
               <div class="staff-row-actions" style="display:flex;gap:0.5rem;justify-content:flex-end;">
                 <button class="staff-icon-btn" style="color:#60a5fa;border:1px solid rgba(96,165,250,0.3);background:rgba(96,165,250,0.1);padding:0.4rem;border-radius:0.4rem;cursor:pointer;" title="Editar Datos" onclick="window.editUserNew('${u.id}')">
@@ -2507,17 +2563,17 @@
                        : '<span class="audit-badge voto">Pendiente</span>';
           html += `
             <td class="audit-time">${i + 1}</td>
-            <td><div class="audit-name">${r.nombre || '—'}</div><div class="audit-mat">${r.matricula || ''}</div></td>
-            <td class="audit-horario">${r.horario || '—'}</td>
+            <td><div class="audit-name">${sanitize(r.nombre) || '—'}</div><div class="audit-mat">${sanitize(r.matricula) || ''}</div></td>
+            <td class="audit-horario">${sanitize(r.horario) || '—'}</td>
             <td>${estado}</td>
             <td class="audit-time">${fmtDateTime(r.created_at)}</td>
           `;
         } else if (auditActiveTab === 'faltas') {
           html += `
             <td class="audit-time">${i + 1}</td>
-            <td><div class="audit-name">${r.nombre || '—'}</div><div class="audit-mat">${r.matricula || ''}</div></td>
-            <td class="audit-horario">${r.horario || '—'}</td>
-            <td class="audit-time">${r.fecha || '—'}</td>
+            <td><div class="audit-name">${sanitize(r.nombre) || '—'}</div><div class="audit-mat">${sanitize(r.matricula) || ''}</div></td>
+            <td class="audit-horario">${sanitize(r.horario) || '—'}</td>
+            <td class="audit-time">${sanitize(r.fecha) || '—'}</td>
             <td class="audit-time">${fmtDateTime(r.created_at)}</td>
           `;
         } else {
@@ -2528,7 +2584,7 @@
             : '<span class="audit-badge activo">✅ Activo</span>';
           html += `
             <td class="audit-time">${i + 1}</td>
-            <td><div class="audit-name">${r.nombre || '—'}</div><div class="audit-mat">${r.matricula || ''}</div></td>
+            <td><div class="audit-name">${sanitize(r.nombre) || '—'}</div><div class="audit-mat">${sanitize(r.matricula) || ''}</div></td>
             <td><span style="font-weight:800;color:${color};">${faltasNum}</span><span style="color:#475569;font-size:.7rem;"> / 3</span></td>
             <td>${penBadge}</td>
             <td class="audit-time">${fmtDateTime(r.updated_at)}</td>
