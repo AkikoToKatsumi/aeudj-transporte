@@ -208,17 +208,21 @@
           .pv-chevron { color:#475569; width:16px; height:16px; transition:transform .2s; }
           .pv-chevron.open { transform:rotate(180deg); }
           .pv-body { display:flex; flex-direction:column; }
-          .pv-row { display:flex; align-items:center; gap:.8rem; padding:.7rem 1.15rem; border-bottom:1px solid rgba(255,255,255,0.04); transition:background .12s; }
+          .pv-row { display:flex; align-items:center; gap:.75rem; padding:.55rem .85rem; border-bottom:1px solid rgba(255,255,255,0.04); transition:all .15s; }
           .pv-row:last-child { border-bottom:none; }
-          .pv-row:hover { background:rgba(255,255,255,0.02); }
-          .pv-num { width:28px; height:28px; border-radius:50%; flex-shrink:0; background:rgba(59,130,246,.12); border:1px solid rgba(59,130,246,.2); display:flex; align-items:center; justify-content:center; font-size:.7rem; font-weight:800; color:#60a5fa; }
+          .pv-row:hover { background:rgba(255,255,255,0.03); transform:translateX(3px); }
+          .pv-num { width:24px; height:24px; border-radius:6px; flex-shrink:0; background:rgba(59,130,246,.12); border:1px solid rgba(59,130,246,.2); display:flex; align-items:center; justify-content:center; font-size:.65rem; font-weight:800; color:#60a5fa; }
           .pv-info { flex:1; min-width:0; }
-          .pv-name { font-size:.87rem; font-weight:700; color:#f1f5f9; }
-          .pv-mat  { font-size:.67rem; font-family:monospace; color:#475569; margin-top:.03rem; }
-          .pv-badge { font-size:.6rem; font-weight:800; flex-shrink:0; padding:.15rem .55rem; border-radius:999px; text-transform:uppercase; }
-          .pv-badge-ok     { background:rgba(52,211,153,.12); color:#34d399; border:1px solid rgba(52,211,153,.25); }
+          .pv-name { font-size:.82rem; font-weight:700; color:#f1f5f9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+          .pv-mat  { font-size:.62rem; color:#475569; margin-top:.05rem; font-weight:500; }
+          .pv-status { display:flex; align-items:center; gap:.35rem; flex-shrink:0; }
+          .pv-point { display:flex; align-items:center; }
+          .pv-badge { font-size:.58rem; font-weight:800; flex-shrink:0; padding:.15rem .45rem; border-radius:6px; text-transform:uppercase; letter-spacing:.02em; }
+          .pv-badge-ok     { background:rgba(16,185,129,.12); color:#10b981; border:1px solid rgba(16,185,129,.25); }
           .pv-badge-espera { background:rgba(251,146,60,.12); color:#fb923c; border:1px solid rgba(251,146,60,.25); }
-          .pv-time { font-size:.74rem; font-weight:700; color:#60a5fa; font-family:monospace; flex-shrink:0; }
+          .pv-badge-camino { background:rgba(245,158,11,.12); color:#f59e0b; border:1px solid rgba(245,158,11,.25); }
+          .pv-badge-parada { background:rgba(59,130,246,.12); color:#60a5fa; border:1px solid rgba(59,130,246,.25); }
+          .pv-time { font-size:.62rem; font-weight:700; color:#3b82f6; background:rgba(59,130,246,.1); padding:.15rem .35rem; border-radius:4px; flex-shrink:0; }
           .pv-empty { text-align:center; padding:3rem 1.5rem; color:#475569; }
           .pv-spin { width:30px; height:30px; margin:0 auto .75rem; border:3px solid rgba(59,130,246,.2); border-top-color:#3b82f6; border-radius:50%; animation:pvSpin .8s linear infinite; }
           @keyframes pvSpin { to { transform:rotate(360deg); } }
@@ -1262,18 +1266,21 @@
           hours = hours % 12 || 12;
           const time = `${hours}:${minutes} ${ampm}`;
           const row  = document.createElement('div');
+          row.className = 'pv-row';
           row.innerHTML =
             '<div class="pv-num">' + (idx + 1) + '</div>' +
             '<div class="pv-info">' +
               '<div class="pv-name"></div>' +
               '<div class="pv-mat"></div>' +
             '</div>' +
-            '<div class="pv-point"></div>' +
-            '<div class="pv-time"></div>' +
-            '<span class="pv-badge"></span>';
+            '<div class="pv-status">' +
+              '<div class="pv-point"></div>' +
+              '<span class="pv-badge"></span>' +
+              '<div class="pv-time"></div>' +
+            '</div>';
             
           row.querySelector('.pv-name').textContent = p.nombre || 'Sin nombre';
-          row.querySelector('.pv-mat').textContent = p.matricula || '';
+          row.querySelector('.pv-mat').textContent = (p.matricula || '') + (p.universidad ? ' · ' + p.universidad : '');
           row.querySelector('.pv-time').textContent = time;
           
           const badge = row.querySelector('.pv-badge');
@@ -1282,9 +1289,15 @@
 
           const pointDiv = row.querySelector('.pv-point');
           if (p.punto_espera === 'camino') {
-            pointDiv.innerHTML = '<span style="font-size:0.58rem;font-weight:800;background:rgba(52,211,153,0.12);color:#34d399;border:1px solid rgba(52,211,153,0.3);padding:0.1rem 0.45rem;border-radius:999px;">🚶 Camino</span>';
+            const s = document.createElement('span');
+            s.className = 'pv-badge pv-badge-camino';
+            s.textContent = '🚶 Camino';
+            pointDiv.appendChild(s);
           } else if (p.punto_espera === 'parada') {
-            pointDiv.innerHTML = '<span style="font-size:0.58rem;font-weight:800;background:rgba(59,130,246,0.12);color:#93c5fd;border:1px solid rgba(59,130,246,0.3);padding:0.1rem 0.45rem;border-radius:999px;">📍 Parada</span>';
+            const s = document.createElement('span');
+            s.className = 'pv-badge pv-badge-parada';
+            s.textContent = '📍 Parada';
+            pointDiv.appendChild(s);
           }
           body.appendChild(row);
         });
