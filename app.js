@@ -252,59 +252,37 @@ function initIndexPage() {
  }
 
  try {
- let matriculaLogin = userInput;
-
- let userDataLocal = null;
- 
- // Buscar por matrícula o teléfono
- const { data: userByMat, error: errMat } = await supabase
- .from('profiles')
- .select('*')
- .eq('matricula', userInput)
- .maybeSingle();
-
- if (userByMat) {
- userDataLocal = userByMat;
- } else {
- const { data: userByTel, error: errTel } = await supabase
- .from('profiles')
- .select('*')
- .eq('telefono', userInput)
- .maybeSingle();
- 
- if (userByTel) {
- userDataLocal = userByTel;
- matriculaLogin = userDataLocal.matricula;
- }
- }
- 
- const pseudoEmail = `${matriculaLogin}@aeudj.com`;
-
- let authResult;
- // Intentar con pseudo-email
- authResult = await supabase.auth.signInWithPassword({
- email: pseudoEmail,
- password: pass
- });
-
-  if (authResult.error) {
-    // CASO ESPECIAL: Si es la cuenta maestra de choferes y falla el login, intentamos crearla automáticamente
-    if (false) {
-      // Bloque de cuenta maestra eliminado por seguridad.
+    let userDataLocal = null;
+    
+    // 1. Buscar perfil por matrícula
+    const { data: userByMat } = await supabase.from('profiles').select('*').eq('matricula', userInput).maybeSingle();
+    if (userByMat) {
+      userDataLocal = userByMat;
     } else {
-      // Intentar con email real si existe en el perfil
-      if (userDataLocal && userDataLocal.email) {
-        authResult = await supabase.auth.signInWithPassword({
-          email: userDataLocal.email,
-          password: pass
-        });
-      }
-      
-      if (authResult.error) throw authResult.error;
+      // 2. Si no hay por matrícula, buscar por teléfono
+      const { data: userByTel } = await supabase.from('profiles').select('*').eq('telefono', userInput).maybeSingle();
+      if (userByTel) userDataLocal = userByTel;
     }
-  }
- 
- const user = authResult.data.user;
+
+    let authResult;
+    if (userDataLocal && userDataLocal.email) {
+      // 3. Si tenemos perfil, usar su correo real
+      authResult = await supabase.auth.signInWithPassword({
+        email: userDataLocal.email,
+        password: pass
+      });
+    } else {
+      // 4. Si no hay perfil o no tiene email, intentar con el pseudo-email (compatibilidad)
+      const emailToTry = userInput.includes('@') ? userInput : `${userInput}@aeudj.com`;
+      authResult = await supabase.auth.signInWithPassword({
+        email: emailToTry,
+        password: pass
+      });
+    }
+
+    if (authResult.error) throw authResult.error;
+    
+    const user = authResult.data.user;
  
  const { data: userData, error: fetchErr } = await supabase
  .from('profiles')
