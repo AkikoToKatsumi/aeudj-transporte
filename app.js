@@ -250,7 +250,8 @@ function initIndexPage() {
  btn.disabled = true;
  btn.textContent = 'Verificando...';
  }
-    let userDataLocal = null;
+  try {
+    let userDataLocal = null;
     let matriculaLogin = userInput;
     
     // 1. Buscar perfil por matrícula
