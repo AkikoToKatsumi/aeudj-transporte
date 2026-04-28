@@ -250,65 +250,73 @@ function initIndexPage() {
  btn.disabled = true;
  btn.textContent = 'Verificando...';
  }
-
- try {
-    let userDataLocal = null;
+    let userDataLocal = null;
+    let matriculaLogin = userInput;
     
     // 1. Buscar perfil por matrícula
     const { data: userByMat } = await supabase.from('profiles').select('*').eq('matricula', userInput).maybeSingle();
     if (userByMat) {
       userDataLocal = userByMat;
+      matriculaLogin = userDataLocal.matricula;
     } else {
       // 2. Si no hay por matrícula, buscar por teléfono
       const { data: userByTel } = await supabase.from('profiles').select('*').eq('telefono', userInput).maybeSingle();
-      if (userByTel) userDataLocal = userByTel;
+      if (userByTel) {
+        userDataLocal = userByTel;
+        matriculaLogin = userDataLocal.matricula;
+      }
     }
 
+    // 3. Determinar el email a usar para Auth
+    const pseudoEmail = matriculaLogin.includes('@') ? matriculaLogin : `${matriculaLogin.replace(/\s+/g, '')}@aeudj.com`;
+
     let authResult;
-    if (userDataLocal && userDataLocal.email) {
-      // 3. Si tenemos perfil, usar su correo real
-      authResult = await supabase.auth.signInWithPassword({
+    // Intentar PRIMERO con el pseudo-email (que es como se registran en app.js:363)
+    authResult = await supabase.auth.signInWithPassword({
+      email: pseudoEmail,
+      password: pass
+    });
+
+    // 4. Si falla, y tenemos un email real en el perfil, intentar con ese como fallback
+    if (authResult.error && userDataLocal && userDataLocal.email && userDataLocal.email !== pseudoEmail) {
+      const secondAuthResult = await supabase.auth.signInWithPassword({
         email: userDataLocal.email,
         password: pass
       });
-    } else {
-      // 4. Si no hay perfil o no tiene email, intentar con el pseudo-email (compatibilidad)
-      const emailToTry = userInput.includes('@') ? userInput : `${userInput}@aeudj.com`;
-      authResult = await supabase.auth.signInWithPassword({
-        email: emailToTry,
-        password: pass
-      });
+      if (!secondAuthResult.error) {
+        authResult = secondAuthResult;
+      }
     }
 
     if (authResult.error) throw authResult.error;
     
     const user = authResult.data.user;
  
- const { data: userData, error: fetchErr } = await supabase
- .from('profiles')
- .select('*')
- .eq('id', user.id)
- .single();
+    const { data: userData, error: fetchErr } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
 
- if (userData) {
- setSession(userData);
-  if (userData.rol === 'chofer' || userData.rol === 'admin_chofer') {
-    window.location.href = 'choferes.html';
-  } else {
-    window.location.href = 'votar.html';
-  }
- } else {
- showError('Credenciales correctas, pero no se encontraron datos de usuario en la base de datos.');
- }
- 
- } catch (error) {
- console.error('Error:', error);
- showError('Error al iniciar sesión. Verifica tu matrícula o contraseña.');
- }
- btn.disabled = false;
- btn.textContent = 'Entrar';
- });
-  }
+    if (userData) {
+      setSession(userData);
+      if (userData.rol === 'chofer' || userData.rol === 'admin_chofer') {
+        window.location.href = 'choferes.html';
+      } else {
+        window.location.href = 'votar.html';
+      }
+    } else {
+      showError('Credenciales correctas, pero no se encontraron datos de usuario en la base de datos.');
+    }
+    
+    } catch (error) {
+      console.error('Error:', error);
+      showError('Error al iniciar sesión. Verifica tu matrícula o contraseña.');
+    }
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+  });
+}
 
   if (registerForm) {
   
