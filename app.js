@@ -265,53 +265,70 @@ function initIndexPage() {
         authEmail = rawInput;
       } else {
         // 2. Intentar buscar el perfil para saber el email real
-        // Probamos varias combinaciones en el OR sin comillas innecesarias
         const { data: profile, error: searchError } = await supabase
           .from('profiles')
           .select('*')
           .or(`matricula.eq.${rawInput},telefono.eq.${rawInput},matricula.eq.${cleanInput}`)
           .maybeSingle();
         
-        if (searchError) console.warn('Búsqueda de perfil limitada (probablemente RLS):', searchError.message);
-
         if (profile) {
           userData = profile;
-          const pseudo = `${profile.matricula.replace(/[\s-]+/g, '')}@aeudj.com`;
-          
-          console.log('Perfil encontrado. Probando pseudo-email:', pseudo);
-          const { data: authA, error: errA } = await supabase.auth.signInWithPassword({
-            email: pseudo,
-            password: pass,
-          });
-
-          if (!errA) {
-            await finishLogin(profile, authA.user);
-            return;
-          }
-
-          console.log('Fallo pseudo-email, probando email del perfil:', profile.email);
-          if (profile.email && profile.email !== pseudo) {
-            const { data: authB, error: errB } = await supabase.auth.signInWithPassword({
-              email: profile.email,
-              password: pass,
-            });
-            if (!errB) {
-              await finishLogin(profile, authB.user);
-              return;
-            }
-          }
-          throw new Error('Contraseña incorrecta para este usuario.');
+          authEmail = profile.email; // Usamos el email real del perfil
+          console.log('Perfil encontrado. Email:', authEmail);
         } else {
-          // 3. Fallback universal
-          authEmail = `${cleanInput}@aeudj.com`;
-          console.log('No se encontró perfil, usando fallback:', authEmail);
+          // 2.1 Si no hay perfil (por RLS o no existe), buscamos en la tabla de votos (que es pública)
+          console.log('Perfil no accesible. Buscando en historial de votos...');
+          const { data: lastVote } = await supabase
+            .from('votos')
+            .select('email')
+            .or(`matricula.eq.${rawInput},matricula.eq.${cleanInput}`)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          
+          if (lastVote && lastVote.email) {
+            authEmail = lastVote.email;
+            console.log('Email recuperado de votos:', authEmail);
+          } else {
+            // 2.2 Fallback final al pseudo-email
+            authEmail = `${cleanInput}@aeudj.com`;
+            console.log('Sin historial, usando pseudo-email:', authEmail);
+          }
         }
       }
 
-      const { data: finalAuth, error: finalErr } = await supabase.auth.signInWithPassword({
+      // Intento de login principal
+      const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
         email: authEmail,
         password: pass,
       });
+
+      // Si falla y el authEmail era el real, probamos el pseudo-email por si acaso
+      let finalAuth = authData;
+      let finalErr = authErr;
+
+      if (finalErr && !rawInput.includes('@')) {
+        const pseudoFallback = `${cleanInput}@aeudj.com`;
+        if (authEmail !== pseudoFallback) {
+          console.log('Fallo con email recuperado, intentando pseudo-email...');
+          const { data: secondAuth, error: secondErr } = await supabase.auth.signInWithPassword({
+            email: pseudoFallback,
+            password: pass,
+          });
+          if (!secondErr) {
+            finalAuth = secondAuth;
+            finalErr = null;
+          }
+        }
+      }
+
+      if (finalErr) {
+        console.error('Error final en Auth:', finalErr);
+        if (finalErr.message.includes('Invalid login credentials')) {
+          throw new Error('La matrícula o contraseña son incorrectas.');
+        }
+        throw finalErr;
+      }
 
       if (finalErr) {
         console.error('Error final en Auth:', finalErr);

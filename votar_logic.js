@@ -215,44 +215,52 @@ function initIndexPage() {
       const rawInput = userInput;
       const cleanInput = rawInput.replace(/[\s-]+/g, ''); // Sin espacios ni guiones
       let userData = null;
-      
+      let authEmail = null;
+
       console.log('Tentando login para:', rawInput, 'Clean:', cleanInput);
 
-      // Buscar por matrícula o teléfono
-      const { data: profile, error: searchError } = await supabase
-        .from('profiles')
-        .select('*')
-        .or(`matricula.eq.${rawInput},telefono.eq.${rawInput},matricula.eq.${cleanInput}`)
-        .maybeSingle();
+      if (rawInput.includes('@')) {
+        authEmail = rawInput;
+      } else {
+        // 1. Buscar en perfiles (puede fallar por RLS)
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .or(`matricula.eq.${rawInput},telefono.eq.${rawInput},matricula.eq.${cleanInput}`)
+          .maybeSingle();
 
-      if (searchError) console.warn('Búsqueda limitada por RLS:', searchError.message);
+        if (profile) {
+          userData = profile;
+          authEmail = profile.email;
+        } else {
+          // 2. Fallback: Buscar en tabla pública de votos para recuperar el email
+          const { data: lastVote } = await supabase
+            .from('votos')
+            .select('email')
+            .or(`matricula.eq.${rawInput},matricula.eq.${cleanInput}`)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          
+          authEmail = (lastVote && lastVote.email) ? lastVote.email : `${cleanInput}@aeudj.com`;
+        }
+      }
 
-      let authResult;
+      // Intento A: Auth con email encontrado
+      let authResult = await supabase.auth.signInWithPassword({
+        email: authEmail,
+        password: pass
+      });
 
-      if (profile) {
-        userData = profile;
-        const pseudo = `${profile.matricula.replace(/[\s-]+/g, '')}@aeudj.com`;
-        
-        console.log('Perfil encontrado. Probando pseudo-email:', pseudo);
-        authResult = await supabase.auth.signInWithPassword({
+      // Intento B: Si falló el A, probar el pseudo-email por si acaso
+      const pseudo = `${cleanInput}@aeudj.com`;
+      if (authResult.error && authEmail !== pseudo) {
+        console.log('Fallo con email recuperado, probando pseudo-email...');
+        const secondAuth = await supabase.auth.signInWithPassword({
           email: pseudo,
           password: pass
         });
-
-        if (authResult.error && userData.email && userData.email !== pseudo) {
-          console.log('Fallo pseudo, probando email del perfil:', userData.email);
-          authResult = await supabase.auth.signInWithPassword({
-            email: userData.email,
-            password: pass
-          });
-        }
-      } else {
-        const fallback = `${cleanInput}@aeudj.com`;
-        console.log('No se encontró perfil, usando fallback:', fallback);
-        authResult = await supabase.auth.signInWithPassword({
-          email: fallback,
-          password: pass
-        });
+        if (!secondAuth.error) authResult = secondAuth;
       }
 
       if (authResult.error) {
