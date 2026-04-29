@@ -62,7 +62,9 @@ async function checkSecurity() {
     return;
   }
   
-  const rol = profile.rol || '';
+  const { data: profile } = await supabase.from('profiles').select('rol').eq('id', user.id).single();
+  const rol = (profile && profile.rol) ? profile.rol : '';
+  
   if (!profile || (!rol.includes('chofer') && !rol.includes('admin_chofer') && !rol.includes('desarrolladora'))) {
     console.warn("Acceso denegado: Rol insuficiente");
     window.location.href = 'votar.html';
@@ -132,7 +134,6 @@ async function loadData() {
     if (statTurnos) statTurnos.textContent = activeHorarios.length;
 
     container.innerHTML = '';
-    container.innerHTML = '';
 
     if (activeHorarios.length === 0) {
       container.innerHTML = '<div class="empty-state"><p>No hay viajes programados o activos para hoy.</p></div>';
@@ -169,14 +170,13 @@ async function loadData() {
           </button>
           <div class="passenger-list-content" id="content-list-${encodeURIComponent(horario)}"></div>
           <div class="notify-bar">
-           <button class="notify-btn"><i data-lucide="send"></i> En camino</button>
-           <button class="notify-btn"><i data-lucide="map-pin"></i> Llegó</button>
-           <button class="notify-btn"><i data-lucide="clock"></i> Saliendo</button>
-           <div style="width:1px; background:rgba(255,255,255,0.1); margin:0 0.2rem;"></div>
-           <button class="notify-btn whatsapp"><i data-lucide="message-circle"></i> WhatsApp</button>
-        </div>
-        ` : ''}
-      `;
+             <button class="notify-btn"><i data-lucide="send"></i> En camino</button>
+             <button class="notify-btn"><i data-lucide="map-pin"></i> Llegó</button>
+             <button class="notify-btn"><i data-lucide="clock"></i> Saliendo</button>
+             <div style="width:1px; background:rgba(255,255,255,0.1); margin:0 0.2rem;"></div>
+             <button class="notify-btn whatsapp"><i data-lucide="message-circle"></i> WhatsApp</button>
+          </div>
+        `;
 
       if (allPassengers.length > 0) {
         const listContent = section.querySelector('.passenger-list-content');

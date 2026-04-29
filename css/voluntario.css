@@ -312,8 +312,8 @@ h1 {
 .passenger-row {
   display: flex;
   align-items: center;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   gap: 1.25rem;
   animation: slideDown 0.3s ease-out;
 }
@@ -467,7 +467,4 @@ h1 {
 @media (max-width: 640px) {
   .stats-bar { grid-template-columns: 1fr; }
   h1 { font-size: 1.75rem; }
-  .passenger-row { flex-direction: column; align-items: flex-start; }
-  .attendance-btns { width: 100%; justify-content: space-between; }
-  .att-btn { flex: 1; }
 }

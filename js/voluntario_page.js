@@ -283,9 +283,8 @@ function renderList() {
     // Collapsible
     header.addEventListener('click', () => {
       const chevron = header.querySelector('.chevron');
-      const isOpen = chevron.classList.contains('open');
-      table.style.display = isOpen ? 'none' : 'flex';
-      chevron.classList.toggle('open', !isOpen);
+      const isOpen = table.classList.toggle('open');
+      chevron.classList.toggle('open', isOpen);
     });
 
     const notifyBar = document.createElement('div');
@@ -312,7 +311,17 @@ function renderList() {
     container.appendChild(section);
   });
 
-  if (pendingGroupsCount === 0 && Object.keys(groups).length > 0) {
+  if (Object.keys(groups).length === 0) {
+    container.innerHTML = `
+    <div style="text-align:center; padding: 4rem 1.5rem; opacity: 0.6;">
+      <div style="width:60px; height:60px; margin: 0 auto 1.5rem; background: rgba(255,255,255,0.05); color: var(--text-muted); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid var(--glass-border);">
+        <i data-lucide="clipboard-x" style="width:32px; height:32px;"></i>
+      </div>
+      <h2 style="font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Sin registros</h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 260px; margin: 0 auto;">No se han encontrado pasajeros registrados para los turnos de hoy.</p>
+    </div>
+    `;
+  } else if (pendingGroupsCount === 0) {
     container.innerHTML = `
     <div style="text-align:center; padding: 3rem 1.5rem; background: rgba(16,185,129,0.1); border-radius: 1.5rem; border: 1px solid rgba(16,185,129,0.2); margin-top: 1rem;">
       <div style="width:60px; height:60px; margin: 0 auto 1.5rem; background: rgba(16,185,129,0.15); color: #34d399; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 25px rgba(16,185,129,0.2);">
