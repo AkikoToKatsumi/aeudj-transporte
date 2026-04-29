@@ -385,6 +385,8 @@ function initIndexPage() {
  errorDiv.classList.remove('hidden');
  }
 }
+}
+
 
 // ============================================
 // PGINA VOTAR
