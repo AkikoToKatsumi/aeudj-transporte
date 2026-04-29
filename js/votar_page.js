@@ -148,7 +148,8 @@ function renderHorarios(group) {
   let visible = SCHEDULES.filter(s => s.group === group);
 
   // Si es Sábado (día 6), solo permitimos 7:00 AM y 12:10 PM
-  const dateParts = getCycleDate(group).split('-');
+  const cycleDateStr = getCycleDate(group);
+  const dateParts = cycleDateStr.split('-');
   const d = new Date(dateParts[0], dateParts[1] - 1, dateParts[2], 12, 0, 0);
   if (d.getDay() === 6) {
     visible = visible.filter(s => s.time === '7:00 AM' || s.time === '12:10 PM');
@@ -185,7 +186,7 @@ function renderHorarios(group) {
 
 function toggleSlot(el, fullText, dir) {
   // Limpiar selecciones previas de la misma dirección en el DOM
-  document.querySelectorAll(\`.time-slot.selected[data-dir="\${dir}"]\`).forEach(n => n.classList.remove('selected'));
+  document.querySelectorAll(`.time-slot.selected[data-dir="${dir}"]`).forEach(n => n.classList.remove('selected'));
   
   // Limpiar selecciones previas de la misma dirección en el array
   selectedHorarios = selectedHorarios.filter(h => {
@@ -197,15 +198,20 @@ function toggleSlot(el, fullText, dir) {
   const wasSelected = el.classList.contains('selected');
   if (!wasSelected) {
     el.classList.add('selected');
-    // Solo agregar si no existe ya (doble seguridad)
     if (!selectedHorarios.includes(fullText)) {
       selectedHorarios.push(fullText);
     }
   }
 
   // Enable submit only if one ida + one vuelta
-  const hasIda    = selectedHorarios.some(h => { const s = SCHEDULES.find(x=>x.fullText===h); return s && s.dir==='ida'; });
-  const hasVuelta = selectedHorarios.some(h => { const s = SCHEDULES.find(x=>x.fullText===h); return s && s.dir==='vuelta'; });
+  const hasIda    = selectedHorarios.some(h => { 
+    const s = SCHEDULES.find(x=>x.fullText===h); 
+    return s ? s.dir==='ida' : (h.includes('-> La Vega') || h.includes('→ La Vega')); 
+  });
+  const hasVuelta = selectedHorarios.some(h => { 
+    const s = SCHEDULES.find(x=>x.fullText===h); 
+    return s ? s.dir==='vuelta' : (h.includes('-> Jarabacoa') || h.includes('→ Jarabacoa')); 
+  });
   if (submitBtn) submitBtn.disabled = !(hasIda && hasVuelta);
 }
 
@@ -214,11 +220,9 @@ function renderConfirmedView(votes) {
   if (!confirmedTrips) return;
   confirmedTrips.innerHTML = '';
   
-  // Deduplicación para la vista de confirmación
   const uniqueMap = new Map();
   votes.forEach(v => {
     const dir = (v.horario.includes('-> La Vega') || v.horario.includes('→ La Vega')) ? 'ida' : 'vuelta';
-    // Si no existe o este es más reciente
     if (!uniqueMap.has(dir) || new Date(v.created_at) > new Date(uniqueMap.get(dir).created_at)) {
       uniqueMap.set(dir, v);
     }
@@ -231,15 +235,15 @@ function renderConfirmedView(votes) {
     const card = document.createElement('div');
     card.className = 'trip-card';
     card.innerHTML = `
-      <div class="trip-icon \${dir}">
-        <i data-lucide="\${dir === 'ida' ? 'arrow-right' : 'arrow-left'}"></i>
+      <div class="trip-icon ${dir}">
+        <i data-lucide="${dir === 'ida' ? 'arrow-right' : 'arrow-left'}"></i>
       </div>
       <div class="trip-info">
-        <div class="trip-label">\${dir === 'ida' ? 'Salida' : 'Regreso'}</div>
-        <div class="trip-time">\${v.horario.split(' ').slice(0,2).join(' ')}</div>
-        <div class="trip-route">\${v.horario.split(' ').slice(2).join(' ')}</div>
+        <div class="trip-label">${dir === 'ida' ? 'Salida' : 'Regreso'}</div>
+        <div class="trip-time">${v.horario.split(' ').slice(0,2).join(' ')}</div>
+        <div class="trip-route">${v.horario.split(' ').slice(2).join(' ')}</div>
       </div>
-      <span class="trip-badge \${v.en_espera ? 'badge-espera' : 'badge-confirmed'}">\${v.en_espera ? 'En espera' : 'Confirmado'}</span>
+      <span class="trip-badge ${v.en_espera ? 'badge-espera' : 'badge-confirmed'}">${v.en_espera ? 'En espera' : 'Confirmado'}</span>
     `;
     confirmedTrips.appendChild(card);
   });
@@ -287,8 +291,6 @@ async function checkYaVotado() {
         }
       });
       const dedupedData = Array.from(uniqueMap.values());
-
-      // Filtrar solo los viajes que aún no se han pasado (donde se_monto es null)
       const pendingVotes = dedupedData.filter(v => v.se_monto === null);
       
       if (pendingVotes.length > 0) {
@@ -296,7 +298,6 @@ async function checkYaVotado() {
         selectedHorarios = dedupedData.map(v => v.horario);
         showConfirmed(pendingVotes);
       } else {
-        // Si ya viajó en todos sus horarios, mostrar el formulario (para el próximo ciclo)
         showForm();
       }
     } else {
@@ -322,22 +323,21 @@ if (btnParada) btnParada.addEventListener('click',  () => confirmarConEspera('pa
 async function confirmarConEspera(puntoEspera) {
   const modal = document.getElementById('esperaModal');
   if (modal) modal.classList.add('hidden');
+  if (!pendingSubmitData) return;
   const { cycleDate } = pendingSubmitData;
 
   try {
-    // Delete old votes for today
     await supabase.from('votos').delete()
       .eq('usuario_id', currentUser.id)
       .eq('fecha', cycleDate);
 
-    // Insert new votes WITH punto_espera
     const rows = selectedHorarios.map(h => ({
       usuario_id: currentUser.id,
       horario: h,
       fecha: cycleDate,
       nombre: currentUser.nombre,
       matricula: currentUser.matricula,
-      email: currentUser.email || \`\${currentUser.matricula}@aeudj.com\`,
+      email: currentUser.email || `${currentUser.matricula}@aeudj.com`,
       punto_espera: puntoEspera
     }));
 
@@ -368,7 +368,6 @@ if (submitBtn) {
       const { group } = await getActiveGroup();
       const cycleDate = getCycleDate(group);
 
-      // Guardar datos pendientes y mostrar modal de espera
       pendingSubmitData = { group, cycleDate };
       const modal = document.getElementById('esperaModal');
       if (modal) modal.classList.remove('hidden');
@@ -394,26 +393,27 @@ if (closeActionModal) {
 function openActionModal(actionStr) {
   if (!actionModal) return;
   currentAction = actionStr;
-  actionModalContent.innerHTML = '';
-  btnActionModalBoth.classList.add('hidden');
+  if (actionModalContent) actionModalContent.innerHTML = '';
+  if (btnActionModalBoth) btnActionModalBoth.classList.add('hidden');
   
   if (actionStr === 'antes') {
-    actionModalTitle.textContent = 'Me fui antes';
-    actionModalDesc.textContent = '¿Cuál de tus viajes de hoy realizaste antes de tiempo? (Esto liberará tu cupo para que otro lo use)';
+    if (actionModalTitle) actionModalTitle.textContent = 'Me fui antes';
+    if (actionModalDesc) actionModalDesc.textContent = '¿Cuál de tus viajes de hoy realizaste antes de tiempo? (Esto liberará tu cupo para que otro lo use)';
   } else if (actionStr === 'otros') {
-    actionModalTitle.textContent = 'Otros medios';
-    actionModalDesc.textContent = '¿En cuál de estos viajes te irás por otros medios?';
-    btnActionModalBoth.classList.remove('hidden');
-    btnActionModalBoth.onclick = () => executeAction('ambos');
+    if (actionModalTitle) actionModalTitle.textContent = 'Otros medios';
+    if (actionModalDesc) actionModalDesc.textContent = '¿En cuál de estos viajes te irás por otros medios?';
+    if (btnActionModalBoth) {
+      btnActionModalBoth.classList.remove('hidden');
+      btnActionModalBoth.onclick = () => executeAction('ambos');
+    }
   } else if (actionStr === 'despues') {
-    actionModalTitle.textContent = 'Iré después';
-    actionModalDesc.textContent = '¿Cuál viaje deseas cambiar para irte más tarde?';
+    if (actionModalTitle) actionModalTitle.textContent = 'Iré después';
+    if (actionModalDesc) actionModalDesc.textContent = '¿Cuál viaje deseas cambiar para irte más tarde?';
   }
 
   if (!initialVotes || initialVotes.length === 0) {
-    actionModalContent.innerHTML = '<p style="text-align:center;color:#f87171;">No se encontraron viajes.</p>';
+    if (actionModalContent) actionModalContent.innerHTML = '<p style="text-align:center;color:#f87171;">No se encontraron viajes.</p>';
   } else {
-    // Safeguard deduplication
     const uniqueMap = new Map();
     initialVotes.forEach(v => {
       const dir = (v.horario.includes('-> La Vega') || v.horario.includes('→ La Vega')) ? 'ida' : 'vuelta';
@@ -441,18 +441,18 @@ function openActionModal(actionStr) {
       btn.onmouseover = () => { btn.style.background = 'rgba(59,130,246,0.2)'; btn.style.transform = 'translateY(-2px)'; };
       btn.onmouseout = () => { btn.style.background = 'rgba(59,130,246,0.1)'; btn.style.transform = 'none'; };
       
-      btn.innerHTML = \`
-        <div class="trip-icon \${dir}">
-          <i data-lucide="\${dir === 'ida' ? 'arrow-right' : 'arrow-left'}"></i>
+      btn.innerHTML = `
+        <div class="trip-icon ${dir}">
+          <i data-lucide="${dir === 'ida' ? 'arrow-right' : 'arrow-left'}"></i>
         </div>
         <div class="trip-info">
-          <div class="trip-label" style="color:#93c5fd;">\${dir === 'ida' ? 'Salida' : 'Regreso'}</div>
-          <div class="trip-time" style="color:white;">\${time}</div>
-          <div class="trip-route" style="color:#cbd5e1;">\${route}</div>
+          <div class="trip-label" style="color:#93c5fd;">${dir === 'ida' ? 'Salida' : 'Regreso'}</div>
+          <div class="trip-time" style="color:white;">${time}</div>
+          <div class="trip-route" style="color:#cbd5e1;">${route}</div>
         </div>
-      \`;
+      `;
       btn.onclick = () => executeAction(v);
-      actionModalContent.appendChild(btn);
+      if (actionModalContent) actionModalContent.appendChild(btn);
     });
   }
   
@@ -464,10 +464,13 @@ async function executeAction(voteObj) {
   if (actionModal) actionModal.classList.add('hidden');
   
   const horarioToChange = voteObj === 'ambos' ? 'ambos' : voteObj.horario;
-  const voteDate = voteObj === 'ambos' ? (await (async () => {
+  let voteDate = '';
+  if (voteObj === 'ambos') {
     const { group } = await getActiveGroup();
-    return getCycleDate(group);
-  })()) : voteObj.fecha;
+    voteDate = getCycleDate(group);
+  } else {
+    voteDate = voteObj.fecha;
+  }
 
   if (currentAction === 'despues') {
     isEditing = true;
@@ -492,7 +495,6 @@ async function executeAction(voteObj) {
     }
 
     await checkYaVotado(); 
-    console.log('Operación realizada con éxito');
   } catch (e) {
     console.error(e);
     alert("Error al procesar: " + e.message);
@@ -519,25 +521,16 @@ if (btnCambiar) {
 async function init() {
   console.log('🚀 Votar Page Initializing...');
   try {
-    // 1. Get current session from Supabase
     const { data: { session }, error: sessionErr } = await supabase.auth.getSession();
     
-    if (sessionErr) {
-      console.error('Session Error:', sessionErr);
-      setStatus('Error de sesión: ' + sessionErr.message, '#f87171');
-      return;
-    }
+    if (sessionErr) throw sessionErr;
 
     if (!session) {
-      console.log('No session found, redirecting...');
       localStorage.clear();
       window.location.href = 'index.html';
       return;
     }
 
-    console.log('Session active for:', session.user.id);
-
-    // 2. Fetch LATEST profile
     const { data: profile, error: profileErr } = await supabase
       .from('profiles')
       .select('*')
@@ -545,8 +538,6 @@ async function init() {
       .single();
       
     if (profileErr) {
-      console.error('Profile Fetch Error:', profileErr);
-      // Fallback
       currentUser = loadSession();
       if (!currentUser) { 
         setStatus('No se pudo cargar el perfil. Por favor, inicia sesión de nuevo.', '#f87171');
@@ -556,8 +547,6 @@ async function init() {
       currentUser = profile;
       localStorage.setItem('aeudj_user', JSON.stringify(profile));
     }
-
-    console.log('User profile loaded:', currentUser.nombre);
 
     buildStaffMenu(currentUser);
     await checkYaVotado();
