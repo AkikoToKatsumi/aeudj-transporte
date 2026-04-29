@@ -748,6 +748,8 @@
             showForm();
           }
         } else {
+          initialVotes = [];
+          selectedHorarios = [];
           showForm();
         }
       } catch(err) {
@@ -916,12 +918,23 @@
            query = query.eq('horario', horarioToChange);
         }
         
-        await query;
-        alert(`Operación realizada con éxito. ${horarioToChange === 'ambos' ? 'Todos los viajes cancelados.' : 'El viaje ha sido cancelado.'}`);
+        const { error } = await query;
+        if (error) throw error;
+
+        // Si borramos todo, limpiamos estado local de inmediato
+        if (horarioToChange === 'ambos') {
+          initialVotes = [];
+          selectedHorarios = [];
+        }
+
+        // Refrescar datos
         await checkYaVotado(); 
+        
+        // Notificación sutil (opcional, pero mejor que alert)
+        console.log('Operación realizada con éxito');
       } catch (e) {
         console.error(e);
-        alert("Ocurrió un error.");
+        alert("Ocurrió un error al procesar la solicitud.");
       }
     }
 
