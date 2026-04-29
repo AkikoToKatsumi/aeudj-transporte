@@ -255,24 +255,30 @@ function initIndexPage() {
       let authEmail = null;
       let userData = null;
 
+      // Normalización para búsqueda y auth
+      const cleanInput = rawInput.replace(/[\s-]+/g, ''); 
+
+      console.log('Tentando login para:', rawInput, 'Clean:', cleanInput);
+
       // 1. Si el input ya parece un email, lo usamos directamente
       if (rawInput.includes('@')) {
         authEmail = rawInput;
       } else {
-        // 2. Si no es email, intentamos buscar el perfil para saber el email real
-        // Buscamos por matrícula o teléfono (con o sin guiones)
+        // 2. Intentar buscar el perfil para saber el email real
+        // Probamos varias combinaciones en el OR sin comillas innecesarias
         const { data: profile, error: searchError } = await supabase
           .from('profiles')
           .select('*')
-          .or(`matricula.eq."${rawInput}",telefono.eq."${rawInput}",matricula.eq."${cleanInput}"`)
+          .or(`matricula.eq.${rawInput},telefono.eq.${rawInput},matricula.eq.${cleanInput}`)
           .maybeSingle();
         
+        if (searchError) console.warn('Búsqueda de perfil limitada (probablemente RLS):', searchError.message);
+
         if (profile) {
           userData = profile;
-          // Intentamos primero con el pseudo-email basado en la matrícula guardada
           const pseudo = `${profile.matricula.replace(/[\s-]+/g, '')}@aeudj.com`;
           
-          // Intento A: Pseudo-email
+          console.log('Perfil encontrado. Probando pseudo-email:', pseudo);
           const { data: authA, error: errA } = await supabase.auth.signInWithPassword({
             email: pseudo,
             password: pass,
@@ -283,7 +289,7 @@ function initIndexPage() {
             return;
           }
 
-          // Intento B: Email real guardado en el perfil (si existe y es distinto)
+          console.log('Fallo pseudo-email, probando email del perfil:', profile.email);
           if (profile.email && profile.email !== pseudo) {
             const { data: authB, error: errB } = await supabase.auth.signInWithPassword({
               email: profile.email,
@@ -294,24 +300,27 @@ function initIndexPage() {
               return;
             }
           }
-          
-          // Si fallaron ambos pero tenemos el perfil, el error probablemente es la contraseña
-          throw new Error('Credenciales inválidas');
+          throw new Error('Contraseña incorrecta para este usuario.');
         } else {
-          // 3. Si no se encontró perfil (por RLS o porque no existe), probamos el fallback universal
+          // 3. Fallback universal
           authEmail = `${cleanInput}@aeudj.com`;
+          console.log('No se encontró perfil, usando fallback:', authEmail);
         }
       }
 
-      // Intento final (si no se resolvió arriba)
       const { data: finalAuth, error: finalErr } = await supabase.auth.signInWithPassword({
         email: authEmail,
         password: pass,
       });
 
-      if (finalErr) throw finalErr;
+      if (finalErr) {
+        console.error('Error final en Auth:', finalErr);
+        if (finalErr.message.includes('Invalid login credentials')) {
+          throw new Error('La matrícula o contraseña son incorrectas.');
+        }
+        throw finalErr;
+      }
 
-      // Si el login funcionó pero no teníamos el profile (ej. RLS), lo buscamos ahora que estamos logueados
       if (!userData) {
         const { data: p } = await supabase.from('profiles').select('*').eq('id', finalAuth.user.id).single();
         userData = p;
@@ -324,8 +333,8 @@ function initIndexPage() {
       }
 
     } catch (error) {
-      console.error('Error de login:', error);
-      showError('Error al iniciar sesión. Verifica tu matrícula o contraseña.');
+      console.error('Error detallado de login:', error);
+      showError(error.message || 'Error al iniciar sesión.');
     } finally {
       if (btn) {
         btn.disabled = false;
