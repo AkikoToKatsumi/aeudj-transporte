@@ -275,30 +275,20 @@ window.sendTripNotification = async (horario, tipo, btn) => {
       to_email: emails.join(',')
     };
 
-    const payload = {
-      service_id: EMAILJS_SERVICE,
-      template_id: EMAILJS_TEMPLATE,
-      user_id: EMAILJS_PUBLIC,
-      template_params: templateParams
-    };
+    const response = await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, templateParams, EMAILJS_PUBLIC);
 
-    const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (response.ok) {
-      alert('✅ EL MENSAJE SE ENVIÓ CORRECTAMENTE.');
+    if (response.status === 200) {
+      alert('✅ EL MENSAJE FUE ENVIADO CORRECTAMENTE A TODOS LOS ESTUDIANTES.');
       showToast(`Enviado a ${emails.length} personas`);
     } else {
-      const txt = await response.text();
-      throw new Error('Error en EmailJS: ' + txt);
+      throw new Error('Respuesta inesperada de EmailJS: ' + response.status);
     }
 
   } catch(err) {
-    console.error('Error detallado:', err);
-    const errorMsg = err.text || err.message || 'Error desconocido';
+    let errorMsg = err.text || err.message || 'Error desconocido';
+    if (errorMsg.includes('Failed to fetch')) {
+      errorMsg = "Error de red (Failed to fetch). Esto suele ocurrir si tienes un bloqueador de anuncios (AdBlock) activado. Por favor, desactívalo para esta página.";
+    }
     alert('Detalle del error: ' + errorMsg);
     showToast('Error en el envío', 'error');
   } finally {
