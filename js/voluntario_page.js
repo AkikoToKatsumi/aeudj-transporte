@@ -287,25 +287,20 @@ function renderList() {
     const notifyBar = document.createElement('div');
     notifyBar.className = 'notify-bar';
     notifyBar.innerHTML = `
-       <button class="notify-btn" id="notify-camino-${encodeURIComponent(horario)}">
-         <i data-lucide="send"></i> En camino
-       </button>
-       <button class="notify-btn" id="notify-llego-${encodeURIComponent(horario)}">
-         <i data-lucide="map-pin"></i> Llegó
-       </button>
-       <button class="notify-btn" id="notify-sale-${encodeURIComponent(horario)}">
-         <i data-lucide="clock"></i> Saliendo
-       </button>
+       <button class="notify-btn"><i data-lucide="send"></i> En camino</button>
+       <button class="notify-btn"><i data-lucide="map-pin"></i> Llegó</button>
+       <button class="notify-btn"><i data-lucide="clock"></i> Saliendo</button>
        <div style="width:1px; background:rgba(255,255,255,0.1); margin:0 0.2rem;"></div>
-       <button class="notify-btn whatsapp" id="notify-whatsapp-${encodeURIComponent(horario)}">
-         <i data-lucide="message-circle"></i> WhatsApp
-       </button>
+       <button class="notify-btn whatsapp"><i data-lucide="message-circle"></i> WhatsApp</button>
     `;
     
-    notifyBar.querySelector(`#notify-camino-${encodeURIComponent(horario)}`).onclick = (e) => window.sendTripNotification(horario, 'camino', e.currentTarget);
-    notifyBar.querySelector(`#notify-llego-${encodeURIComponent(horario)}`).onclick = (e) => window.sendTripNotification(horario, 'llego', e.currentTarget);
-    notifyBar.querySelector(`#notify-sale-${encodeURIComponent(horario)}`).onclick = (e) => window.sendTripNotification(horario, 'sale', e.currentTarget);
-    notifyBar.querySelector(`#notify-whatsapp-${encodeURIComponent(horario)}`).onclick = (e) => window.sendWhatsAppNotification(horario, e.currentTarget);
+    const notifyBtns = notifyBar.querySelectorAll('.notify-btn');
+    if (notifyBtns.length >= 4) {
+      notifyBtns[0].onclick = (e) => window.sendTripNotification(horario, 'camino', e.currentTarget);
+      notifyBtns[1].onclick = (e) => window.sendTripNotification(horario, 'llego', e.currentTarget);
+      notifyBtns[2].onclick = (e) => window.sendTripNotification(horario, 'sale', e.currentTarget);
+      notifyBtns[3].onclick = (e) => window.sendWhatsAppNotification(horario, e.currentTarget);
+    }
 
     section.appendChild(header);
     section.appendChild(table);
