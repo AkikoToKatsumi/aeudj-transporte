@@ -13,8 +13,8 @@ try {
 }
 
 window.supabase = supabaseClient;
-window.SUPABASE_URL = SUPABASE_URL;
-window.SUPABASE_KEY = SUPABASE_KEY;
+// Nota: SUPABASE_URL y SUPABASE_KEY NO se exponen en window.
+// La anon key es pública por diseño, pero no necesitamos facilitarla.
 
 const transportSchedules = [
   { time: "7:00 AM",  route: "Jarabacoa -> La Vega", fullText: "7:00 AM Jarabacoa -> La Vega", group: "manana" },
