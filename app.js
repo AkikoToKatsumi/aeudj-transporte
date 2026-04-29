@@ -250,72 +250,51 @@ function initIndexPage() {
  btn.textContent = 'Verificando...';
  }
 
-  try {
-    let userDataLocal = null;
-    let matriculaLogin = userInput;
-    
-    // 1. Buscar perfil por matrícula
-    const { data: userByMat } = await supabase.from('profiles').select('*').eq('matricula', userInput).maybeSingle();
-    if (userByMat) {
-      userDataLocal = userByMat;
-      matriculaLogin = userDataLocal.matricula;
-    } else {
-      // 2. Si no hay por matrícula, buscar por teléfono
-      const { data: userByTel } = await supabase.from('profiles').select('*').eq('telefono', userInput).maybeSingle();
-      if (userByTel) {
-        userDataLocal = userByTel;
-        matriculaLogin = userDataLocal.matricula;
+    try {
+      let emailToAuth = userInput;
+
+      // Si no es un correo, buscamos el email asociado a esa matrícula
+      if (!userInput.includes('@')) {
+        const { data: foundUser, error: searchError } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('matricula', userInput)
+          .maybeSingle();
+        
+        // Si no lo encontramos por RLS, intentamos el formato por defecto
+        emailToAuth = foundUser ? foundUser.email : `${userInput}@aeudj.com`;
       }
-    }
 
-    // 3. Determinar el email a usar para Auth
-    const pseudoEmail = matriculaLogin.includes('@') ? matriculaLogin : `${matriculaLogin.replace(/\s+/g, '')}@aeudj.com`;
-
-    let authResult;
-    // Intentar PRIMERO con el pseudo-email (que es como se registran en app.js:363)
-    authResult = await supabase.auth.signInWithPassword({
-      email: pseudoEmail,
-      password: pass
-    });
-
-    // 4. Si falla, y tenemos un email real en el perfil, intentar con ese como fallback
-    if (authResult.error && userDataLocal && userDataLocal.email && userDataLocal.email !== pseudoEmail) {
-      const secondAuthResult = await supabase.auth.signInWithPassword({
-        email: userDataLocal.email,
-        password: pass
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: emailToAuth,
+        password: pass,
       });
-      if (!secondAuthResult.error) {
-        authResult = secondAuthResult;
-      }
-    }
 
-    if (authResult.error) throw authResult.error;
-    
-    const user = authResult.data.user;
+      if (error) throw error;
+      const user = data.user;
  
-    const { data: userData, error: fetchErr } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
+      // Obtener el perfil completo ya logueado
+      const { data: userData, error: fetchErr } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
 
-    if (userData) {
-      setSession(userData);
-      if (userData.rol === 'chofer' || userData.rol === 'admin_chofer') {
-        window.location.href = 'choferes.html';
+      if (userData) {
+        setSession(userData);
+        window.location.href = (userData.rol === 'chofer' || userData.rol === 'admin_chofer') ? 'choferes.html' : 'votar.html';
       } else {
-        window.location.href = 'votar.html';
+        showError('Usuario validado, pero perfil no encontrado.');
       }
-    } else {
-      showError('Credenciales correctas, pero no se encontraron datos de usuario en la base de datos.');
-    }
-    
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error de login:', error);
       showError('Error al iniciar sesión. Verifica tu matrícula o contraseña.');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Entrar';
+      }
     }
-    btn.disabled = false;
-    btn.textContent = 'Entrar';
   });
 }
 
@@ -1974,6 +1953,26 @@ function hashString(str) {
 // FUNCIONES GLOBALES
 // ============================================
 window.logout = logout;
+window.handleLogin = async function(userInput, pass) {
+    try {
+      let emailToAuth = userInput;
+      if (!userInput.includes('@')) {
+        emailToAuth = `${userInput}@aeudj.com`;
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: emailToAuth,
+        password: pass,
+      });
+
+      if (error) throw error;
+      const user = data.user;
+      return user;
+    } catch (e) {
+      throw e;
+    }
+};
+
 window.notificarAccion = async function(tipo) {
  if (!currentUser || (!currentUser.rol.includes('admin') && !currentUser.rol.includes('desarrolladora'))) return;
  
