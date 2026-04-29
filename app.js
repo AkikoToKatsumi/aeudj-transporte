@@ -249,7 +249,8 @@ function initIndexPage() {
  btn.disabled = true;
  btn.textContent = 'Verificando...';
  }
-  try {
+
+  try {
     let userDataLocal = null;
     let matriculaLogin = userInput;
     
@@ -746,12 +747,7 @@ async function initListaPage() {
  
  async function loadLista() {
  try {
- const { data: votos, error } = await supabase
- .from('votos')
- .select('*')
- .eq('fecha', cycleDate)
- .order('horario')
- .order('created_at');
+  const { data: votos, error } = await supabase.functions.invoke('obtener-lista-segura');
  
  if (error) throw error;
  
