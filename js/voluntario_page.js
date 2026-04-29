@@ -192,7 +192,7 @@ function renderList() {
     
     const ida = isIda(horario);
     const section = document.createElement('div');
-    section.className = 'horario-section';
+    section.className = 'horario-section glass-card';
 
     const header = document.createElement('div');
     header.className = 'horario-header';
@@ -223,16 +223,20 @@ function renderList() {
       row.innerHTML = `
         <div class="row-num">${idx+1}</div>
         <div class="row-info">
+          <div class="row-name"></div>
           <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
-            <div class="row-name"></div>
+            <div class="row-mat"></div>
             <div class="badges-area" style="display:flex; gap:0.3rem;"></div>
           </div>
-          <div class="row-mat"></div>
         </div>
         <div class="row-time"></div>
         <div class="attendance-btns">
-          <button class="att-btn subio ${isSubio ? 'active' : ''}" data-id="${p.id}" data-action="subio">✅ Subió</button>
-          <button class="att-btn no-subio ${isNoSubio ? 'active' : ''}" data-id="${p.id}" data-action="no-subio">❌ No subió</button>
+          <button class="att-btn subio ${isSubio ? 'active' : ''}" data-id="${p.id}" data-action="subio">
+            <i data-lucide="check"></i>
+          </button>
+          <button class="att-btn no-subio ${isNoSubio ? 'active' : ''}" data-id="${p.id}" data-action="no-subio">
+            <i data-lucide="x"></i>
+          </button>
         </div>
       `;
       

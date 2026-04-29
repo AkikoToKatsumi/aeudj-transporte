@@ -143,7 +143,7 @@ async function loadData() {
         const group = groups[horario];
         const ida = isIda(horario);
         const section = document.createElement('div');
-        section.className = 'horario-section';
+        section.className = 'horario-section glass-card';
 
         const numConfirmados = group.confirmados.length;
         const numEspera = group.espera.length;
