@@ -38,7 +38,10 @@ async function checkSecurity() {
       .eq('id', session.user.id)
       .single();
 
-    if (error || !profile || !(profile.rol.includes('admin') || profile.rol.includes('desarrolladora') || profile.rol.includes('administrador'))) {
+    const rol = profile.rol || '';
+    const isAdmin = rol.includes('admin') || rol.includes('desarrolladora') || rol.includes('administrador');
+
+    if (error || !profile || !isAdmin) {
       console.error("Acceso denegado: Insuficientes privilegios");
       window.location.href = 'votar.html';
       return;

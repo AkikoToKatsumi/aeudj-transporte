@@ -62,8 +62,9 @@ async function checkSecurity() {
     return;
   }
   
-  const { data: profile } = await supabase.from('profiles').select('rol').eq('id', user.id).single();
-  if (!profile || (!profile.rol.includes('chofer') && !profile.rol.includes('admin_chofer') && !profile.rol.includes('desarrolladora'))) {
+  const rol = profile.rol || '';
+  if (!profile || (!rol.includes('chofer') && !rol.includes('admin_chofer') && !rol.includes('desarrolladora'))) {
+    console.warn("Acceso denegado: Rol insuficiente");
     window.location.href = 'votar.html';
     return;
   }
@@ -85,7 +86,7 @@ async function loadData() {
   const cycleDate = getCycleDate();
   const fechaBadge = document.getElementById('fechaBadge');
   if (fechaBadge) fechaBadge.textContent = formatDate(cycleDate);
-  const container = document.getElementById('listContainer');
+  const container = document.getElementById('horarios-container');
   if (!container) return;
   container.innerHTML = '<div class="empty-state"><div class="spinner"></div><p style="margin-top:1rem;">Actualizando...</p></div>';
 
@@ -125,119 +126,100 @@ async function loadData() {
       totalEspera += groups[h].espera.length;
     });
 
-    const statTotal = document.getElementById('statTotal');
-    const statEspera = document.getElementById('statEspera');
+    const statTotal = document.getElementById('stat-total-hoy');
+    const statTurnos = document.getElementById('stat-turnos-hoy');
     if (statTotal) statTotal.textContent = totalViajeros;
-    if (statEspera) statEspera.textContent = totalEspera;
+    if (statTurnos) statTurnos.textContent = activeHorarios.length;
 
     container.innerHTML = '';
+    container.innerHTML = '';
 
-    if (Object.keys(groups).length === 0) {
-      container.innerHTML = '<div class="empty-state"><p>No hay pasajeros registrados para hoy.</p></div>';
-      return;
-    }
+    if (activeHorarios.length === 0) {
+      container.innerHTML = '<div class="empty-state"><p>No hay viajes programados o activos para hoy.</p></div>';
+    } else {
+      const sortedHorarios = activeHorarios.sort((a, b) => horarioAMinutos(a) - horarioAMinutos(b));
 
-    const sortedHorarios = activeHorarios.sort((a, b) => horarioAMinutos(a) - horarioAMinutos(b));
+      sortedHorarios.forEach(horario => {
+        const group = groups[horario];
+        const ida = isIda(horario);
+        const section = document.createElement('div');
+        section.className = 'horario-section';
 
-    sortedHorarios.forEach(horario => {
-      const group = groups[horario];
-      const ida = isIda(horario);
-      
-      const section = document.createElement('div');
-      section.className = 'horario-section';
+        const numConfirmados = group.confirmados.length;
+        const numEspera = group.espera.length;
+        const allPassengers = [...group.confirmados, ...group.espera];
 
-      const numConfirmados = group.confirmados.length;
-      const numEspera = group.espera.length;
-      const allPassengers = [...group.confirmados, ...group.espera];
-      const passengerHtmlNodes = [];
-
-      allPassengers.forEach((p, idx) => {
-        const row = document.createElement('div');
-        row.className = 'p-row';
-        
-        const num = document.createElement('div');
-        num.className = 'p-num';
-        num.textContent = idx + 1;
-        
-        const name = document.createElement('div');
-        name.className = `p-name ${p.en_espera ? 'text-amber-400' : 'text-slate-200'}`;
-        name.textContent = p.nombre || 'Sin nombre';
-        
-        row.appendChild(num);
-        row.appendChild(name);
-        
-        if (p.en_espera) {
-          const badge = document.createElement('div');
-          badge.className = 'badge-espera';
-          badge.textContent = 'Lista de Espera';
-          row.appendChild(badge);
-        }
-        
-        passengerHtmlNodes.push(row);
-      });
-
-      section.innerHTML = `
-        <div class="horario-header">
-          <span class="dir-badge ${ida ? 'dir-ida' : 'dir-vuelta'}">${ida ? '↗ Salida' : '↙ Regreso'}</span>
-          <div class="horario-title">${horario}</div>
-          
-          <div class="horario-stats">
-            <div class="h-stat confirmados">
-              <div class="h-stat-num">${numConfirmados}</div>
-              <div class="h-stat-label">Confirmados</div>
-            </div>
-            <div class="h-stat ${numEspera > 0 ? 'espera' : ''}">
-              <div class="h-stat-num">${numEspera}</div>
-              <div class="h-stat-label">En Espera</div>
+        section.innerHTML = `
+          <div class="horario-header">
+            <span class="dir-badge ${ida ? 'dir-ida' : 'dir-vuelta'}">${ida ? '↗ Salida' : '↙ Regreso'}</span>
+            <div class="horario-title">${horario}</div>
+            <div class="horario-stats">
+              <div class="h-stat confirmados">
+                <div class="h-stat-num">${numConfirmados}</div>
+                <div class="h-stat-label">Confirmados</div>
+              </div>
+              <div class="h-stat ${numEspera > 0 ? 'espera' : ''}">
+                <div class="h-stat-num">${numEspera}</div>
+                <div class="h-stat-label">En Espera</div>
+              </div>
             </div>
           </div>
-        </div>
-        ${allPassengers.length > 0 ? `
-        <button class="passenger-list-btn" id="btn-list-${encodeURIComponent(horario)}">
-          Ver Pasajeros <i data-lucide="chevron-down"></i>
-        </button>
-        <div class="passenger-list-content" id="content-list-${encodeURIComponent(horario)}">
-        </div>
-        <div class="notify-bar">
-           <button class="notify-btn" id="notify-camino-${encodeURIComponent(horario)}">
-             <i data-lucide="send"></i> En camino
-           </button>
-           <button class="notify-btn" id="notify-llego-${encodeURIComponent(horario)}">
-             <i data-lucide="map-pin"></i> Llegó
-           </button>
-           <button class="notify-btn" id="notify-sale-${encodeURIComponent(horario)}">
-             <i data-lucide="clock"></i> Saliendo
-           </button>
-           <div style="width:1px; background:rgba(255,255,255,0.1); margin:0 0.2rem;"></div>
-           <button class="notify-btn whatsapp" id="notify-whatsapp-${encodeURIComponent(horario)}">
-             <i data-lucide="message-circle"></i> WhatsApp
-           </button>
-        </div>
-        ` : ''}
-      `;
+          <button class="passenger-list-btn" id="btn-list-${encodeURIComponent(horario)}">
+            Ver Pasajeros <i data-lucide="chevron-down"></i>
+          </button>
+          <div class="passenger-list-content" id="content-list-${encodeURIComponent(horario)}"></div>
+          <div class="notify-bar">
+             <button class="notify-btn" id="notify-camino-${encodeURIComponent(horario)}">
+               <i data-lucide="send"></i> En camino
+             </button>
+             <button class="notify-btn" id="notify-llego-${encodeURIComponent(horario)}">
+               <i data-lucide="map-pin"></i> Llegó
+             </button>
+             <button class="notify-btn" id="notify-sale-${encodeURIComponent(horario)}">
+               <i data-lucide="clock"></i> Saliendo
+             </button>
+             <div style="width:1px; background:rgba(255,255,255,0.1); margin:0 0.2rem;"></div>
+             <button class="notify-btn whatsapp" id="notify-whatsapp-${encodeURIComponent(horario)}">
+               <i data-lucide="message-circle"></i> WhatsApp
+             </button>
+          </div>
+        `;
 
-      if (allPassengers.length > 0) {
         const listContent = section.querySelector('.passenger-list-content');
-        passengerHtmlNodes.forEach(node => listContent.appendChild(node));
-        
+        allPassengers.forEach((p, idx) => {
+          const row = document.createElement('div');
+          row.className = 'p-row';
+          row.innerHTML = `
+            <div class="p-num">${idx + 1}</div>
+            <div class="p-name ${p.en_espera ? 'text-amber-400' : 'text-slate-200'}">${p.nombre || 'Sin nombre'}</div>
+            ${p.en_espera ? '<div class="badge-espera">Lista de Espera</div>' : ''}
+          `;
+          listContent.appendChild(row);
+        });
+
         const listBtn = section.querySelector('.passenger-list-btn');
         listBtn.onclick = () => {
           listBtn.classList.toggle('open');
           listContent.classList.toggle('open');
         };
-        
+
         section.querySelector(`#notify-camino-${encodeURIComponent(horario)}`).onclick = (e) => window.sendTripNotification(horario, 'camino', e.currentTarget);
         section.querySelector(`#notify-llego-${encodeURIComponent(horario)}`).onclick = (e) => window.sendTripNotification(horario, 'llego', e.currentTarget);
         section.querySelector(`#notify-sale-${encodeURIComponent(horario)}`).onclick = (e) => window.sendTripNotification(horario, 'sale', e.currentTarget);
         section.querySelector(`#notify-whatsapp-${encodeURIComponent(horario)}`).onclick = (e) => window.sendWhatsAppNotification(horario, e.currentTarget);
-      }
 
-      container.appendChild(section);
-    });
+        container.appendChild(section);
+      });
+    }
 
     if (window.lucide) window.lucide.createIcons();
+    const loader = document.getElementById('loading');
+    if (loader) loader.classList.add('hidden');
   } catch(err) {
-    container.innerHTML = `<div class="empty-state"><p style="color:#f87171;">Error: ${err.message}</p></div>`;
+    const container = document.getElementById('horarios-container');
+    if (container) container.innerHTML = `<div class="empty-state"><p style="color:#f87171;">Error: ${err.message}</p></div>`;
+    const loader = document.getElementById('loading');
+    if (loader) loader.classList.add('hidden');
   }
 }
 
