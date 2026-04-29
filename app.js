@@ -90,21 +90,20 @@ if (document.readyState === 'loading') {
 // GESTIÓN DE SESIÓN
 // ============================================
 function checkSession() {
- try {
- const userData = localStorage.getItem('aeudj_user');
- const adminData = localStorage.getItem('aeudj_admin_session');
- 
- if (userData && userData !== 'undefined') {
- currentUser = JSON.parse(userData);
- }
- 
- if (adminData === 'true') {
- isAdmin = true;
- }
- } catch (e) {
- console.error('Error loading session:', e);
- clearSession();
- }
+  try {
+    const userData = localStorage.getItem('aeudj_user');
+    
+    if (userData && userData !== 'undefined') {
+      currentUser = JSON.parse(userData);
+      // El rol se verifica desde el objeto de usuario recuperado de la DB
+      if (currentUser && (currentUser.rol === 'admin' || currentUser.rol === 'desarrolladora')) {
+        isAdmin = true;
+      }
+    }
+  } catch (e) {
+    console.error('Error loading session:', e);
+    clearSession();
+  }
 }
 
 function setSession(user) {
@@ -113,15 +112,15 @@ function setSession(user) {
 }
 
 function setAdminSession() {
- isAdmin = true;
- localStorage.setItem('aeudj_admin_session', 'true');
+  // Ya no guardamos 'true' en localStorage porque es vulnerable.
+  // La sesión de admin se determinará por el campo 'rol' del perfil en la DB.
+  isAdmin = true;
 }
 
 function clearSession() {
  currentUser = null;
  isAdmin = false;
  localStorage.removeItem('aeudj_user');
- localStorage.removeItem('aeudj_admin_session');
 }
 
 async function logout() {
@@ -681,8 +680,8 @@ function initVotarPage() {
           horario: hor,
           fecha: cycleDate,
           se_monto: null,
-          en_espera: enEspera,
-          created_at: new Date().toISOString()
+          en_espera: enEspera
+          // SE ELIMINA created_at: el servidor lo generará automáticamente (E-4 FIX)
         });
       }
       

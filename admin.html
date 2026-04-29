@@ -799,6 +799,32 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyand4ZWdlcGt6bnFyaXNicnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNjk0NDIsImV4cCI6MjA5MTc0NTQ0Mn0.TZOhsy0ghfmjK8rd4GWcgbtOLpERKRJ62mjqc5gaYOM';
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // --- ESCUDO DE SEGURIDAD (REMEDIACIÓN E-1, E-2) ---
+    async function checkSecurity() {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      // Verificar el rol real en la base de datos, no en localStorage
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('rol')
+        .eq('id', session.user.id)
+        .single();
+
+      if (error || !profile || !(profile.rol.includes('admin') || profile.rol.includes('desarrolladora'))) {
+        console.error("Acceso denegado: Insuficientes privilegios");
+        window.location.href = 'votar.html'; // Redirigir a usuarios normales
+      }
+    }
+
+    // Ejecutar verificación de inmediato
+    checkSecurity();
+    // -------------------------------------------------
+
     let currentUser = null;
     try {
       const raw = localStorage.getItem('aeudj_user');
