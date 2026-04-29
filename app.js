@@ -286,45 +286,60 @@ function initIndexPage() {
       }
 
       // Intento de login principal
-      const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
+      let { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
         email: authEmail,
         password: pass,
       });
 
-      // Si falla y el authEmail era el real, probamos el pseudo-email por si acaso
-      let finalAuth = authData;
-      let finalErr = authErr;
-
-      if (finalErr && !rawInput.includes('@')) {
-        const pseudoFallback = `${cleanInput}@aeudj.com`;
-        if (authEmail !== pseudoFallback) {
-          console.log('Fallo con email recuperado, intentando pseudo-email...');
+      // Si falla y el authEmail era el pseudo-email, intentamos buscar el email real en 'votos' (que es pública)
+      if (authErr && !rawInput.includes('@')) {
+        console.log('Fallo inicial. Buscando email real en historial público...');
+        const { data: voteRecord } = await supabase
+          .from('votos')
+          .select('email')
+          .or(`matricula.eq.${rawInput},matricula.eq.${cleanInput}`)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        if (voteRecord && voteRecord.email && voteRecord.email !== authEmail) {
+          console.log('Intentando con email recuperado:', voteRecord.email);
           const { data: secondAuth, error: secondErr } = await supabase.auth.signInWithPassword({
-            email: pseudoFallback,
+            email: voteRecord.email,
             password: pass,
           });
           if (!secondErr) {
-            finalAuth = secondAuth;
-            finalErr = null;
+            authData = secondAuth;
+            authErr = null;
           }
         }
       }
 
-      if (finalErr) {
-        console.error('Error final en Auth:', finalErr);
-        if (finalErr.message.includes('Invalid login credentials')) {
-          throw new Error('La matrícula o contraseña son incorrectas.');
+      // Si sigue fallando y no hemos probado el pseudo-email, lo probamos como última opción
+      if (authErr && !rawInput.includes('@')) {
+        const pseudoFallback = `${cleanInput}@aeudj.com`;
+        if (authEmail !== pseudoFallback) {
+          console.log('Intentando pseudo-email como último recurso...');
+          const { data: thirdAuth, error: thirdErr } = await supabase.auth.signInWithPassword({
+            email: pseudoFallback,
+            password: pass,
+          });
+          if (!thirdErr) {
+            authData = thirdAuth;
+            authErr = null;
+          }
         }
-        throw finalErr;
       }
 
-      if (finalErr) {
-        console.error('Error final en Auth:', finalErr);
-        if (finalErr.message.includes('Invalid login credentials')) {
+      if (authErr) {
+        console.error('Error final en Auth:', authErr);
+        if (authErr.message.includes('Invalid login credentials')) {
           throw new Error('La matrícula o contraseña son incorrectas.');
         }
-        throw finalErr;
+        throw authErr;
       }
+
+      const finalAuth = authData;
 
       if (!userData) {
         const { data: p } = await supabase.from('profiles').select('*').eq('id', finalAuth.user.id).single();
@@ -490,8 +505,7 @@ function initVotarPage() {
         .from('votos')
         .select('*')
         .eq('usuario_id', currentUser.id)
-        .eq('fecha', cycleDate)
-        .gt('id', 40);
+        .eq('fecha', cycleDate);
       
       if (snapshot && snapshot.length > 0) {
         // Filtrar solo los votos pendientes (aún no se ha pasado lista)
