@@ -135,35 +135,23 @@ async function logout() {
 // INICIALIZACIÓN DE PÁGINAS
 // ============================================
 function initPage(page) {
- switch(page) {
- case 'index':
- initIndexPage();
- break;
- case 'votar':
- renderUserGreeting();
- initVotarPage();
- break;
- case 'lista':
- initListaPage();
- break;
- case 'admin':
- renderUserGreeting();
- initAdminPage();
- break;
- case 'voluntario':
- renderUserGreeting();
- initVoluntarioPage();
- break;
- case 'gracias':
- initGraciasPage();
- break;
- case 'cambios':
- initCambiosPage();
- break;
- case 'no-subieron':
- initNoSubieronPage();
- break;
- }
+  switch(page) {
+    case 'index':
+      initIndexPage();
+      break;
+    case 'gracias':
+      initGraciasPage();
+      break;
+    case 'no-subieron':
+      initNoSubieronPage();
+      break;
+  }
+}
+
+function initGraciasPage() {
+  refreshIcons();
+  console.log('Página de gracias cargada.');
+  // El redireccionamiento se maneja vía meta tag en el HTML.
 }
 
 // ============================================
@@ -1924,66 +1912,79 @@ function initCambiosPage() {
 // PÁGINA NO SUBIERON
 // ============================================
 function initNoSubieronPage() {
- const adminSession = localStorage.getItem('aeudj_admin_session');
- if (adminSession !== 'true') {
- window.location.href = 'admin.html';
- return;
- }
- 
- const cycleDate = getCycleDate();
- const container = document.getElementById('noSubieronContainer');
- 
- loadNoSubieron();
- 
- async function loadNoSubieron() {
- try {
- const { data: snapshot, error } = await supabase
- .from('votos')
- .select('*')
- .eq('fecha', cycleDate)
- .eq('se_monto', 0);
- 
- if (error) throw error;
- 
- const personas = snapshot || [];
- personas.sort((a, b) => horarioAMinutos(a.horario) - horarioAMinutos(b.horario));
- 
- if (personas.length === 0) {
- container.innerHTML = `<div class="text-center"><p class="text-green-700 text-lg">Todos subieron! </p></div>`;
- return;
- }
- 
- let html = '<div class="card">';
- html += `<h3 class="text-lg font-bold text-red-700 mb-4">Total: ${personas.length} persona(s)</h3>`;
- 
- personas.forEach(p => {
- html += `
- <div class="passenger-item" style="background: #fef2f2; border: 1px solid #fecaca; margin-bottom: 0.5rem; padding: 1rem; border-radius: 0.5rem;">
- <div style="flex: 1;">
- <p class="passenger-name" style="font-weight: 600;">${escapeHtml(p.nombre)}</p>
- <p class="passenger-meta"> ${p.telefono || 'N/A'} ${p.horario}</p>
- </div>
- <button onclick="marcarComoSubio('${p.id}')" class="btn btn-success btn-small">Subi</button>
- </div>
- `;
- });
- 
- html += '</div>';
- container.innerHTML = html;
- } catch (error) {
- console.error('Error:', error);
- }
- }
- 
- window.marcarComoSubio = async function(id) {
- try {
- await supabase.from('votos').update({ se_monto: 1 }).eq('id', id);
- loadNoSubieron();
- } catch (error) {
- console.error(error);
- }
- };
+  const adminSession = localStorage.getItem('aeudj_admin_session');
+  if (adminSession !== 'true') {
+    window.location.href = 'admin.html';
+    return;
+  }
+  
+  const cycleDate = getCycleDate();
+  const fechaEl = document.getElementById('fechaNoSubieron');
+  if (fechaEl) fechaEl.textContent = formatDate(cycleDate);
+  const container = document.getElementById('noSubieronContainer');
+  
+  loadNoSubieron();
+  
+  async function loadNoSubieron() {
+    try {
+      const { data: snapshot, error } = await supabase
+        .from('votos')
+        .select('*')
+        .eq('fecha', cycleDate)
+        .eq('se_monto', 0);
+      
+      if (error) throw error;
+      
+      const personas = snapshot || [];
+      personas.sort((a, b) => horarioAMinutos(a.horario) - horarioAMinutos(b.horario));
+      
+      if (personas.length === 0) {
+        container.innerHTML = `<div class="text-center"><p class="text-green-700 text-lg">Todos subieron! </p></div>`;
+        return;
+      }
+      
+      let html = '<div class="card">';
+      html += `<h3 class="text-lg font-bold text-red-700 mb-4">Total: ${personas.length} persona(s)</h3>`;
+      
+      personas.forEach(p => {
+        html += `
+        <div class="passenger-item" style="background: #fef2f2; border: 1px solid #fecaca; margin-bottom: 0.5rem; padding: 1rem; border-radius: 0.5rem;">
+          <div style="flex: 1;">
+            <p class="passenger-name" style="font-weight: 600;">${escapeHtml(p.nombre)}</p>
+            <p class="passenger-meta"> ${p.telefono || 'N/A'} ${p.horario}</p>
+          </div>
+          <button data-id="${p.id}" class="btn btn-success btn-small btn-subi">Subi</button>
+        </div>
+        `;
+      });
+      
+      html += '</div>';
+      container.innerHTML = html;
+
+      // Event Delegation
+      if (!container.dataset.wired) {
+        container.dataset.wired = "true";
+        container.addEventListener('click', (e) => {
+          if (e.target.classList.contains('btn-subi')) {
+            window.marcarComoSubio(e.target.dataset.id);
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+  
+  window.marcarComoSubio = async function(id) {
+    try {
+      await supabase.from('votos').update({ se_monto: 1 }).eq('id', id);
+      loadNoSubieron();
+    } catch (error) {
+      console.error(error);
+    }
+  };
 }
+
 
 // ============================================
 // UTILIDADES
