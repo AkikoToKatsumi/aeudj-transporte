@@ -862,20 +862,6 @@
       return div.innerHTML;
     }
     
-    function getCycleDate() {
-      const now = new Date();
-      const hora = now.getHours();
-      let targetDate = now;
-      if (hora >= 22) {
-        targetDate = new Date(now);
-        targetDate.setDate(targetDate.getDate() + 1);
-      }
-      const y = targetDate.getFullYear();
-      const m = String(targetDate.getMonth() + 1).padStart(2, '0');
-      const d = String(targetDate.getDate()).padStart(2, '0');
-      return `${y}-${m}-${d}`;
-    }
-    
     // State management
     let currentVotos = [];
     let currentStaff = [];
@@ -1015,9 +1001,9 @@
         if (statusText) statusText.textContent = isManual ? 'MODO: MANUAL (FORZADO)' : 'MODO: AUTOMÁTICO';
         // -------------------------------
 
-        const { data: votos, error } = await supabase.from('votos').select('*').eq('fecha', today).gt('id', 40).order('horario');
+        const { data: votos, error } = await supabase.from('votos').select('*').eq('fecha', today).order('horario');
         if (error) throw error;
-        currentVotos = votos;
+        currentVotos = votos || [];
 
       let total = 0;
       let espera = 0;
@@ -1123,6 +1109,8 @@
       if (window.lucide) window.lucide.createIcons();
       } catch(e) {
         console.error("Dashboard Load Error:", e);
+        const container = document.getElementById('dashboardRecentActivity');
+        if (container) container.innerHTML = `<div style="text-align:center;padding:2.5rem;color:#f87171;"><p>Error al cargar datos: ${e.message}</p></div>`;
       }
     }
 
@@ -2282,7 +2270,6 @@
       const { data, error } = await supabase
         .from('votos').select('*')
         .eq('fecha', today)
-        .gt('id', 40)
         .order('horario')
         .order('created_at');
 
@@ -2526,7 +2513,7 @@
       try {
         // Load all three counts in parallel for the stat cards
         const [votosRes, faltasRes, penRes] = await Promise.all([
-          supabase.from('votos').select('id', { count: 'exact', head: true }).eq('fecha', dateVal).gt('id', 40),
+          supabase.from('votos').select('id', { count: 'exact', head: true }).eq('fecha', dateVal),
           supabase.from('faltas').select('id', { count: 'exact', head: true }).eq('fecha', dateVal),
           supabase.from('penalidades').select('id', { count: 'exact', head: true }).eq('penalizado', true),
         ]);
@@ -2541,7 +2528,6 @@
           const { data: resRows, error } = await supabase
             .from('votos').select('*')
             .eq('fecha', dateVal)
-            .gt('id', 40)
             .order('created_at', { ascending: false });
           if (error) throw error;
           let rows = resRows || [];
