@@ -146,7 +146,7 @@
               <h3 class="text-lg font-bold text-white flex items-center gap-2">
                 <i data-lucide="bar-chart-3" class="text-blue-400 w-5 h-5"></i> Demanda por Horario
               </h3>
-              <button type="button" class="btn-pill-outline btn-small text-red-400 hover:bg-red-500/10 transition-colors" style="border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.05); display: none;" onclick="window.clearTodayVotes()">
+              <button type="button" class="btn-pill-outline btn-small text-red-400 hover:bg-red-500/10 transition-colors" style="border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.05);" onclick="window.clearTodayVotes()">
                 <i data-lucide="trash-2" class="icon-inline text-red-400"></i> Limpiar Hoy
               </button>
             </div>
@@ -799,6 +799,20 @@
     const SUPABASE_URL = 'https://irjwxegepkznqrisbrys.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyand4ZWdlcGt6bnFyaXNicnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNjk0NDIsImV4cCI6MjA5MTc0NTQ0Mn0.TZOhsy0ghfmjK8rd4GWcgbtOLpERKRJ62mjqc5gaYOM';
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    function getCycleDate() {
+      const now = new Date();
+      const hora = now.getHours();
+      let targetDate = now;
+      if (hora >= 22) {
+        targetDate = new Date(now);
+        targetDate.setDate(targetDate.getDate() + 1);
+      }
+      const y = targetDate.getFullYear();
+      const m = String(targetDate.getMonth() + 1).padStart(2, '0');
+      const d = String(targetDate.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
 
     let currentUser = null;
 
@@ -1831,7 +1845,7 @@
     // ── SESSION CONTROL ──────────────────────────────────────────────────────────
     // ── RESET TOTAL DEL SISTEMA (PARA PRESENTACIÓN) ──────────────────────────────
     window.clearTodayVotes = async function() {
-      return; // Función anulada temporalmente
+      // Función habilitada para limpieza del sistema
 
       const isDeep = confirm('¿Quieres realizar una LIMPIEZA PROFUNDA?\n\n- "Aceptar": Borra Votos, Faltas y Penalidades (Reseteo Total).\n- "Cancelar": Solo borra los votos de hoy.');
       
