@@ -656,7 +656,19 @@
     // ── CONFIRMED VIEW ──────────────────────────────────────
     function renderConfirmedView(votes) {
       confirmedTrips.innerHTML = '';
+      
+      // Deduplicación para la vista de confirmación
+      const uniqueMap = new Map();
       votes.forEach(v => {
+        const dir = v.horario.includes('Jarabacoa') ? 'ida' : 'vuelta';
+        // Si no existe o este es más reciente (usando created_at o simplemente el último en el array)
+        if (!uniqueMap.has(dir) || new Date(v.created_at) > new Date(uniqueMap.get(dir).created_at)) {
+          uniqueMap.set(dir, v);
+        }
+      });
+      const dedupedVotes = Array.from(uniqueMap.values());
+
+      dedupedVotes.forEach(v => {
         const s = SCHEDULES.find(x => x.fullText === v.horario);
         const dir = s ? s.dir : (v.horario.includes('Jarabacoa') ? 'ida' : 'vuelta');
         const card = document.createElement('div');
@@ -709,12 +721,22 @@
         if (error) throw error;
 
         if (data && data.length > 0) {
+          // Deduplicación: Solo nos quedamos con el último voto por dirección
+          const uniqueMap = new Map();
+          data.forEach(v => {
+            const dir = v.horario.includes('Jarabacoa') ? 'ida' : 'vuelta';
+            if (!uniqueMap.has(dir) || new Date(v.created_at) > new Date(uniqueMap.get(dir).created_at)) {
+              uniqueMap.set(dir, v);
+            }
+          });
+          const dedupedData = Array.from(uniqueMap.values());
+
           // Filtrar solo los viajes que aún no se han pasado (donde se_monto es null)
-          const pendingVotes = data.filter(v => v.se_monto === null);
+          const pendingVotes = dedupedData.filter(v => v.se_monto === null);
           
           if (pendingVotes.length > 0) {
-            initialVotes = data;
-            selectedHorarios = data.map(v => v.horario);
+            initialVotes = dedupedData;
+            selectedHorarios = dedupedData.map(v => v.horario);
             showConfirmed(pendingVotes);
           } else {
             // Si ya viajó en todos sus horarios, mostrar el formulario (para el próximo ciclo)
@@ -823,7 +845,17 @@
       if (!initialVotes || initialVotes.length === 0) {
         actionModalContent.innerHTML = '<p style="text-align:center;color:#f87171;">No se encontraron viajes.</p>';
       } else {
+        // Safeguard deduplication
+        const uniqueMap = new Map();
         initialVotes.forEach(v => {
+          const dir = v.horario.includes('Jarabacoa') ? 'ida' : 'vuelta';
+          if (!uniqueMap.has(dir) || new Date(v.created_at) > new Date(uniqueMap.get(dir).created_at)) {
+            uniqueMap.set(dir, v);
+          }
+        });
+        const dedupedVotes = Array.from(uniqueMap.values());
+
+        dedupedVotes.forEach(v => {
           let s = SCHEDULES.find(x => x.fullText === v.horario);
           let dir = s ? s.dir : (v.horario.includes('Jarabacoa') ? 'ida' : 'vuelta');
           let parts = v.horario.split(' ');
