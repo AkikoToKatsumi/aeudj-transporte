@@ -497,3 +497,93 @@ function initVotarPage() {
  });
  
  selectedHorarios = selectedHorarios.filter(h => {
+  const hDirection = h.includes('Jarabacoa La Vega') ? 'ida' : 'vuelta';
+  return hDirection !== direction;
+  });
+  
+  // Si ya estaba seleccionado, simplemente queríamos apagarlo, así que salimos.
+  if (isCurrentlySelected && prevSelectedList.length === 1) {
+  return;
+  }
+  
+  // Si no, lo encendemos.
+  el.classList.add('selected');
+  el.querySelector('.checkmark').classList.remove('hidden');
+  selectedHorarios.push(fullText);
+  
+  statusMsg.textContent = ` Viaje de ${direction === 'ida' ? 'ida' : 'vuelta'} seleccionado (${selectedHorarios.length}/2)`;
+  statusMsg.className = 'text-center text-sm font-medium text-green-600 mt-4';
+  }
+  
+  horarioForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    if (selectedHorarios.length === 0 || selectedHorarios.length > 2) {
+      alert('Debes seleccionar al menos 1 horario (y máximo 2: ida y vuelta).');
+      return;
+    }
+    
+    const ida = selectedHorarios.find(h => h.includes('Jarabacoa La Vega'));
+    const vuelta = selectedHorarios.find(h => h.includes('La Vega Jarabacoa'));
+    
+    if (ida && vuelta) {
+      const pIda = horarioAMinutos(ida);
+      const pVuelta = horarioAMinutos(vuelta);
+      if (pVuelta <= pIda) {
+        alert('Error: El viaje de regreso debe ser posterior al de ida.');
+        return;
+      }
+    }
+
+    const btn = horarioForm.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.textContent = 'Guardando...';
+
+    try {
+      const { error: clearErr } = await supabase
+        .from('votos')
+        .delete()
+        .eq('usuario_id', currentUser.id)
+        .eq('fecha', cycleDate)
+        .is('se_monto', null);
+      
+      if (clearErr) throw clearErr;
+
+      const dataToInsert = [];
+      for (const hor of selectedHorarios) {
+        const { count, error: countErr } = await supabase
+          .from('votos')
+          .select('*', { count: 'exact', head: true })
+          .eq('horario', hor)
+          .eq('fecha', cycleDate)
+          .eq('en_espera', false);
+        
+        if (countErr) throw countErr;
+        const enEspera = count >= 30;
+
+        dataToInsert.push({
+          usuario_id: currentUser.id,
+          nombre: currentUser.nombre,
+          universidad: currentUser.universidad,
+          matricula: currentUser.matricula,
+          telefono: currentUser.telefono || '',
+          email: currentUser.email || '',
+          horario: hor,
+          fecha: cycleDate,
+          se_monto: null,
+          en_espera: enEspera
+        });
+      }
+      
+      const { error: insErr } = await supabase.from('votos').insert(dataToInsert);
+      if (insErr) throw insErr;
+      
+      window.location.href = 'gracias.html?v=324';
+    } catch (error) {
+      console.error('ERROR:', error);
+      alert('Error al guardar: ' + error.message);
+      btn.disabled = false;
+      btn.textContent = 'Confirmar Selección';
+    }
+  });
+}
