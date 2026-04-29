@@ -890,7 +890,7 @@
               <div class="trip-route" style="color:#cbd5e1;">${route}</div>
             </div>
           `;
-          btn.onclick = () => executeAction(v.horario);
+          btn.onclick = () => executeAction(v);
           actionModalContent.appendChild(btn);
         });
       }
@@ -899,10 +899,14 @@
       actionModal.classList.remove('hidden');
     }
 
-    async function executeAction(horarioToChange) {
+    async function executeAction(voteObj) {
       actionModal.classList.add('hidden');
-      const { group } = await getActiveGroup();
-      const cycleDate = getCycleDate(group);
+      
+      const horarioToChange = voteObj === 'ambos' ? 'ambos' : voteObj.horario;
+      const voteDate = voteObj === 'ambos' ? (await (async () => {
+        const { group } = await getActiveGroup();
+        return getCycleDate(group);
+      })()) : voteObj.fecha;
 
       if (currentAction === 'despues') {
         isEditing = true;
@@ -913,7 +917,7 @@
       }
 
       try {
-        let query = supabase.from('votos').delete().eq('usuario_id', currentUser.id).eq('fecha', cycleDate);
+        let query = supabase.from('votos').delete().eq('usuario_id', currentUser.id).eq('fecha', voteDate);
         if (horarioToChange !== 'ambos') {
            query = query.eq('horario', horarioToChange);
         }
@@ -921,20 +925,16 @@
         const { error } = await query;
         if (error) throw error;
 
-        // Si borramos todo, limpiamos estado local de inmediato
         if (horarioToChange === 'ambos') {
           initialVotes = [];
           selectedHorarios = [];
         }
 
-        // Refrescar datos
         await checkYaVotado(); 
-        
-        // Notificación sutil (opcional, pero mejor que alert)
         console.log('Operación realizada con éxito');
       } catch (e) {
         console.error(e);
-        alert("Ocurrió un error al procesar la solicitud.");
+        alert("Error al procesar: " + e.message);
       }
     }
 
