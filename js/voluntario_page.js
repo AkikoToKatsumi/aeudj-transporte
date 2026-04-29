@@ -96,7 +96,7 @@ checkSecurity();
 
 async function loadData() {
   const cycleDate = getCycleDate();
-  const fechaBadge = document.getElementById('fechaBadge');
+  const fechaBadge = document.getElementById('currentDate');
   if (fechaBadge) fechaBadge.textContent = formatDate(cycleDate);
   const container = document.getElementById('horariosContainer');
   if (!container) return;
