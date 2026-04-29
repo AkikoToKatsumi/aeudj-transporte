@@ -640,7 +640,7 @@
       // Limpiar selecciones previas de la misma dirección en el array
       selectedHorarios = selectedHorarios.filter(h => {
         const s = SCHEDULES.find(x => x.fullText === h);
-        const direction = s ? s.dir : (h.includes('Jarabacoa') ? 'ida' : 'vuelta');
+        const direction = s ? s.dir : ((h.includes('-> La Vega') || h.includes('→ La Vega')) ? 'ida' : 'vuelta');
         return direction !== dir;
       });
 
@@ -666,8 +666,8 @@
       // Deduplicación para la vista de confirmación
       const uniqueMap = new Map();
       votes.forEach(v => {
-        const dir = v.horario.includes('Jarabacoa') ? 'ida' : 'vuelta';
-        // Si no existe o este es más reciente (usando created_at o simplemente el último en el array)
+        const dir = (v.horario.includes('-> La Vega') || v.horario.includes('→ La Vega')) ? 'ida' : 'vuelta';
+        // Si no existe o este es más reciente
         if (!uniqueMap.has(dir) || new Date(v.created_at) > new Date(uniqueMap.get(dir).created_at)) {
           uniqueMap.set(dir, v);
         }
@@ -727,10 +727,9 @@
         if (error) throw error;
 
         if (data && data.length > 0) {
-          // Deduplicación: Solo nos quedamos con el último voto por dirección
           const uniqueMap = new Map();
           data.forEach(v => {
-            const dir = v.horario.includes('Jarabacoa') ? 'ida' : 'vuelta';
+            const dir = (v.horario.includes('-> La Vega') || v.horario.includes('→ La Vega')) ? 'ida' : 'vuelta';
             if (!uniqueMap.has(dir) || new Date(v.created_at) > new Date(uniqueMap.get(dir).created_at)) {
               uniqueMap.set(dir, v);
             }
@@ -854,7 +853,7 @@
         // Safeguard deduplication
         const uniqueMap = new Map();
         initialVotes.forEach(v => {
-          const dir = v.horario.includes('Jarabacoa') ? 'ida' : 'vuelta';
+          const dir = (v.horario.includes('-> La Vega') || v.horario.includes('→ La Vega')) ? 'ida' : 'vuelta';
           if (!uniqueMap.has(dir) || new Date(v.created_at) > new Date(uniqueMap.get(dir).created_at)) {
             uniqueMap.set(dir, v);
           }
