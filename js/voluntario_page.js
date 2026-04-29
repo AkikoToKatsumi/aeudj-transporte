@@ -482,7 +482,8 @@ window.sendTripNotification = async (horario, tipo, btn) => {
       to_email: emails.join(',')
     };
 
-    const response = await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, templateParams);
+    console.log('Enviando notificación a:', emails);
+    const response = await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, templateParams, EMAILJS_PUBLIC);
     if (response.status === 200) {
       showToast(`✅ Enviado a ${emails.length} personas`);
     } else {
