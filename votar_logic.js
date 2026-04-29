@@ -542,48 +542,23 @@ function initVotarPage() {
     btn.textContent = 'Guardando...';
 
     try {
-      const { error: clearErr } = await supabase
-        .from('votos')
-        .delete()
-        .eq('usuario_id', currentUser.id)
-        .eq('fecha', cycleDate)
-        .is('se_monto', null);
-      
-      if (clearErr) throw clearErr;
+      // LLAMADA A LA EDGE FUNCTION (Lógica protegida)
+      const { data, error } = await supabase.functions.invoke('registrar-voto', {
+        body: { 
+          horarios: selectedHorarios,
+          fecha: cycleDate 
+        }
+      });
 
-      const dataToInsert = [];
-      for (const hor of selectedHorarios) {
-        const { count, error: countErr } = await supabase
-          .from('votos')
-          .select('*', { count: 'exact', head: true })
-          .eq('horario', hor)
-          .eq('fecha', cycleDate)
-          .eq('en_espera', false);
-        
-        if (countErr) throw countErr;
-        const enEspera = count >= 30;
-
-        dataToInsert.push({
-          usuario_id: currentUser.id,
-          nombre: currentUser.nombre,
-          universidad: currentUser.universidad,
-          matricula: currentUser.matricula,
-          telefono: currentUser.telefono || '',
-          email: currentUser.email || '',
-          horario: hor,
-          fecha: cycleDate,
-          se_monto: null,
-          en_espera: enEspera
-        });
-      }
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
       
-      const { error: insErr } = await supabase.from('votos').insert(dataToInsert);
-      if (insErr) throw insErr;
-      
+      console.log('Voto registrado vía servidor:', data);
       window.location.href = 'gracias.html?v=324';
+      
     } catch (error) {
-      console.error('ERROR:', error);
-      alert('Error al guardar: ' + error.message);
+      console.error('ERROR AL VOTAR:', error);
+      alert('Error en el servidor: ' + error.message);
       btn.disabled = false;
       btn.textContent = 'Confirmar Selección';
     }
