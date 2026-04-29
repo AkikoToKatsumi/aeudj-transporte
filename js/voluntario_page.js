@@ -482,12 +482,25 @@ window.sendTripNotification = async (horario, tipo, btn) => {
       to_email: emails.join(',')
     };
 
-    console.log('Enviando notificación a:', emails);
-    const response = await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, templateParams, EMAILJS_PUBLIC);
-    if (response.status === 200) {
-      showToast(`✅ Enviado a ${emails.length} personas`);
+    const payload = {
+      service_id: EMAILJS_SERVICE,
+      template_id: EMAILJS_TEMPLATE,
+      user_id: EMAILJS_PUBLIC,
+      template_params: templateParams
+    };
+
+    const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (response.ok) {
+      alert('✅ EL MENSAJE FUE ENVIADO CORRECTAMENTE A TODOS LOS ESTUDIANTES.');
+      showToast(`Enviado a ${emails.length} personas`);
     } else {
-      throw new Error('Error en EmailJS');
+      const txt = await response.text();
+      throw new Error('Error en EmailJS: ' + txt);
     }
   } catch(err) {
     console.error(err);
