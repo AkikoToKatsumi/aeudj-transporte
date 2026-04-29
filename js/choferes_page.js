@@ -275,7 +275,7 @@ window.sendTripNotification = async (horario, tipo, btn) => {
       to_email: emails.join(',')
     };
 
-    const response = await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, templateParams, EMAILJS_PUBLIC);
+    const response = await window.emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, templateParams, EMAILJS_PUBLIC);
 
     if (response.status === 200) {
       alert('✅ EL MENSAJE FUE ENVIADO CORRECTAMENTE A TODOS LOS ESTUDIANTES.');
@@ -285,9 +285,15 @@ window.sendTripNotification = async (horario, tipo, btn) => {
     }
 
   } catch(err) {
-    let errorMsg = err.text || err.message || 'Error desconocido';
-    if (errorMsg.includes('Failed to fetch')) {
-      errorMsg = "Error de red (Failed to fetch). Esto suele ocurrir si tienes un bloqueador de anuncios (AdBlock) activado. Por favor, desactívalo para esta página.";
+    console.error('Error completo:', err);
+    let errorMsg = 'Error desconocido';
+    if (typeof err === 'string') errorMsg = err;
+    else if (err.message) errorMsg = err.message;
+    else if (err.text) errorMsg = err.text;
+    else errorMsg = JSON.stringify(err);
+
+    if (errorMsg.includes('Failed to fetch') || errorMsg.includes('TypeError')) {
+      errorMsg = "Error de conexión. Esto suele ocurrir si un bloqueador de anuncios (AdBlock) está bloqueando EmailJS. Desactívalo e intenta de nuevo.";
     }
     alert('Detalle del error: ' + errorMsg);
     showToast('Error en el envío', 'error');
