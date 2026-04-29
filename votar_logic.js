@@ -1,4 +1,4 @@
-﻿import { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY } from './supabase-config.js?v=200';
+import { supabase, transportSchedules, getCycleDate, formatDate, SUPABASE_URL, SUPABASE_KEY } from './supabase-config.js?v=200';
 
 alert('SISTEMA ACTIVADO âœ…');
 console.log('ðŸš€ AEUDJ App Iniciada');
@@ -79,21 +79,20 @@ document.addEventListener('DOMContentLoaded', async function() {
 // GESTIN DE SESIN
 // ============================================
 function checkSession() {
- try {
- const userData = localStorage.getItem('aeudj_user');
- const adminData = localStorage.getItem('aeudj_admin_session');
- 
- if (userData && userData !== 'undefined') {
- currentUser = JSON.parse(userData);
- }
- 
- if (adminData === 'true') {
- isAdmin = true;
- }
- } catch (e) {
- console.error('Error loading session:', e);
- clearSession();
- }
+  try {
+    const userData = localStorage.getItem('aeudj_user');
+    
+    if (userData && userData !== 'undefined') {
+      currentUser = JSON.parse(userData);
+      // El rol se verifica desde el objeto de usuario recuperado de la DB
+      if (currentUser && (currentUser.rol === 'admin' || currentUser.rol === 'desarrolladora' || currentUser.rol === 'administrador')) {
+        isAdmin = true;
+      }
+    }
+  } catch (e) {
+    console.error('Error loading session:', e);
+    clearSession();
+  }
 }
 
 function setSession(user) {
