@@ -634,17 +634,23 @@
     }
 
     function toggleSlot(el, fullText, dir) {
-      // Deselect others of same direction
+      // Limpiar selecciones previas de la misma dirección en el DOM
       document.querySelectorAll(`.time-slot.selected[data-dir="${dir}"]`).forEach(n => n.classList.remove('selected'));
+      
+      // Limpiar selecciones previas de la misma dirección en el array
       selectedHorarios = selectedHorarios.filter(h => {
         const s = SCHEDULES.find(x => x.fullText === h);
-        return s && s.dir !== dir;
+        const direction = s ? s.dir : (h.includes('Jarabacoa') ? 'ida' : 'vuelta');
+        return direction !== dir;
       });
 
       const wasSelected = el.classList.contains('selected');
       if (!wasSelected) {
         el.classList.add('selected');
-        selectedHorarios.push(fullText);
+        // Solo agregar si no existe ya (doble seguridad)
+        if (!selectedHorarios.includes(fullText)) {
+          selectedHorarios.push(fullText);
+        }
       }
 
       // Enable submit only if one ida + one vuelta
