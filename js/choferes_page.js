@@ -72,10 +72,13 @@ checkSecurity();
 
 const logoutBtn = document.getElementById('logoutBtn');
 if (logoutBtn) {
-  logoutBtn.onclick = () => { 
-    localStorage.clear(); 
-    window.location.href = 'index.html'; 
-  };
+  logoutBtn.addEventListener('click', async () => {
+    try {
+      if (supabase) await supabase.auth.signOut();
+    } catch(e) {}
+    localStorage.clear();
+    window.location.href = 'index.html';
+  });
 }
 
 async function loadData() {
@@ -91,7 +94,6 @@ async function loadData() {
       .from('votos')
       .select('*')
       .eq('fecha', cycleDate)
-      .gt('id', 40)
       .order('created_at', { ascending: true });
 
     if (error) throw error;
@@ -252,8 +254,7 @@ window.sendTripNotification = async (horario, tipo, btn) => {
       .from('votos')
       .select('email, usuario_id')
       .eq('fecha', cycleDate)
-      .eq('horario', horario)
-      .gt('id', 40);
+      .eq('horario', horario);
 
     if (errVotos) throw errVotos;
 

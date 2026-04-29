@@ -5,337 +5,51 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lista de Pasajeros - AEUDJ</title>
   <link rel="icon" href="img/comite.jpg" type="image/jpg">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="js/custom-alert.js"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background: #0f172a;
-      color: #f8fafc;
-      min-height: 100vh;
-      background-image: url('img/jarabacoa.webp');
-      background-size: cover;
-      background-position: center;
-      background-attachment: fixed;
-    }
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background: rgba(10, 15, 30, 0.82);
-      z-index: 0;
-    }
-    main {
-      position: relative;
-      z-index: 1;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 2rem 1rem 4rem;
-    }
-
-    /* Top nav */
-    .top-nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 2rem;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-    }
-    .btn-back {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      background: rgba(59,130,246,0.15);
-      border: 1px solid rgba(59,130,246,0.3);
-      color: #60a5fa;
-      padding: 0.5rem 1rem;
-      border-radius: 0.6rem;
-      font-size: 0.85rem;
-      font-weight: 600;
-      text-decoration: none;
-      transition: all 0.2s;
-    }
-    .btn-back:hover { background: rgba(59,130,246,0.25); }
-
-    .reload-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      background: transparent;
-      border: 1px solid rgba(255,255,255,0.1);
-      color: #64748b;
-      padding: 0.5rem 1rem;
-      border-radius: 0.6rem;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .reload-btn:hover { border-color: rgba(255,255,255,0.2); color: #94a3b8; }
-    .reload-btn svg { width: 14px; height: 14px; }
-
-    header { text-align: center; margin-bottom: 2rem; }
-    h1 { font-size: 2rem; font-weight: 800; }
-    .date-badge {
-      display: inline-block;
-      margin-top: 0.5rem;
-      background: rgba(59,130,246,0.12);
-      border: 1px solid rgba(59,130,246,0.25);
-      color: #93c5fd;
-      padding: 0.25rem 0.9rem;
-      border-radius: 999px;
-      font-size: 0.8rem;
-      font-weight: 600;
-    }
-
-    /* Summary bar */
-    .summary-bar {
-      display: flex;
-      gap: 0.75rem;
-      margin-bottom: 1.5rem;
-      flex-wrap: wrap;
-    }
-    .summary-pill {
-      flex: 1;
-      min-width: 120px;
-      background: rgba(15,23,42,0.55);
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 0.75rem;
-      padding: 0.85rem 1rem;
-      text-align: center;
-      backdrop-filter: blur(16px);
-    }
-    .summary-pill .pill-num { font-size: 1.6rem; font-weight: 800; color: #60a5fa; }
-    .summary-pill .pill-label { font-size: 0.7rem; text-transform: uppercase; color: #475569; font-weight: 700; margin-top: 0.1rem; }
-
-    /* Section card */
-    .horario-section {
-      background: rgba(15,23,42,0.6);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 1.25rem;
-      overflow: hidden;
-      margin-bottom: 1.25rem;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    }
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1rem 1.25rem;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-    .section-title {
-      font-size: 1rem;
-      font-weight: 700;
-      color: #60a5fa;
-    }
-    .section-direction {
-      font-size: 0.65rem;
-      text-transform: uppercase;
-      font-weight: 700;
-      padding: 0.2rem 0.65rem;
-      border-radius: 999px;
-    }
-    .dir-ida    { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.25); }
-    .dir-vuelta { background: rgba(139,92,246,0.15); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.25); }
-    .section-count {
-      font-size: 0.75rem;
-      background: rgba(30,41,59,0.6);
-      color: #94a3b8;
-      padding: 0.2rem 0.65rem;
-      border-radius: 999px;
-      font-weight: 600;
-    }
-
-    /* Passenger row */
-    .passenger-list { padding: 0.5rem; display: flex; flex-direction: column; gap: 0.4rem; }
-    .passenger-row {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      background: rgba(30,41,59,0.4);
-      border: 1px solid rgba(255,255,255,0.05);
-      border-radius: 0.85rem;
-      padding: 0.6rem 0.85rem;
-      transition: all 0.2s;
-    }
-    .passenger-row:hover { background: rgba(30,41,59,0.7); transform: translateX(4px); }
-    
-    .passenger-num {
-      width: 24px; height: 24px;
-      background: rgba(59,130,246,0.15);
-      border: 1px solid rgba(59,130,246,0.3);
-      border-radius: 6px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.7rem;
-      font-weight: 800;
-      color: #60a5fa;
-      flex-shrink: 0;
-    }
-
-    .passenger-main {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      min-width: 0;
-    }
-
-    .passenger-info { min-width: 0; }
-    .passenger-name { 
-      font-size: 0.85rem; 
-      font-weight: 700; 
-      color: #f8fafc; 
-      white-space: nowrap; 
-      overflow: hidden; 
-      text-overflow: ellipsis;
-      letter-spacing: -0.01em;
-    }
-    .passenger-meta {
-      font-size: 0.65rem;
-      color: #64748b;
-      margin-top: 0.1rem;
-      font-weight: 500;
-    }
-
-    .passenger-status {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      flex-shrink: 0;
-    }
-
-    .badge-base {
-      font-size: 0.6rem;
-      font-weight: 800;
-      padding: 0.2rem 0.5rem;
-      border-radius: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.02em;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25rem;
-    }
-
-    .badge-confirmado {
-      background: rgba(16,185,129,0.12);
-      color: #10b981;
-      border: 1px solid rgba(16,185,129,0.25);
-    }
-
-    .badge-point {
-      background: rgba(59,130,246,0.12);
-      color: #60a5fa;
-      border: 1px solid rgba(59,130,246,0.25);
-    }
-
-    .badge-camino {
-      background: rgba(245,158,11,0.12);
-      color: #f59e0b;
-      border: 1px solid rgba(245,158,11,0.25);
-    }
-
-    .passenger-time {
-      font-size: 0.65rem;
-      font-weight: 700;
-      color: #3b82f6;
-      background: rgba(59,130,246,0.1);
-      padding: 0.2rem 0.4rem;
-      border-radius: 4px;
-      flex-shrink: 0;
-    }
-
-    /* Empty / loading */
-    .empty-state {
-      text-align: center;
-      padding: 3rem 1.5rem;
-      color: #475569;
-    }
-    .empty-state svg { width: 48px; height: 48px; margin: 0 auto 1rem; opacity: 0.3; }
-    .empty-state p { font-size: 0.9rem; }
-
-    .spinner {
-      width: 36px; height: 36px;
-      border: 3px solid rgba(59,130,246,0.2);
-      border-top-color: #3b82f6;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    
-    .spin-animation { animation: spin 0.8s linear infinite; }
-
-    @keyframes pulse {
-      0% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.2); opacity: 0.7; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-
-
-
-    @media (max-width: 500px) {
-      .summary-bar { gap: 0.5rem; }
-      .summary-pill { min-width: 90px; }
-    }
-  </style>
+  <link rel="stylesheet" href="css/lista.css">
 </head>
-<body>
+<body data-page="lista">
+  <a href="votar.html" class="btn-nav">
+    <i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Volver
+  </a>
+
   <main>
-
-    <nav class="top-nav">
-      <a href="votar.html" class="btn-back">
-        <i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Volver
-      </a>
-      <button class="reload-btn" id="reloadBtn">
-        <i data-lucide="refresh-cw"></i> Actualizar
-      </button>
-    </nav>
-
     <header>
-      <h1>📋 Lista de Pasajeros</h1>
-      <div class="date-badge" id="fechaBadge">Cargando...</div>
-      <div style="margin-top:0.5rem;display:inline-flex;align-items:center;gap:0.35rem;font-size:0.72rem;color:#34d399;font-weight:600;">
-        <span style="width:7px;height:7px;background:#34d399;border-radius:50%;display:inline-block;animation:pulse 2s infinite;"></span>
-        Actualizando en tiempo real
-      </div>
+      <h1>Lista de Pasajeros</h1>
+      <p class="subtitle">Sincronización en tiempo real de viajes</p>
+      <div class="date-badge" id="fechaBadge">Cargando fecha...</div>
     </header>
 
-    <!-- Stats -->
     <div class="summary-bar" id="summaryBar" style="display:none;">
-      <div class="summary-pill">
-        <div class="pill-num" id="statTotal">0</div>
-        <div class="pill-label">Pasajeros</div>
+      <div class="summary-item">
+        <div class="summary-num" id="statTotal">0</div>
+        <div class="summary-lbl">Total Uniq</div>
       </div>
-      <div class="summary-pill">
-        <div class="pill-num" id="statIda">0</div>
-        <div class="pill-label">Viajes Ida</div>
+      <div class="summary-item">
+        <div class="summary-num" id="statIda" style="color:#60a5fa;">0</div>
+        <div class="summary-lbl">↗ Ida</div>
       </div>
-      <div class="summary-pill">
-        <div class="pill-num" id="statVuelta">0</div>
-        <div class="pill-label">Viajes Vuelta</div>
+      <div class="summary-item">
+        <div class="summary-num" id="statVuelta" style="color:#c4b5fd;">0</div>
+        <div class="summary-lbl">↙ Vuelta</div>
       </div>
     </div>
 
-    <!-- List container -->
     <div id="listContainer">
       <div class="empty-state">
         <div class="spinner"></div>
-        <p style="margin-top:1rem;">Cargando lista...</p>
+        <p>Sincronizando con la base de datos...</p>
       </div>
     </div>
-
-
-
   </main>
 
-  <script type="module" src="js/lista_page.js"></script>
+  <button class="reload-fab" id="reloadBtn">
+    <i data-lucide="refresh-cw"></i>
+  </button>
 
+  <script type="module" src="js/lista_page.js"></script>
 </body>
 </html>

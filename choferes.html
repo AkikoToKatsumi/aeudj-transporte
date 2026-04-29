@@ -9,340 +9,56 @@
   <script src="supabase-config.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background: #0f172a;
-      color: #f8fafc;
-      min-height: 100vh;
-      background-image: url('img/jarabacoa.webp');
-      background-size: cover;
-      background-position: center;
-      background-attachment: fixed;
-    }
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background: rgba(10,15,30,0.84);
-      z-index: 0;
-    }
-    main {
-      position: relative;
-      z-index: 1;
-      max-width: 860px;
-      margin: 0 auto;
-      padding: 2rem 1rem 4rem;
-    }
-
-    /* Nav */
-    .top-nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1.75rem;
-      flex-wrap: wrap;
-      gap: 0.6rem;
-    }
-    .nav-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.5rem 0.9rem;
-      border-radius: 0.6rem;
-      font-size: 0.8rem;
-      font-weight: 600;
-      text-decoration: none;
-      border: 1px solid;
-      cursor: pointer;
-      background: transparent;
-      transition: all 0.2s;
-    }
-    .nav-btn svg { width: 14px; height: 14px; }
-    .nav-btn.red   { color: #f87171; border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.08); }
-    .nav-btn:hover { filter: brightness(1.2); transform: translateY(-1px); }
-
-    /* Header */
-    header { text-align: center; margin-bottom: 1.75rem; }
-    h1 { font-size: 1.9rem; font-weight: 800; color: #fbbf24; }
-    .subtitle { color: #94a3b8; font-size: 0.95rem; margin-top: 0.35rem; }
-    .date-badge {
-      display: inline-block;
-      margin-top: 0.75rem;
-      background: rgba(251,191,36,0.12);
-      border: 1px solid rgba(251,191,36,0.25);
-      color: #fbbf24;
-      padding: 0.3rem 1rem;
-      border-radius: 999px;
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
-
-    /* Stats */
-    .stats-bar {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0.75rem;
-      margin-bottom: 1.5rem;
-    }
-    .stat-card {
-      background: rgba(15,23,42,0.6);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 0.85rem;
-      padding: 1rem;
-      text-align: center;
-      backdrop-filter: blur(16px);
-    }
-    .stat-num { font-size: 2rem; font-weight: 800; }
-    .stat-label { font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-top: 0.25rem; }
-    .stat-blue   .stat-num { color: #60a5fa; }
-    .stat-orange .stat-num { color: #fb923c; }
-
-    /* Horario section */
-    .horario-section {
-      background: rgba(15,23,42,0.6);
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 1.1rem;
-      overflow: hidden;
-      margin-bottom: 1.25rem;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-      transition: transform 0.2s;
-    }
-    .horario-section:hover {
-      transform: translateY(-2px);
-      border-color: rgba(255,255,255,0.15);
-    }
-    .horario-header {
-      padding: 1.25rem;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-    .horario-title { font-size: 1.1rem; font-weight: 800; color: #f8fafc; margin-bottom: 0.5rem; }
-    
-    .horario-stats {
-      display: flex;
-      gap: 1rem;
-      margin-top: 0.75rem;
-    }
-    
-    .h-stat {
-      flex: 1;
-      background: rgba(0,0,0,0.2);
-      padding: 0.75rem;
-      border-radius: 0.75rem;
-      text-align: center;
-    }
-    .h-stat-num { font-size: 1.5rem; font-weight: 800; }
-    .h-stat-label { font-size: 0.65rem; text-transform: uppercase; font-weight: 700; color: #94a3b8; margin-top: 0.25rem; }
-    
-    .h-stat.confirmados .h-stat-num { color: #34d399; }
-    .h-stat.espera { border: 1px solid rgba(245,158,11,0.2); background: rgba(245,158,11,0.05); }
-    .h-stat.espera .h-stat-num { color: #fbbf24; }
-    
-    .dir-badge {
-      display: inline-block;
-      font-size: 0.7rem;
-      font-weight: 700;
-      padding: 0.2rem 0.6rem;
-      border-radius: 999px;
-      text-transform: uppercase;
-      margin-bottom: 0.5rem;
-    }
-    .dir-ida    { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.25); }
-    .dir-vuelta { background: rgba(139,92,246,0.15); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.25); }
-
-    /* Passenger list */
-    .passenger-list-btn {
-      width: 100%;
-      background: rgba(255,255,255,0.03);
-      border: none;
-      border-top: 1px solid rgba(255,255,255,0.05);
-      color: #94a3b8;
-      padding: 0.75rem;
-      font-size: 0.8rem;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      transition: all 0.2s;
-    }
-    .passenger-list-btn:hover {
-      background: rgba(255,255,255,0.06);
-      color: #f8fafc;
-    }
-    .passenger-list-btn svg { transition: transform 0.2s; }
-    .passenger-list-btn.open svg { transform: rotate(180deg); }
-
-    .passenger-list-content {
-      display: none;
-      padding: 0;
-      background: rgba(0,0,0,0.2);
-    }
-    .passenger-list-content.open {
-      display: block;
-    }
-    
-    .p-row {
-      display: flex;
-      align-items: center;
-      padding: 0.75rem 1.25rem;
-      border-bottom: 1px solid rgba(255,255,255,0.03);
-      gap: 0.75rem;
-    }
-    .p-row:last-child { border-bottom: none; }
-    .p-num {
-      width: 24px; height: 24px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.1);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.7rem; font-weight: 700; color: #94a3b8;
-    }
-    .p-name { flex: 1; font-size: 0.85rem; font-weight: 600; }
-    .badge-espera {
-      font-size: 0.65rem; font-weight: 700;
-      background: rgba(245,158,11,0.15); color: #fbbf24;
-      padding: 0.2rem 0.5rem; border-radius: 999px;
-      border: 1px solid rgba(245,158,11,0.3);
-    }
-
-    /* Empty */
-    .empty-state { text-align: center; padding: 3rem 1.5rem; color: #94a3b8; }
-    .spinner {
-      width: 36px; height: 36px;
-      border: 3px solid rgba(251,191,36,0.2);
-      border-top-color: #fbbf24;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .reload-fab {
-      position: fixed;
-      bottom: 1.5rem;
-      right: 1.5rem;
-      z-index: 10;
-      background: #fbbf24;
-      color: #0f172a;
-      border: none;
-      width: 52px; height: 52px;
-      border-radius: 50%;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 20px rgba(251,191,36,0.4);
-      transition: all 0.2s;
-    }
-    .reload-fab:hover { transform: scale(1.1); }
-    .reload-fab svg { width: 24px; height: 24px; stroke-width: 2.5; }
-
-    /* Notification Buttons */
-    .notify-bar {
-       display: flex;
-       gap: 0.5rem;
-       padding: 0.75rem 1.25rem;
-       background: rgba(16, 185, 129, 0.05);
-       border-top: 1px solid rgba(255, 255, 255, 0.05);
-       overflow-x: auto;
-       scrollbar-width: none;
-    }
-    .notify-bar::-webkit-scrollbar { display: none; }
-    .notify-btn {
-       white-space: nowrap;
-       padding: 0.4rem 0.8rem;
-       border-radius: 999px;
-       font-size: 0.7rem;
-       font-weight: 700;
-       border: 1px solid rgba(52, 211, 153, 0.3);
-       background: rgba(52, 211, 153, 0.1);
-       color: #34d399;
-       cursor: pointer;
-       transition: all 0.2s;
-       display: flex;
-       align-items: center;
-       gap: 0.3rem;
-    }
-    .notify-btn:hover { background: rgba(52, 211, 153, 0.2); transform: translateY(-1px); }
-    .notify-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    
-    .notify-btn.whatsapp {
-       background: rgba(37, 211, 102, 0.1);
-       border-color: rgba(37, 211, 102, 0.3);
-       color: #25d366;
-    }
-    .notify-btn.whatsapp:hover { background: rgba(37, 211, 102, 0.2); }
-     
-    .toast {
-       position: fixed;
-       top: 1.5rem;
-       left: 50%;
-       transform: translateX(-50%) translateY(-20px);
-       background: #10b981;
-       color: white;
-       padding: 0.75rem 1.5rem;
-       border-radius: 999px;
-       font-weight: 700;
-       font-size: 0.9rem;
-       box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-       z-index: 1000;
-       opacity: 0;
-       transition: all 0.3s;
-       pointer-events: none;
-    }
-    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-    .toast.error { background: #ef4444; }
-
-  </style>
+  <link rel="stylesheet" href="css/choferes.css">
 </head>
 <body data-page="choferes">
+  <div id="loading">
+    <div class="spinner"></div>
+  </div>
+
   <main>
-    <!-- Nav -->
     <nav class="top-nav">
-      <div></div>
-      <button class="nav-btn red" id="logoutBtn">
-        <i data-lucide="log-out"></i> Cerrar sesión
+      <a href="votar.html" class="nav-btn" style="color:#94a3b8; border-color:rgba(255,255,255,0.1); background:rgba(255,255,255,0.03);">
+        <i data-lucide="arrow-left"></i> Volver
+      </a>
+      <button id="logoutBtn" class="nav-btn red">
+        <i data-lucide="log-out"></i> Cerrar Sesión
       </button>
     </nav>
 
-    <!-- Header -->
     <header>
-      <h1>🚌 Panel de Choferes</h1>
-      <p class="subtitle">Resumen de viajes y pasajeros</p>
-      <div class="date-badge" id="fechaBadge">Cargando...</div>
+      <h1>Panel de Choferes</h1>
+      <p class="subtitle">Gestión de recorridos y pasajeros</p>
+      <div class="date-badge" id="currentDate">Cargando fecha...</div>
     </header>
 
-    <!-- Stats -->
     <div class="stats-bar">
       <div class="stat-card stat-blue">
-        <div class="stat-num" id="statTotal">0</div>
-        <div class="stat-label">Total Viajeros</div>
+        <div class="stat-num" id="stat-total-hoy">0</div>
+        <div class="stat-label">Pasajeros Hoy</div>
       </div>
       <div class="stat-card stat-orange">
-        <div class="stat-num" id="statEspera">0</div>
-        <div class="stat-label">En Lista de Espera</div>
+        <div class="stat-num" id="stat-turnos-hoy">0</div>
+        <div class="stat-label">Viajes Activos</div>
       </div>
     </div>
 
-    <!-- List -->
-    <div id="listContainer">
-      <div class="empty-state">
-        <div class="spinner"></div>
-        <p style="margin-top:1rem;">Cargando información de viajes...</p>
-      </div>
+    <!-- Container para horarios -->
+    <div id="horarios-container">
+      <!-- Inyectado por JS -->
+    </div>
+
+    <div id="no-data-msg" class="no-data hidden">
+      <i data-lucide="calendar-x"></i>
+      <p>No hay viajes programados para hoy.</p>
     </div>
   </main>
-  
-  <div class="toast" id="toast"></div>
 
-  <!-- Reload FAB -->
-  <button class="reload-fab" id="reloadFab" title="Actualizar">
+  <!-- Botón flotante para refrescar -->
+  <button id="refreshBtn" class="reload-fab" title="Actualizar datos">
     <i data-lucide="refresh-cw"></i>
   </button>
 
   <script type="module" src="js/choferes_page.js"></script>
-
 </body>
 </html>

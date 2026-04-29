@@ -1,7 +1,5 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-const SUPABASE_URL = 'https://irjwxegepkznqrisbrys.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyand4ZWdlcGt6bnFyaXNicnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNjk0NDIsImV4cCI6MjA5MTc0NTQ0Mn0.TZOhsy0ghfmjK8rd4GWcgbtOLpERKRJ62mjqc5gaYOM';
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+// Usamos el cliente global de Supabase
+const supabase = window.supabase;
 
 const SCHEDULES_IDA = ['Jarabacoa -> La Vega','Jarabacoa → La Vega'];
 
@@ -40,7 +38,6 @@ async function loadData() {
     let { data: votos, error } = await supabase
       .from('votos').select('*')
       .eq('fecha', cycleDate)
-      .gt('id', 40)
       .order('horario', { ascending: true })
       .order('created_at', { ascending: true });
 

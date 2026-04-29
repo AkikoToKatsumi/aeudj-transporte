@@ -100,10 +100,13 @@ function setStatus(msg, color = '#60a5fa') {
 
 // ── SESSION ─────────────────────────────────────────────
 if (logoutBtn) {
-    logoutBtn.onclick = () => {
-      localStorage.clear();
-      window.location.href = 'index.html';
-    };
+  logoutBtn.addEventListener('click', async () => {
+    try {
+      if (supabase) await supabase.auth.signOut();
+    } catch(e) {}
+    localStorage.clear();
+    window.location.href = 'index.html';
+  });
 }
 
 function loadSession() {
@@ -271,8 +274,7 @@ async function checkYaVotado() {
       .from('votos')
       .select('*')
       .eq('usuario_id', currentUser.id)
-      .eq('fecha', cycleDate)
-      .gt('id', 40);
+      .eq('fecha', cycleDate);
 
     if (error) throw error;
 

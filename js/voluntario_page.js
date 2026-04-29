@@ -50,7 +50,13 @@ function showToast(msg, type = 'success') {
 // Auth check
 const logoutBtn = document.getElementById('logoutBtn');
 if (logoutBtn) {
-  logoutBtn.onclick = () => { localStorage.clear(); window.location.href = 'index.html'; };
+  logoutBtn.addEventListener('click', async () => {
+    try {
+      if (supabase) await supabase.auth.signOut();
+    } catch(e) {}
+    localStorage.clear();
+    window.location.href = 'index.html';
+  });
 }
 
 let currentUser = null;
@@ -98,7 +104,6 @@ async function loadData() {
     const { data, error } = await supabase
       .from('votos').select('*')
       .eq('fecha', cycleDate)
-      .gt('id', 40)
       .order('horario', { ascending: true })
       .order('created_at', { ascending: true });
 
@@ -424,8 +429,7 @@ window.sendTripNotification = async (horario, tipo, btn) => {
       .from('votos')
       .select('email, usuario_id')
       .eq('fecha', cycleDate)
-      .eq('horario', horario)
-      .gt('id', 40);
+      .eq('horario', horario);
 
     if (errVotos) throw errVotos;
 

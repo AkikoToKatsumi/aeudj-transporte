@@ -480,7 +480,7 @@ async function loadVotosDetail() {
   const today = getCycleDate();
   const { data: votos, error } = await supabase
     .from('votos').select('*')
-    .eq('fecha', today).gt('id', 40)
+    .eq('fecha', today)
     .order('horario').order('created_at');
 
   if (error || !votos) {
@@ -1297,7 +1297,10 @@ window.downloadCajaReport = () => {
 
 const logoutBtn = document.getElementById('logoutBtn');
 if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
+    logoutBtn.addEventListener('click', async () => {
+      try {
+        if (supabase) await supabase.auth.signOut();
+      } catch(e) {}
       localStorage.clear();
       window.location.href = 'index.html';
     });

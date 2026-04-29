@@ -8,437 +8,89 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background: #0f172a;
-      color: #f8fafc;
-      min-height: 100vh;
-      background-image: url('img/jarabacoa.webp');
-      background-size: cover;
-      background-position: center;
-      background-attachment: fixed;
-    }
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background: rgba(10,15,30,0.84);
-      z-index: 0;
-    }
-    main {
-      position: relative;
-      z-index: 1;
-      max-width: 860px;
-      margin: 0 auto;
-      padding: 2rem 1rem 4rem;
-    }
-
-    /* Nav */
-    .top-nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1.75rem;
-      flex-wrap: wrap;
-      gap: 0.6rem;
-    }
-    .nav-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.5rem 0.9rem;
-      border-radius: 0.6rem;
-      font-size: 0.8rem;
-      font-weight: 600;
-      text-decoration: none;
-      border: 1px solid;
-      cursor: pointer;
-      background: transparent;
-      transition: all 0.2s;
-    }
-    .nav-btn svg { width: 14px; height: 14px; }
-    .nav-btn.blue  { color: #60a5fa; border-color: rgba(59,130,246,0.3); background: rgba(59,130,246,0.08); }
-    .nav-btn.green { color: #34d399; border-color: rgba(52,211,153,0.3); background: rgba(52,211,153,0.08); }
-    .nav-btn.red   { color: #f87171; border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.08); }
-    .nav-btn.slate { color: #94a3b8; border-color: rgba(148,163,184,0.2); background: rgba(148,163,184,0.06); }
-    .nav-btn:hover { filter: brightness(1.2); transform: translateY(-1px); }
-
-    /* Header */
-    header { text-align: center; margin-bottom: 1.75rem; }
-    h1 { font-size: 1.9rem; font-weight: 800; }
-    .subtitle { color: #475569; font-size: 0.85rem; margin-top: 0.35rem; }
-    .date-badge {
-      display: inline-block;
-      margin-top: 0.5rem;
-      background: rgba(16,185,129,0.12);
-      border: 1px solid rgba(16,185,129,0.25);
-      color: #34d399;
-      padding: 0.2rem 0.85rem;
-      border-radius: 999px;
-      font-size: 0.78rem;
-      font-weight: 600;
-    }
-
-    /* Filter bar */
-    .filter-bar {
-      display: flex;
-      gap: 0.6rem;
-      margin-bottom: 1.25rem;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-    .filter-label { font-size: 0.75rem; text-transform: uppercase; color: #475569; font-weight: 700; margin-right: 0.25rem; }
-    .filter-btn {
-      padding: 0.4rem 0.85rem;
-      border-radius: 999px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(30,41,59,0.5);
-      color: #64748b;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .filter-btn.active {
-      background: rgba(59,130,246,0.2);
-      border-color: rgba(59,130,246,0.4);
-      color: #60a5fa;
-    }
-    .filter-btn:hover:not(.active) { border-color: rgba(255,255,255,0.15); color: #94a3b8; }
-
-    /* Stats */
-    .stats-bar {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0.75rem;
-      margin-bottom: 1.25rem;
-    }
-    .stat-card {
-      background: rgba(15,23,42,0.6);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 0.85rem;
-      padding: 0.85rem 1rem;
-      text-align: center;
-      backdrop-filter: blur(16px);
-    }
-    .stat-num { font-size: 1.7rem; font-weight: 800; }
-    .stat-label { font-size: 0.65rem; text-transform: uppercase; color: #475569; font-weight: 700; }
-    .stat-blue   .stat-num { color: #60a5fa; }
-    .stat-green  .stat-num { color: #34d399; }
-    .stat-purple .stat-num { color: #c4b5fd; }
-
-    /* Horario section */
-    .horario-section {
-      background: rgba(15,23,42,0.6);
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 1.1rem;
-      overflow: hidden;
-      margin-bottom: 1rem;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-    }
-    .horario-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.9rem 1.1rem;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      cursor: pointer;
-      user-select: none;
-    }
-    .horario-header:hover { background: rgba(255,255,255,0.02); }
-    .horario-title { font-size: 0.95rem; font-weight: 700; color: #60a5fa; }
-    .horario-meta { display: flex; gap: 0.5rem; align-items: center; }
-    .dir-badge {
-      font-size: 0.62rem;
-      font-weight: 700;
-      padding: 0.18rem 0.55rem;
-      border-radius: 999px;
-      text-transform: uppercase;
-    }
-    .dir-ida    { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.25); }
-    .dir-vuelta { background: rgba(139,92,246,0.15); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.25); }
-    .count-badge {
-      font-size: 0.72rem;
-      font-weight: 700;
-      background: rgba(30,41,59,0.7);
-      color: #64748b;
-      padding: 0.18rem 0.55rem;
-      border-radius: 999px;
-    }
-    .chevron { color: #475569; transition: transform 0.2s; }
-    .chevron.open { transform: rotate(180deg); }
-
-    /* Passenger table */
-    .passenger-table { display: flex; flex-direction: column; }
-    .passenger-row {
-      display: flex;
-      align-items: center;
-      padding: 0.75rem 1.1rem;
-      border-bottom: 1px solid rgba(255,255,255,0.03);
-      gap: 0.85rem;
-      transition: background 0.12s;
-    }
-    .passenger-row:last-child { border-bottom: none; }
-    .passenger-row:hover { background: rgba(255,255,255,0.02); }
-    .row-num {
-      width: 26px; height: 26px;
-      background: rgba(59,130,246,0.15);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: #60a5fa;
-      flex-shrink: 0;
-    }
-    .row-info { flex: 1; min-width: 0; }
-    .row-name { font-size: 0.88rem; font-weight: 600; color: #f1f5f9; }
-    .row-mat  { font-size: 0.7rem; color: #475569; font-family: monospace; }
-    .row-tel  { font-size: 0.7rem; color: #475569; }
-    .row-time { font-size: 0.78rem; font-weight: 700; color: #60a5fa; font-family: monospace; flex-shrink: 0; }
-
-    /* Checklist mode */
-    .check-circle {
-      width: 22px; height: 22px;
-      border-radius: 50%;
-      border: 2px solid rgba(255,255,255,0.15);
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: all 0.15s;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .check-circle.checked {
-      background: #34d399;
-      border-color: #34d399;
-    }
-    .check-circle.checked::after {
-      content: '✓';
-      font-size: 12px;
-      font-weight: 700;
-      color: white;
-    }
-    .check-circle:hover:not(.checked) { border-color: #34d399; background: rgba(52,211,153,0.1); }
-
-    /* Attendance buttons */
-    .attendance-btns {
-      display: flex;
-      gap: 0.35rem;
-      flex-shrink: 0;
-    }
-    .att-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25rem;
-      padding: 0.3rem 0.7rem;
-      border-radius: 999px;
-      font-size: 0.72rem;
-      font-weight: 700;
-      border: 1px solid;
-      cursor: pointer;
-      background: transparent;
-      transition: all 0.15s;
-      white-space: nowrap;
-    }
-    .att-btn.subio {
-      color: #34d399;
-      border-color: rgba(52,211,153,0.3);
-    }
-    .att-btn.subio:hover, .att-btn.subio.active {
-      background: rgba(52,211,153,0.18);
-      border-color: #34d399;
-    }
-    .att-btn.no-subio {
-      color: #f87171;
-      border-color: rgba(248,113,113,0.3);
-    }
-    .att-btn.no-subio:hover, .att-btn.no-subio.active {
-      background: rgba(248,113,113,0.18);
-      border-color: #f87171;
-    }
-    .att-btn.active { opacity: 1; }
-    .att-btn:not(.active) { opacity: 0.6; }
-
-    /* Penalty badge on row */
-    .penalizado-badge {
-      font-size: 0.6rem;
-      font-weight: 700;
-      background: rgba(239,68,68,0.15);
-      color: #f87171;
-      border: 1px solid rgba(239,68,68,0.3);
-      padding: 0.1rem 0.5rem;
-      border-radius: 999px;
-      flex-shrink: 0;
-    }
-
-    .toast {
-      position: fixed;
-      bottom: 5rem;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #1e293b;
-      border: 1px solid rgba(255,255,255,0.1);
-      color: #f8fafc;
-      padding: 0.75rem 1.5rem;
-      border-radius: 0.75rem;
-      font-size: 0.85rem;
-      font-weight: 600;
-      z-index: 100;
-      opacity: 0;
-      transition: opacity 0.3s;
-      pointer-events: none;
-    }
-    .toast.show { opacity: 1; }
-    .toast.success { border-color: rgba(52,211,153,0.4); color: #34d399; }
-    .toast.error   { border-color: rgba(248,113,113,0.4); color: #f87171; }
-    .toast.warning { border-color: rgba(251,191,36,0.4); color: #fbbf24; }
-
-    /* Empty */
-    .empty-state { text-align: center; padding: 3rem 1.5rem; color: #475569; }
-    .spinner {
-      width: 32px; height: 32px;
-      border: 3px solid rgba(59,130,246,0.2);
-      border-top-color: #3b82f6;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .reload-fab {
-      position: fixed;
-      bottom: 1.5rem;
-      right: 1.5rem;
-      z-index: 10;
-      background: #3b82f6;
-      color: white;
-      border: none;
-      width: 48px; height: 48px;
-      border-radius: 50%;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 20px rgba(59,130,246,0.4);
-      transition: all 0.2s;
-    }
-    .reload-fab:hover { transform: scale(1.1); }
-    .reload-fab svg { width: 20px; height: 20px; }
-
-    @media(max-width:500px) {
-      .stats-bar { grid-template-columns: repeat(3,1fr); }
-      .row-tel { display: none; }
-    }
-
-    /* Notification Buttons */
-    .notify-bar {
-       display: flex;
-       gap: 0.5rem;
-       padding: 0.75rem 1.1rem;
-       background: rgba(16, 185, 129, 0.05);
-       border-top: 1px solid rgba(255, 255, 255, 0.05);
-       overflow-x: auto;
-       scrollbar-width: none;
-    }
-    .notify-bar::-webkit-scrollbar { display: none; }
-    .notify-btn {
-       white-space: nowrap;
-       padding: 0.4rem 0.8rem;
-       border-radius: 999px;
-       font-size: 0.7rem;
-       font-weight: 700;
-       border: 1px solid rgba(52, 211, 153, 0.3);
-       background: rgba(52, 211, 153, 0.1);
-       color: #34d399;
-       cursor: pointer;
-       transition: all 0.2s;
-       display: flex;
-       align-items: center;
-       gap: 0.3rem;
-    }
-    .notify-btn:hover { background: rgba(52, 211, 153, 0.2); transform: translateY(-1px); }
-    .notify-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    
-    .notify-btn.whatsapp {
-       background: rgba(37, 211, 102, 0.1);
-       border-color: rgba(37, 211, 102, 0.3);
-       color: #25d366;
-    }
-    .notify-btn.whatsapp:hover { background: rgba(37, 211, 102, 0.2); }
-  </style>
+  <link rel="stylesheet" href="css/voluntario.css">
 </head>
-<body>
-  <main>
+<body data-page="voluntario">
+  <div id="loading">
+    <div class="spinner"></div>
+  </div>
 
-    <!-- Nav -->
+  <main>
     <nav class="top-nav">
-      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-        <a href="votar.html" class="nav-btn blue">
-          <i data-lucide="home"></i> Inicio
-        </a>
-        <a href="lista.html" class="nav-btn green">
-          <i data-lucide="list"></i> Lista Pública
-        </a>
-        <a href="admin.html" id="adminLink" class="nav-btn slate" style="display:none;">
-          <i data-lucide="shield"></i> Admin
-        </a>
+      <a href="votar.html" class="nav-btn slate">
+        <i data-lucide="arrow-left"></i> Volver
+      </a>
+      <div style="display:flex; gap:0.5rem;">
+        <button id="btnRefresh" class="nav-btn blue">
+          <i data-lucide="refresh-cw"></i> Refrescar
+        </button>
+        <button id="logoutBtn" class="nav-btn red">
+          <i data-lucide="log-out"></i> Salir
+        </button>
       </div>
-      <button class="nav-btn red" id="logoutBtn">
-        <i data-lucide="log-out"></i> Cerrar sesión
-      </button>
     </nav>
 
-    <!-- Header -->
     <header>
-      <h1>🟢 Panel de Voluntario</h1>
-      <p class="subtitle">Pase de lista y control de pasajeros</p>
-      <div class="date-badge" id="fechaBadge">Cargando...</div>
+      <h1>Panel Voluntario</h1>
+      <p class="subtitle">Control de asistencia y pasajeros</p>
+      <div class="date-badge" id="currentDate">Lunes, 20 de Mayo</div>
     </header>
 
-    <!-- Stats -->
     <div class="stats-bar">
       <div class="stat-card stat-blue">
-        <div class="stat-num" id="statTotal">–</div>
-        <div class="stat-label">Pasajeros</div>
+        <div class="stat-num" id="statTotal">0</div>
+        <div class="stat-label">Reservas</div>
       </div>
       <div class="stat-card stat-green">
         <div class="stat-num" id="statPresentes">0</div>
         <div class="stat-label">Presentes</div>
       </div>
       <div class="stat-card stat-purple">
-        <div class="stat-num" id="statHorarios">–</div>
-        <div class="stat-label">Horarios</div>
+        <div class="stat-num" id="statTurnos">0</div>
+        <div class="stat-label">Turnos</div>
       </div>
     </div>
 
-    <!-- Filters -->
     <div class="filter-bar">
       <span class="filter-label">Filtrar:</span>
-      <button class="filter-btn active" data-filter="todos">Todos</button>
-      <button class="filter-btn" data-filter="ida">↗ Ida</button>
-      <button class="filter-btn" data-filter="vuelta">↙ Vuelta</button>
+      <button type="button" class="filter-btn active" data-filter="todos">Todos</button>
+      <button type="button" class="filter-btn" data-filter="ida">↗ Ida</button>
+      <button type="button" class="filter-btn" data-filter="vuelta">↙ Vuelta</button>
     </div>
 
-    <!-- List -->
-    <div id="listContainer">
-      <div class="empty-state">
-        <div class="spinner"></div>
-        <p style="margin-top:1rem;">Cargando datos...</p>
-      </div>
+    <div id="horariosContainer">
+      <!-- Inyectado por JS -->
     </div>
 
+    <div id="emptyMsg" class="empty-state hidden">
+      <i data-lucide="clipboard-x"></i>
+      <p>No hay pasajeros registrados hoy.</p>
+    </div>
   </main>
 
-  <!-- Toast notification -->
-  <div class="toast" id="toast"></div>
+  <!-- Modal Penalidad -->
+  <div id="penalidadModal" class="modal hidden">
+    <div class="modal-content">
+      <h3 class="modal-title">Registrar Falta</h3>
+      <p class="modal-desc">Indica el motivo por el cual el estudiante no asistió al viaje.</p>
+      
+      <div class="input-group">
+        <label class="input-label">Estudiante</label>
+        <div id="penName" style="font-weight:700; color:#fff; margin-bottom:1rem; padding:0.5rem; background:rgba(0,0,0,0.2); border-radius:0.5rem;">Nombre del Estudiante</div>
+      </div>
 
-  <!-- Reload FAB -->
-  <button class="reload-fab" id="reloadFab" title="Actualizar">
-    <i data-lucide="refresh-cw"></i>
-  </button>
+      <div class="input-group">
+        <label class="input-label">Motivo de la falta</label>
+        <input type="text" id="penMotivo" class="input-text" placeholder="Ej: No se presentó a tiempo, avisó tarde, etc.">
+      </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+      <div class="modal-footer">
+        <button type="button" id="btnCancelPen" class="btn-ghost">Cancelar</button>
+        <button type="button" id="btnConfirmPen" class="btn-primary" style="background:#f43f5e;">Confirmar Falta</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="js/voluntario_page.js"></script>
-
 </body>
 </html>
