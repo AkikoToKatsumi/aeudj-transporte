@@ -77,9 +77,11 @@ async function checkSecurity() {
   if (profile) {
     currentUser = { ...currentUser, ...profile };
   }
-  const isAdmin = profile && (profile.rol.includes('admin') || profile.rol.includes('desarrolladora') || profile.rol.includes('comité'));
+  const rol = profile.rol || '';
+  const isAdmin = rol.includes('admin') || rol.includes('desarrolladora') || rol.includes('comité');
   
   if (!profile || !isAdmin) {
+    console.error("Acceso denegado: Insuficientes privilegios");
     window.location.href = 'votar.html';
     return;
   }
@@ -96,7 +98,7 @@ async function loadData() {
   const cycleDate = getCycleDate();
   const fechaBadge = document.getElementById('fechaBadge');
   if (fechaBadge) fechaBadge.textContent = formatDate(cycleDate);
-  const container = document.getElementById('listContainer');
+  const container = document.getElementById('horariosContainer');
   if (!container) return;
   container.innerHTML = '<div class="empty-state"><div class="spinner"></div><p style="margin-top:1rem;">Actualizando...</p></div>';
 
@@ -141,13 +143,18 @@ async function loadData() {
     });
     
     renderList();
+    const loader = document.getElementById('loading');
+    if (loader) loader.classList.add('hidden');
   } catch(err) {
-    container.innerHTML = `<div class="empty-state"><p style="color:#f87171;">Error: ${err.message}</p></div>`;
+    const container = document.getElementById('horariosContainer');
+    if (container) container.innerHTML = `<div class="empty-state"><p style="color:#f87171;">Error: ${err.message}</p></div>`;
+    const loader = document.getElementById('loading');
+    if (loader) loader.classList.add('hidden');
   }
 }
 
 function renderList() {
-  const container = document.getElementById('listContainer');
+  const container = document.getElementById('horariosContainer');
   if (!container) return;
   let filtered = allVotos;
   if (activeFilter === 'ida')    filtered = allVotos.filter(v => isIda(v.horario));
@@ -155,11 +162,11 @@ function renderList() {
 
   const statTotal = document.getElementById('statTotal');
   const statPresentes = document.getElementById('statPresentes');
-  const statHorarios = document.getElementById('statHorarios');
+  const statTurnos = document.getElementById('statTurnos');
 
   if (statTotal) statTotal.textContent = allVotos.length;
   if (statPresentes) statPresentes.textContent = Object.values(attendanceState).filter(v => v === 'subio').length;
-  if (statHorarios) statHorarios.textContent = new Set(allVotos.map(v=>v.horario)).size;
+  if (statTurnos) statTurnos.textContent = new Set(allVotos.map(v=>v.horario)).size;
 
   container.innerHTML = '';
 
