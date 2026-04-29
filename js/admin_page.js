@@ -1,8 +1,9 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+// Usamos el cliente global de Supabase cargado en el HTML
+const supabase = window.supabase;
 
-const SUPABASE_URL = 'https://irjwxegepkznqrisbrys.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyand4ZWdlcGt6bnFyaXNicnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNjk0NDIsImV4cCI6MjA5MTc0NTQ0Mn0.TZOhsy0ghfmjK8rd4GWcgbtOLpERKRJ62mjqc5gaYOM';
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+if (!supabase) {
+  console.error('Supabase client not found! Ensure the library is loaded in the HTML.');
+}
 
 function getCycleDate() {
   const now = new Date();

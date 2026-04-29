@@ -1,9 +1,9 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+// Usamos el cliente global de Supabase cargado en el HTML
+const supabase = window.supabase;
 
-// ── CONFIG ──────────────────────────────────────────────
-const SUPABASE_URL = 'https://irjwxegepkznqrisbrys.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyand4ZWdlcGt6bnFyaXNicnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNjk0NDIsImV4cCI6MjA5MTc0NTQ0Mn0.TZOhsy0ghfmjK8rd4GWcgbtOLpERKRJ62mjqc5gaYOM';
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+if (!supabase) {
+  console.error('Supabase client not found! Ensure the library is loaded in the HTML.');
+}
 
 const SCHEDULES = [
   { time: '7:00 AM',  route: 'Jarabacoa → La Vega',  fullText: '7:00 AM Jarabacoa -> La Vega',  group: 'manana', dir: 'ida'    },
@@ -515,39 +515,56 @@ if (btnCambiar) {
 
 // ── INIT ─────────────────────────────────────────────────
 async function init() {
-  // 1. Get current session from Supabase
-  const { data: { session } } = await supabase.auth.getSession();
-  
-  if (!session) {
-    localStorage.clear();
-    window.location.href = 'index.html';
-    return;
-  }
-
-  // 2. Fetch LATEST profile to reflect any role changes
+  console.log('🚀 Votar Page Initializing...');
   try {
-    const { data: profile, error } = await supabase
+    // 1. Get current session from Supabase
+    const { data: { session }, error: sessionErr } = await supabase.auth.getSession();
+    
+    if (sessionErr) {
+      console.error('Session Error:', sessionErr);
+      setStatus('Error de sesión: ' + sessionErr.message, '#f87171');
+      return;
+    }
+
+    if (!session) {
+      console.log('No session found, redirecting...');
+      localStorage.clear();
+      window.location.href = 'index.html';
+      return;
+    }
+
+    console.log('Session active for:', session.user.id);
+
+    // 2. Fetch LATEST profile
+    const { data: profile, error: profileErr } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', session.user.id)
       .single();
       
-    if (error || !profile) {
-      // If profile not found but session exists, try using local storage as fallback or redirect
-      const local = loadSession();
-      if (!local) { window.location.href = 'index.html'; return; }
-      currentUser = local;
+    if (profileErr) {
+      console.error('Profile Fetch Error:', profileErr);
+      // Fallback
+      currentUser = loadSession();
+      if (!currentUser) { 
+        setStatus('No se pudo cargar el perfil. Por favor, inicia sesión de nuevo.', '#f87171');
+        return; 
+      }
     } else {
       currentUser = profile;
       localStorage.setItem('aeudj_user', JSON.stringify(profile));
     }
-  } catch (e) {
-    currentUser = loadSession();
-    if (!currentUser) { window.location.href = 'index.html'; return; }
-  }
 
-  buildStaffMenu(currentUser);
-  await checkYaVotado();
+    console.log('User profile loaded:', currentUser.nombre);
+
+    buildStaffMenu(currentUser);
+    await checkYaVotado();
+    console.log('Init completed successfully');
+
+  } catch (e) {
+    console.error('CRITICAL INIT ERROR:', e);
+    setStatus('Error crítico al cargar: ' + e.message, '#f87171');
+  }
 }
 
 init();
