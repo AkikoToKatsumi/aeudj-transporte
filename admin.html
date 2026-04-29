@@ -799,62 +799,46 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyand4ZWdlcGt6bnFyaXNicnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNjk0NDIsImV4cCI6MjA5MTc0NTQ0Mn0.TZOhsy0ghfmjK8rd4GWcgbtOLpERKRJ62mjqc5gaYOM';
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // --- ESCUDO DE SEGURIDAD (REMEDIACIÓN E-1, E-2) ---
+    let currentUser = null;
+
+    // --- ÚNICO ESCUDO DE SEGURIDAD (REMEDIACIÓN E-1, E-2) ---
     async function checkSecurity() {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          window.location.href = 'index.html';
+          return;
+        }
+
+        // Obtener perfil real desde la DB
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (error || !profile || !(profile.rol.includes('admin') || profile.rol.includes('desarrolladora') || profile.rol.includes('administrador'))) {
+          console.error("Acceso denegado: Insuficientes privilegios");
+          window.location.href = 'votar.html';
+          return;
+        }
+
+        // Si todo está bien, guardamos al usuario y permitimos que la página cargue
+        currentUser = profile;
+        localStorage.setItem('aeudj_user', JSON.stringify(profile));
+        
+        // Iniciar la App después de la seguridad
+        initAdminDashboard();
+      } catch (err) {
+        console.error("Security Check Error:", err);
         window.location.href = 'index.html';
-        return;
-      }
-
-      // Verificar el rol real en la base de datos, no en localStorage
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('rol')
-        .eq('id', session.user.id)
-        .single();
-
-      if (error || !profile || !(profile.rol.includes('admin') || profile.rol.includes('desarrolladora'))) {
-        console.error("Acceso denegado: Insuficientes privilegios");
-        window.location.href = 'votar.html'; // Redirigir a usuarios normales
       }
     }
 
-    // Ejecutar verificación de inmediato
+    // Ejecutar verificación
     checkSecurity();
     // -------------------------------------------------
-
-    let currentUser = null;
-    try {
-      const raw = localStorage.getItem('aeudj_user');
-      if (raw && raw !== 'undefined') currentUser = JSON.parse(raw);
-    } catch(e) {}
-
-    // Verificación de sesión más robusta
-    async function checkSecurity() {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      
-      if (error || !user) {
-        localStorage.clear();
-        window.location.href = 'index.html';
-        return;
-      }
-
-      // Volver a verificar el rol desde la base de datos (más seguro que localStorage)
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('rol')
-        .eq('id', user.id)
-        .single();
-
-      if (!profile || (!profile.rol.includes('admin') && !profile.rol.includes('desarrolladora'))) {
-        window.location.href = 'votar.html';
-        return;
-      }
-    }
-    
-    checkSecurity();
 
     function sanitize(str) {
       if (!str) return '';
@@ -881,15 +865,16 @@
     let currentVotos = [];
     let currentStaff = [];
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      // 1. Security Check
-      if (!currentUser || (!currentUser.rol.includes('admin') && !currentUser.rol.includes('desarrolladora'))) {
+    async function initAdminDashboard() {
+      // 1. Security Check (Doble verificación por si acaso)
+      if (!currentUser || (!currentUser.rol.includes('admin') && !currentUser.rol.includes('desarrolladora') && !currentUser.rol.includes('administrador'))) {
         window.location.href = 'index.html';
         return;
       }
 
       // 2. Initial Setup
-      document.getElementById('fechaAdmin').textContent = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      const fechaEl = document.getElementById('fechaAdmin');
+      if (fechaEl) fechaEl.textContent = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
       
       // 3. Navigation Setup
       initNavigation();
@@ -910,7 +895,7 @@
         }).subscribe();
 
       if (window.lucide) window.lucide.createIcons();
-    });
+    }
 
     function initNavigation() {
       const navItems = document.querySelectorAll('.nav-item');
