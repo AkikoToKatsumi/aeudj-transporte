@@ -211,63 +211,52 @@ function initIndexPage() {
  btn.textContent = 'Verificando...';
  }
 
- try {
- let matriculaLogin = userInput;
+  try {
+    const rawInput = userInput;
+    const cleanInput = rawInput.replace(/[\s-]+/g, ''); // Sin espacios ni guiones
+    let userData = null;
+    
+    // Buscar por matrícula o teléfono
+    const { data: profile, error: searchError } = await supabase
+      .from('profiles')
+      .select('*')
+      .or(`matricula.eq."${rawInput}",telefono.eq."${rawInput}",matricula.eq."${cleanInput}"`)
+      .maybeSingle();
 
- let userDataLocal = null;
- 
- // Buscar por matrcula o telfono
- const { data: userByMat, error: errMat } = await supabase
- .from('profiles')
- .select('*')
- .eq('matricula', userInput)
- .maybeSingle();
+    let matriculaLogin = cleanInput;
+    if (profile) {
+      userData = profile;
+      matriculaLogin = profile.matricula.replace(/[\s-]+/g, '');
+    }
+    
+    const pseudoEmail = `${matriculaLogin}@aeudj.com`;
 
- if (userByMat) {
- userDataLocal = userByMat;
- } else {
- const { data: userByTel, error: errTel } = await supabase
- .from('profiles')
- .select('*')
- .eq('telefono', userInput)
- .maybeSingle();
- 
- if (userByTel) {
- userDataLocal = userByTel;
- matriculaLogin = userDataLocal.matricula;
- }
- }
- 
- const pseudoEmail = `${matriculaLogin}@aeudj.com`;
+    let authResult;
+    // Intentar con pseudo-email
+    authResult = await supabase.auth.signInWithPassword({
+      email: pseudoEmail,
+      password: pass
+    });
 
- let authResult;
- // Intentar con pseudo-email
- authResult = await supabase.auth.signInWithPassword({
- email: pseudoEmail,
- password: pass
- });
+    if (authResult.error && userData && userData.email && userData.email !== pseudoEmail) {
+      // Intentar con email real si existe en el perfil
+      authResult = await supabase.auth.signInWithPassword({
+        email: userData.email,
+        password: pass
+      });
+    }
 
- if (authResult.error) {
- // Intentar con email real si existe en el perfil
- if (userDataLocal && userDataLocal.email) {
- authResult = await supabase.auth.signInWithPassword({
- email: userDataLocal.email,
- password: pass
- });
- }
- }
+    if (authResult.error) throw authResult.error;
+    
+    const user = authResult.data.user;
+    
+    // Si no teníamos el perfil (ej. RLS), lo buscamos ahora que estamos logueados
+    if (!userData) {
+      const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      userData = p;
+    }
 
- if (authResult.error) throw authResult.error;
- 
- const user = authResult.data.user;
- 
- const { data: userData, error: fetchErr } = await supabase
- .from('profiles')
- .select('*')
- .eq('id', user.id)
- .single();
-
- if (userData) {
+    if (userData) {
  // Auto-promover a administradora/desarrolladora (ejemplo del cdigo original)
  if (userData.matricula === '0000' && userData.rol !== 'administrador') {
  userData.rol = 'administrador';
@@ -339,7 +328,7 @@ function initIndexPage() {
  return;
  }
  
- const pseudoEmail = `${matricula.replace(/\s+/g, '')}@aeudj.com`;
+  const pseudoEmail = `${matricula.replace(/[\s-]+/g, '')}@aeudj.com`;
  
  // Registrar en Supabase Auth
  const { data: authData, error: authErr } = await supabase.auth.signUp({
