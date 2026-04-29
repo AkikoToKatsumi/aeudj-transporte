@@ -793,12 +793,24 @@ async function initListaPage() {
  loadLista();
  
  async function loadLista() {
- try {
-  const { data: votos, error } = await supabase.functions.invoke('obtener-lista-segura');
- 
- if (error) throw error;
- 
- const listado = {};
+  try {
+   const { data: rawVotos, error } = await supabase.functions.invoke('obtener-lista-segura');
+  
+  if (error) throw error;
+
+  // Deduplicación para la lista segura
+  const uniqueMap = new Map();
+  const isIda = h => h.includes('Jarabacoa -> La Vega') || h.includes('Jarabacoa \u2192 La Vega');
+  
+  (rawVotos || []).forEach(v => {
+    const key = `${v.matricula || v.usuario_id}-${isIda(v.horario) ? 'ida' : 'vuelta'}`;
+    if (!uniqueMap.has(key) || new Date(v.created_at) > new Date(uniqueMap.get(key).created_at)) {
+      uniqueMap.set(key, v);
+    }
+  });
+  const votos = Array.from(uniqueMap.values());
+  
+  const listado = {};
  const listaEspera = {};
  
  votos.forEach(voto => {

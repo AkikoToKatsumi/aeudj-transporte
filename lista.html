@@ -383,8 +383,24 @@
 
         if (error) throw error;
         
-        // Filtrar pasajeros que ya fueron pasados en la lista (se_monto !== null)
-        votos = votos.filter(v => v.se_monto === null);
+        // ── DEDUPLICACIÓN ──
+        // Para evitar duplicados si el delete falló, nos quedamos solo con el último voto
+        // de cada persona por dirección (Ida/Vuelta).
+        const uniqueVotosMap = new Map();
+        
+        votos.forEach(v => {
+          const personId = v.matricula || v.usuario_id;
+          const direction = isIda(v.horario) ? 'ida' : 'vuelta';
+          const key = `${personId}-${direction}`;
+          
+          // Si no existe o este es más reciente, lo guardamos
+          if (!uniqueVotosMap.has(key) || new Date(v.created_at) > new Date(uniqueVotosMap.get(key).created_at)) {
+            uniqueVotosMap.set(key, v);
+          }
+        });
+        
+        // Convertimos de nuevo a array y filtramos pasajeros que ya fueron pasados (se_monto !== null)
+        votos = Array.from(uniqueVotosMap.values()).filter(v => v.se_monto === null);
 
         container.innerHTML = '';
 

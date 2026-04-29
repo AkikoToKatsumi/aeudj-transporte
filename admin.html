@@ -2278,6 +2278,20 @@
       }
       
       adminListaData = data || [];
+
+      // ── DEDUPLICACIÓN ──
+      const uniqueMap = new Map();
+      const IDA_KW = ['Jarabacoa -> La Vega', 'Jarabacoa \u2192 La Vega'];
+      const getDir = h => IDA_KW.some(k => h.includes(k)) ? 'ida' : 'vuelta';
+
+      adminListaData.forEach(v => {
+        const key = `${v.matricula || v.usuario_id}-${getDir(v.horario)}`;
+        if (!uniqueMap.has(key) || new Date(v.created_at) > new Date(uniqueMap.get(key).created_at)) {
+          uniqueMap.set(key, v);
+        }
+      });
+      adminListaData = Array.from(uniqueMap.values());
+
       adminListaData.forEach(v => {
         if(v.se_monto === 1) adminAttendanceState[v.id] = 'subio';
         else if(v.se_monto === 0) adminAttendanceState[v.id] = 'no-subio';
@@ -2510,13 +2524,26 @@
         // Load detail rows for active tab
         let data = [];
         if (auditActiveTab === 'votos') {
-          const { data: rows, error } = await supabase
+          const { data: resRows, error } = await supabase
             .from('votos').select('*')
             .eq('fecha', dateVal)
             .gt('id', 40)
             .order('created_at', { ascending: false });
           if (error) throw error;
-          data = rows || [];
+          let rows = resRows || [];
+
+          // Deduplicación para Auditoría de Votos
+          const uniqueMap = new Map();
+          const IDA_KW = ['Jarabacoa -> La Vega', 'Jarabacoa \u2192 La Vega'];
+          const getDir = h => IDA_KW.some(k => h.includes(k)) ? 'ida' : 'vuelta';
+          
+          rows.forEach(r => {
+            const key = `${r.matricula || r.usuario_id}-${getDir(r.horario)}`;
+            if (!uniqueMap.has(key) || new Date(r.created_at) > new Date(uniqueMap.get(key).created_at)) {
+              uniqueMap.set(key, r);
+            }
+          });
+          data = Array.from(uniqueMap.values());
         } else if (auditActiveTab === 'faltas') {
           const { data: rows, error } = await supabase
             .from('faltas').select('*')
