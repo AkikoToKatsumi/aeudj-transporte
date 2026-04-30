@@ -432,15 +432,15 @@ function initIndexPage() {
  if (authErr) throw authErr;
  const user = authData.user;
 
- const newUser = {
- id: user.id,
- matricula,
- nombre,
- telefono,
- email,
- universidad,
- rol: 'estudiante'
- };
+  const newUser = {
+    id: user.id,
+    matricula: cleanMatricula,
+    nombre,
+    telefono,
+    email,
+    universidad,
+    rol: 'estudiante'
+  };
  
  // Guardar en tabla de perfiles
  const { error: profileErr } = await supabase.from('profiles').insert(newUser);
