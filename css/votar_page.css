@@ -325,6 +325,118 @@ h1 { font-size: 2.2rem; font-weight: 800; }
   font-weight: 500;
 }
 
+/* Modal Overlay & Card */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 380px;
+  background: #0f172a !important; /* Solid dark blue/black */
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 1.5rem !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+}
+
+.z-200 { z-index: 200 !important; }
+
+/* Modal de espera (premium white design) */
+.btn-espera {
+  background: #ffffff !important;
+  color: #3b82f6 !important;
+  border: none !important;
+  border-radius: 2.5rem !important;
+  padding: 0.75rem 1.5rem !important;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  margin-bottom: 0.5rem;
+}
+
+.btn-espera:hover {
+  transform: translateY(-2px);
+  background: #f1f5f9 !important;
+  box-shadow: 0 12px 25px rgba(0,0,0,0.35);
+}
+
+.btn-espera:active {
+  transform: translateY(0);
+}
+
+.espera-icon-text {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.espera-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.espera-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #3b82f6;
+  line-height: 1.2;
+}
+
+.espera-sub {
+  font-size: 0.75rem;
+  color: #60a5fa;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/* Override specifics from other files if they exist */
+.btn-espera-camino, .btn-espera-parada {
+  border-color: transparent !important;
+}
+
+/* Utility classes used in votar.html */
+.max-w-380 { max-width: 380px !important; }
+.text-center { text-align: center !important; }
+.mx-auto { margin-left: auto !important; margin-right: auto !important; }
+.mb-1-25 { margin-bottom: 1.25rem !important; }
+.mb-1-5 { margin-bottom: 1.5rem !important; }
+.mb-0-4 { margin-bottom: 0.4rem !important; }
+.w-64 { width: 64px !important; }
+.h-64 { height: 64px !important; }
+.bg-blue-glow {
+  background: rgba(59, 130, 246, 0.12) !important;
+  border: 1px solid rgba(59, 130, 246, 0.3) !important;
+}
+.rounded-full { border-radius: 9999px !important; }
+.flex-col { display: flex !important; flex-direction: column !important; }
+.gap-3 { gap: 0.75rem !important; }
+.text-blue-400 { color: #60a5fa !important; }
+.text-slate-500 { color: #64748b !important; }
+.text-white { color: #ffffff !important; }
+.font-bold { font-weight: 700 !important; }
+.text-xl-3 { font-size: 1.875rem !important; }
+.text-sm { font-size: 0.875rem !important; }
+.lh-1-5 { line-height: 1.5 !important; }
+.icon-medium { width: 2rem; height: 2rem; }
+.items-center { align-items: center !important; }
+.justify-center { justify-content: center !important; }
+
 @media (max-width: 500px) {
   .schedule-grid { grid-template-columns: repeat(2, 1fr); }
   .action-grid { grid-template-columns: 1fr; }
