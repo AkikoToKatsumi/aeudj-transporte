@@ -403,20 +403,25 @@ function initIndexPage() {
 
  try {
  // Verificar si la matrícula ya existe
+ const cleanMatricula = matricula.replace(/[\s-]+/g, '');
  const { data: existingUser } = await supabase
  .from('profiles')
- .select('id')
- .eq('matricula', matricula)
+ .select('id, matricula, email')
+ .or(`matricula.eq.${cleanMatricula},email.eq.${email}`)
  .maybeSingle();
  
  if (existingUser) {
- showError('Esta matrícula ya está registrada. Usa "Iniciar sesión".');
- btn.disabled = false;
- btn.textContent = 'Registrar';
- return;
+  if (existingUser.matricula === cleanMatricula) {
+    showError('Esta matrícula ya está registrada. Usa "Iniciar sesión".');
+  } else {
+    showError('Este correo electrónico ya está en uso por otro estudiante.');
+  }
+  btn.disabled = false;
+  btn.textContent = 'Registrar';
+  return;
  }
  
-  const pseudoEmail = `${matricula.replace(/[\s-]+/g, '')}@aeudj.com`;
+  const pseudoEmail = `${cleanMatricula}@aeudj.com`;
  
  // Registrar en Supabase Auth
  const { data: authData, error: authErr } = await supabase.auth.signUp({
