@@ -51,11 +51,11 @@
         <a href="#" class="nav-item" data-screen="penalidades">
           <i data-lucide="alert-triangle"></i>
           <span>Penalidades</span>
-          <span id="penalBadge" style="display:none;background:#ef4444;color:white;font-size:0.6rem;font-weight:700;padding:0.1rem 0.45rem;border-radius:999px;margin-left:auto;">0</span>
+          <span id="penalBadge" class="badge-red-mini">0</span>
         </a>
         
         <div style="margin: 1.5rem 1rem 0.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem;"></div>
-        <a href="#" class="nav-item hover:bg-blue-500/10 transition-colors" data-screen="pasarlista" style="border: 1px solid rgba(59, 130, 246, 0.2); background: rgba(59, 130, 246, 0.05);">
+        <a href="#" class="nav-item hover:bg-blue-500/10 transition-colors nav-item-special" data-screen="pasarlista">
           <i data-lucide="clipboard-check" class="text-blue-400"></i>
           <span class="text-blue-400 font-bold tracking-wide">Pasar Lista</span>
         </a>
@@ -148,7 +148,7 @@
               <h3 class="text-lg font-bold text-white flex items-center gap-2">
                 <i data-lucide="bar-chart-3" class="text-blue-400 w-5 h-5"></i> Demanda por Horario
               </h3>
-              <button type="button" class="btn-pill-outline btn-small text-red-400 hover:bg-red-500/10 transition-colors" style="border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.05);" id="btnClearVotes">
+              <button type="button" class="btn-pill-outline btn-small text-red-400 hover:bg-red-500/10 transition-colors border-red-30-light bg-red-05" id="btnClearVotes">
                 <i data-lucide="trash-2" class="icon-inline text-red-400"></i> Limpiar Hoy
               </button>
             </div>
@@ -171,17 +171,17 @@
 
         <!-- Dashboard Trip Activity -->
         <div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
-            <h3 style="font-size:1rem;font-weight:800;color:#f1f5f9;display:flex;align-items:center;gap:.5rem;">
-              <i data-lucide="list" style="width:18px;height:18px;color:#60a5fa;"></i>
+          <div class="flex-between mb-4">
+            <h3 class="activity-header">
+              <i data-lucide="list" class="icon-medium text-blue-400"></i>
               Resumen de Viajes Activos
             </h3>
-            <button type="button" id="btnGoToVotes" style="font-size:.72rem;font-weight:700;color:#60a5fa;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);border-radius:999px;padding:.3rem .85rem;cursor:pointer;transition:all .15s;">Ver lista completa →</button>
+            <button type="button" id="btnGoToVotes" class="btn-small-blue">Ver lista completa →</button>
           </div>
           <div id="dashboardRecentActivity">
-            <div style="text-align:center;padding:2.5rem 1rem;color:#475569;">
-              <div style="width:28px;height:28px;border:3px solid rgba(59,130,246,.2);border-top-color:#3b82f6;border-radius:50%;animation:pvSpin .8s linear infinite;margin:0 auto .75rem;"></div>
-              <p style="font-size:.8rem;">Sincronizando datos...</p>
+            <div class="text-center py-8 text-slate-500">
+              <div class="spinner-mini"></div>
+              <p class="text-0-8">Sincronizando datos...</p>
             </div>
           </div>
         </div>
@@ -242,7 +242,7 @@
       <!-- Staff Management Screen -->
       <section id="screen-staff" class="admin-screen hidden jakarta-font">
         <!-- TOP BAR -->
-        <div class="staff-topbar" style="justify-content: flex-end; padding-bottom: 0;">
+        <div class="staff-topbar flex justify-end pb-0">
           <div class="staff-topbar-actions">
             <button class="staff-btn staff-btn-ghost" id="btnRefreshStaff">🔄 Refrescar</button>
           </div>
@@ -301,7 +301,7 @@
             </div>
 
             <div class="staff-filter-tabs">
-              <button class="staff-filter-tab active" id="tab-todos">Todos <span style="opacity:.6;margin-left:4px" id="tab-count-todos">0</span></button>
+              <button class="staff-filter-tab active" id="tab-todos">Todos <span class="opacity-6 ml-4" id="tab-count-todos">0</span></button>
               <button class="staff-filter-tab" id="tab-administrador">Admins <span style="opacity:.6;margin-left:4px" id="tab-count-admin">0</span></button>
               <button class="staff-filter-tab" id="tab-voluntario">Voluntarios <span style="opacity:.6;margin-left:4px" id="tab-count-voluntario">0</span></button>
               <button class="staff-filter-tab" id="tab-estudiante">Estudiantes <span style="opacity:.6;margin-left:4px" id="tab-count-estudiante">0</span></button>
@@ -350,9 +350,9 @@
               </div>
               <div class="staff-qa-field" id="qa-password-container">
                 <label class="staff-qa-label">Contraseña</label>
-                <div style="position:relative;display:flex;align-items:center;">
-                  <input class="staff-qa-input" id="qa-password" type="password" placeholder="Mínimo 6 caracteres" style="width:100%; padding-right:2.5rem;">
-                  <button type="button" id="toggleQAPassword" style="position:absolute; right:10px; background:none; border:none; cursor:pointer; color:#94a3b8; font-size:1.1rem; outline:none;">👁️</button>
+                <div class="pos-relative flex items-center">
+                  <input class="staff-qa-input pr-2-5 w-full" id="qa-password" type="password" placeholder="Mínimo 6 caracteres">
+                  <button type="button" id="toggleQAPassword" class="pos-absolute right-10 bg-none border-none cursor-pointer text-slate-400 text-lg outline-none">👁️</button>
                 </div>
               </div>
               <div class="staff-qa-field">
@@ -369,8 +369,8 @@
               </div>
 
               <div style="display:flex; gap:0.5rem; margin-top:1rem;">
-                <button class="staff-btn-add-full" id="qa-submit-btn" style="flex:1;">👤 Agregar al Directorio</button>
-                <button class="staff-btn-add-full hidden" id="qa-cancel-btn" style="flex:0.3; background:rgba(239,68,68,0.2); color:#fca5a5; border-color:rgba(239,68,68,0.3);">❌</button>
+                <button class="staff-btn-add-full flex-1" id="qa-submit-btn">👤 Agregar al Directorio</button>
+                <button class="staff-btn-add-full hidden flex-0-3 bg-red-20 text-red-light border-red-30" id="qa-cancel-btn">❌</button>
               </div>
             </div>
             
@@ -426,7 +426,7 @@
               <label class="text-[10px] font-black text-gray-500 uppercase tracking-[0.25em] ml-2">Rol Asignado</label>
               <div class="relative group">
                 <i data-lucide="shield" class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 group-focus-within:text-blue-500 transition-colors"></i>
-                <select id="staffRol" class="w-full bg-slate-950/80 border-2 border-white/5 text-white text-sm font-bold rounded-[1.5rem] py-5 pl-14 pr-12 focus:border-blue-500/50 outline-none transition-all appearance-none cursor-pointer" style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 24 24%22 stroke=%22rgba(255,255,255,0.3)%22><path stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222%22 d=%22M19 9l-7 7-7-7%22/></svg>'); background-repeat: no-repeat; background-position: right 1.5rem center; background-size: 1.2em;">
+                <select id="staffRol" class="w-full bg-slate-950/80 border-2 border-white/5 text-white text-sm font-bold rounded-[1.5rem] py-5 pl-14 pr-12 focus:border-blue-500/50 outline-none transition-all appearance-none cursor-pointer custom-select-arrow">
                   <option value="estudiante">Estudiante</option>
                   <option value="estudiante, comité">Estudiante (Miembro del Comité)</option>
                   <option value="voluntario">Voluntario</option>
@@ -450,25 +450,25 @@
       <!-- Horarios Management Screen -->
       <section id="screen-horarios" class="admin-screen hidden">
         <!-- Outer wrapper styled like the student card container -->
-        <div style="background:#111827; border-radius:1.5rem; padding:2rem; max-width:900px; margin:0 auto;">
+        <div class="bg-dark-900 rounded-1-5 p-2 max-w-900 mx-auto">
 
           <!-- Day tabs -->
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:0.75rem;">
+          <div class="flex-between mb-6 flex-wrap gap-3">
             <div>
-              <h3 style="color:#fff; font-size:1.4rem; font-weight:900; margin:0;">Gestión de Turnos</h3>
-              <p style="color:#6b7280; font-size:0.82rem; margin:0.3rem 0 0;">Asigna un voluntario a cada horario de viaje.</p>
+              <h3 class="text-white text-1-4 font-900 margin-0">Gestión de Turnos</h3>
+              <p class="text-slate-500 text-0-82 mt-0-3">Asigna un voluntario a cada horario de viaje.</p>
             </div>
-            <div id="adminDayTabs" style="display:flex; gap:0.4rem; background:#0f172a; border-radius:1rem; padding:0.3rem; border:1px solid rgba(255,255,255,0.06); flex-wrap:wrap;"></div>
+            <div id="adminDayTabs" class="flex gap-2 bg-slate-900 rounded-1 p-0-3 border-white-06 flex-wrap"></div>
           </div>
 
           <!-- Blue header bar (exact replica) -->
-          <div id="adminScheduleHeader" style="background:linear-gradient(135deg,#4f75ff,#3451d1); border-radius:1.2rem; padding:1.4rem; text-align:center; margin-bottom:1.25rem; display:flex; align-items:center; justify-content:center; gap:0.7rem;">
-            <i data-lucide="calendar" style="color:#fff; width:22px; height:22px;"></i>
-            <h4 id="adminActiveDayLabel" style="color:#fff; font-size:1.1rem; font-weight:900; margin:0; letter-spacing:0.08em; text-transform:uppercase;">Horarios del Lunes</h4>
+          <div id="adminScheduleHeader" class="bg-blue-gradient rounded-1-2 p-1-4 text-center mb-1-25 flex items-center justify-center gap-0-7">
+            <i data-lucide="calendar" class="text-white w-6 h-6"></i>
+            <h4 id="adminActiveDayLabel" class="text-white text-1-1 font-900 margin-0 letter-spacing-0-08 uppercase">Horarios del Lunes</h4>
           </div>
 
           <!-- 4-column schedule grid -->
-          <div id="adminHorarioGrid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:0.85rem;"></div>
+          <div id="adminHorarioGrid" class="grid grid-cols-4 gap-0-85"></div>
         </div>
       </section>
 
@@ -504,7 +504,7 @@
         <div class="audit-toolbar">
           <input type="search"  class="audit-search" id="auditSearch"   placeholder="🔍  Buscar por nombre o matrícula…">
           <input type="date"    class="audit-date"   id="auditDatePick">
-          <button type="button" class="audit-tab" style="margin:0;" id="btnRefreshAudit">
+          <button type="button" class="audit-tab margin-0" id="btnRefreshAudit">
             <i data-lucide="refresh-cw" style="width:13px;height:13px;display:inline;margin-right:4px;"></i> Actualizar
           </button>
         </div>
@@ -530,7 +530,7 @@
       <section id="screen-penalidades" class="admin-screen hidden">
 
         <!-- Summary cards -->
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin-bottom:1.5rem;">
+        <div class="grid grid-cols-3 gap-3 mb-6">
           <div class="stat-card glass-card">
             <div class="stat-header"><i data-lucide="alert-circle" class="text-red-400"></i><span class="stat-label">Penalizados</span></div>
             <div id="penStatPen" class="stat-value" style="color:#f87171;">0</div>

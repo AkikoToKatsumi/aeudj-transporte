@@ -411,14 +411,14 @@ function initVotarPage() {
  const staffMenu = document.getElementById('staffMenu');
  if (staffMenu && currentUser) {
  staffMenu.innerHTML = ''; // Limpiar para evitar duplicados en recargas de SPA
- if (currentUser.rol === 'administrador' || currentUser.rol === 'desarrolladora') {
- staffMenu.innerHTML += `<a href="admin.html" class="btn p-3 mb-2" style="background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); color: #c4b5fd; text-shadow: 0 0 10px rgba(196,181,253,0.5); box-shadow: 0 0 15px rgba(139, 92, 246, 0.15); display: inline-block; width: 100%; border-radius: 12px; font-weight: bold; margin-bottom: 0.75rem;"> Entrar al Panel de Administracin</a>`;
- staffMenu.classList.remove('hidden');
- }
- if (currentUser.rol === 'voluntario' || currentUser.rol === 'desarrolladora') {
- staffMenu.innerHTML += `<a href="voluntario.html" class="btn p-3" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7; text-shadow: 0 0 10px rgba(110,231,183,0.5); box-shadow: 0 0 15px rgba(16, 185, 129, 0.15); display: inline-block; width: 100%; border-radius: 12px; font-weight: bold;"> Entrar al Panel de Voluntario</a>`;
- staffMenu.classList.remove('hidden');
- }
+    if (currentUser.rol === 'administrador' || currentUser.rol === 'desarrolladora') {
+      staffMenu.innerHTML += `<a href="admin.html" class="btn-admin-entry"> Entrar al Panel de Administración</a>`;
+      staffMenu.classList.remove('hidden');
+    }
+    if (currentUser.rol === 'voluntario' || currentUser.rol === 'desarrolladora') {
+      staffMenu.innerHTML += `<a href="voluntario.html" class="btn-voluntario-entry"> Entrar al Panel de Voluntario</a>`;
+      staffMenu.classList.remove('hidden');
+    }
  }
  
  const cycleDate = getCycleDate();

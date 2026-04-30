@@ -76,7 +76,7 @@ function showSessionBanner(group, override) {
   const label   = document.getElementById('sessionLabel');
   const close   = document.getElementById('sessionClose');
   if (!banner) return;
-  banner.style.display = 'flex';
+  banner.classList.add('flex');
   if (override) {
     banner.className = 'session-banner override';
     label.textContent = '🔓 Sesión forzada por administrador';
@@ -94,7 +94,7 @@ function showSessionBanner(group, override) {
 
 function setStatus(msg, color = '#60a5fa') {
   if (!statusMsg) return;
-  statusMsg.style.color = color;
+  statusMsg.style.color = color; // Dynamic color still allowed for now, but better use classes
   statusMsg.textContent = msg;
 }
 
@@ -253,7 +253,7 @@ function renderConfirmedView(votes) {
 async function showForm() {
   const { group, override } = await getActiveGroup();
   showSessionBanner(group, override);
-  if (horarioForm) horarioForm.style.display = 'block';
+  if (horarioForm) horarioForm.classList.remove('hidden');
   if (confirmedView) confirmedView.classList.remove('visible');
   const publicList = document.getElementById('publicListContainer');
   if (publicList) publicList.classList.add('hidden');
@@ -261,7 +261,7 @@ async function showForm() {
 }
 
 function showConfirmed(votes) {
-  if (horarioForm) horarioForm.style.display = 'none';
+  if (horarioForm) horarioForm.classList.add('hidden');
   if (confirmedView) confirmedView.classList.add('visible');
   const publicList = document.getElementById('publicListContainer');
   if (publicList) publicList.classList.remove('hidden');
@@ -412,7 +412,7 @@ function openActionModal(actionStr) {
   }
 
   if (!initialVotes || initialVotes.length === 0) {
-    if (actionModalContent) actionModalContent.innerHTML = '<p style="text-align:center;color:#f87171;">No se encontraron viajes.</p>';
+    if (actionModalContent) actionModalContent.innerHTML = '<p class="text-center text-red-400">No se encontraron viajes.</p>';
   } else {
     const uniqueMap = new Map();
     initialVotes.forEach(v => {
@@ -431,24 +431,18 @@ function openActionModal(actionStr) {
       let route = parts.slice(2).join(' ');
       
       let btn = document.createElement('div');
-      btn.className = 'trip-card';
-      btn.style.cursor = 'pointer';
-      btn.style.width = '100%';
-      btn.style.transition = 'all 0.2s';
-      btn.style.background = 'rgba(59,130,246,0.1)';
-      btn.style.border = '1px solid rgba(59,130,246,0.3)';
+      btn.className = 'trip-card trip-card-interactive';
       
-      btn.onmouseover = () => { btn.style.background = 'rgba(59,130,246,0.2)'; btn.style.transform = 'translateY(-2px)'; };
-      btn.onmouseout = () => { btn.style.background = 'rgba(59,130,246,0.1)'; btn.style.transform = 'none'; };
+      // Remove mouse events as they are now handled by CSS :hover
       
       btn.innerHTML = `
         <div class="trip-icon ${dir}">
           <i data-lucide="${dir === 'ida' ? 'arrow-right' : 'arrow-left'}"></i>
         </div>
         <div class="trip-info">
-          <div class="trip-label" style="color:#93c5fd;">${dir === 'ida' ? 'Salida' : 'Regreso'}</div>
-          <div class="trip-time" style="color:white;">${time}</div>
-          <div class="trip-route" style="color:#cbd5e1;">${route}</div>
+          <div class="trip-label ${dir === 'ida' ? 'trip-label-ida' : 'trip-label-vuelta'}">${dir === 'ida' ? 'Salida' : 'Regreso'}</div>
+          <div class="trip-time text-white">${time}</div>
+          <div class="trip-route text-slate-400">${route}</div>
         </div>
       `;
       btn.onclick = () => executeAction(v);

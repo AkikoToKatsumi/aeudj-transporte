@@ -100,7 +100,7 @@ async function loadData() {
   if (fechaBadge) fechaBadge.textContent = formatDate(cycleDate);
   const container = document.getElementById('horariosContainer');
   if (!container) return;
-  container.innerHTML = '<div class="empty-state"><div class="spinner"></div><p style="margin-top:1rem;">Actualizando...</p></div>';
+  container.innerHTML = '<div class="empty-state"><div class="spinner"></div><p class="mt-4">Actualizando...</p></div>';
 
   try {
     const { data, error } = await supabase
@@ -147,7 +147,7 @@ async function loadData() {
     if (loader) loader.classList.add('hidden');
   } catch(err) {
     const container = document.getElementById('horariosContainer');
-    if (container) container.innerHTML = `<div class="empty-state"><p style="color:#f87171;">Error: ${err.message}</p></div>`;
+    if (container) container.innerHTML = `<div class="empty-state"><p class="text-red-400">Error: ${err.message}</p></div>`;
     const loader = document.getElementById('loading');
     if (loader) loader.classList.add('hidden');
   }
@@ -201,7 +201,7 @@ function renderList() {
       <div class="horario-meta">
         <span class="dir-badge ${ida ? 'dir-ida' : 'dir-vuelta'}">${ida ? '↗ Ida' : '↙ Vuelta'}</span>
         <span class="count-badge">${passengers.length} persona${passengers.length!==1?'s':''}</span>
-        <i data-lucide="chevron-down" class="chevron open" style="width:16px;height:16px;"></i>
+        <i data-lucide="chevron-down" class="chevron open icon-small"></i>
       </div>
     `;
 
@@ -224,9 +224,9 @@ function renderList() {
         <div class="row-num">${idx+1}</div>
         <div class="row-info">
           <div class="row-name"></div>
-          <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+          <div class="flex items-center gap-2 flex-wrap">
             <div class="row-mat"></div>
-            <div class="badges-area" style="display:flex; gap:0.3rem;"></div>
+            <div class="flex gap-2"></div>
           </div>
         </div>
         <div class="row-time"></div>
@@ -253,7 +253,7 @@ function renderList() {
       }
       if (p.punto_espera === 'camino' || p.punto_espera === 'parada') {
         const pointSpan = document.createElement('span');
-        pointSpan.style.cssText = 'font-size:0.6rem;font-weight:800;background:rgba(52,211,153,0.12);color:#34d399;border:1px solid rgba(52,211,153,0.3);padding:0.12rem 0.5rem;border-radius:999px;flex-shrink:0;';
+        pointSpan.className = 'badge-point-espera';
         pointSpan.textContent = p.punto_espera === 'camino' ? '🚶 Camino' : '📍 Parada';
         badgesArea.appendChild(pointSpan);
       }
@@ -293,7 +293,7 @@ function renderList() {
        <button class="notify-btn"><i data-lucide="send"></i> En camino</button>
        <button class="notify-btn"><i data-lucide="map-pin"></i> Llegó</button>
        <button class="notify-btn"><i data-lucide="clock"></i> Saliendo</button>
-       <div style="width:1px; background:rgba(255,255,255,0.1); margin:0 0.2rem;"></div>
+       <div class="divider-vertical"></div>
        <button class="notify-btn whatsapp"><i data-lucide="message-circle"></i> WhatsApp</button>
     `;
     
@@ -313,22 +313,22 @@ function renderList() {
 
   if (Object.keys(groups).length === 0) {
     container.innerHTML = `
-    <div style="text-align:center; padding: 4rem 1.5rem; opacity: 0.6;">
-      <div style="width:60px; height:60px; margin: 0 auto 1.5rem; background: rgba(255,255,255,0.05); color: var(--text-muted); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid var(--glass-border);">
-        <i data-lucide="clipboard-x" style="width:32px; height:32px;"></i>
+    <div class="empty-state-container">
+      <div class="empty-state-icon">
+        <i data-lucide="clipboard-x" class="icon-medium"></i>
       </div>
-      <h2 style="font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Sin registros</h2>
-      <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 260px; margin: 0 auto;">No se han encontrado pasajeros registrados para los turnos de hoy.</p>
+      <h2 class="empty-state-title">Sin registros</h2>
+      <p class="empty-state-desc">No se han encontrado pasajeros registrados para los turnos de hoy.</p>
     </div>
     `;
   } else if (pendingGroupsCount === 0) {
     container.innerHTML = `
-    <div style="text-align:center; padding: 3rem 1.5rem; background: rgba(16,185,129,0.1); border-radius: 1.5rem; border: 1px solid rgba(16,185,129,0.2); margin-top: 1rem;">
-      <div style="width:60px; height:60px; margin: 0 auto 1.5rem; background: rgba(16,185,129,0.15); color: #34d399; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 25px rgba(16,185,129,0.2);">
-        <i data-lucide="check-check" style="width:32px; height:32px;"></i>
+    <div class="success-state-container">
+      <div class="success-state-icon">
+        <i data-lucide="check-check" class="icon-medium"></i>
       </div>
-      <h2 style="font-size: 1.5rem; font-weight: 800; color: #34d399; margin-bottom: 0.5rem;">¡Excelente trabajo!</h2>
-      <p style="color: #6ee7b7; font-size: 0.95rem; opacity: 0.8; max-width: 300px; margin: 0 auto;">Has completado el pase de lista para estos viajes. Ya no quedan pasajeros pendientes.</p>
+      <h2 class="success-state-title">¡Excelente trabajo!</h2>
+      <p class="success-state-desc">Has completado el pase de lista para estos viajes. Ya no quedan pasajeros pendientes.</p>
     </div>
     `;
   }

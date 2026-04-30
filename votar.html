@@ -24,7 +24,7 @@
     </header>
 
     <!-- Session banner  -->
-    <div id="sessionBanner" class="session-banner manana" style="display:none;">
+    <div id="sessionBanner" class="session-banner manana hidden">
       <span id="sessionLabel">🌙 Encuesta Matutina</span>
       <span class="session-close-time" id="sessionClose">Cierra a las 10:00 AM</span>
     </div>
@@ -32,7 +32,7 @@
     <!-- Formulario de selección -->
     <div id="horarioForm" class="card">
       <div class="card-header">
-        <i data-lucide="calendar" style="margin-bottom:0.4rem;"></i>
+        <i data-lucide="calendar" class="mb-0-4"></i>
         <p class="card-title">Horarios de Hoy</p>
       </div>
       <div id="scheduleGrid" class="schedule-grid">
@@ -48,13 +48,13 @@
         <div class="check-badge">
           <i data-lucide="check-circle"></i>
         </div>
-        <h2 style="font-size:1.5rem;font-weight:800;">Voto Confirmado</h2>
-        <p style="color:#475569;font-size:0.9rem;margin-top:0.3rem;">Ya reservaste tus horarios para hoy.</p>
+        <h2 class="text-xl-2 font-bold">Voto Confirmado</h2>
+        <p class="text-slate-600 text-sm mt-0-3">Ya reservaste tus horarios para hoy.</p>
       </div>
 
       <div id="confirmedTrips" class="confirmed-trips"></div>
 
-      <p style="font-size:0.7rem;text-transform:uppercase;color:#475569;font-weight:700;text-align:center;margin-bottom:0.75rem;">Notificaciones y Cambios</p>
+      <p class="text-xs uppercase text-slate-600 font-bold text-center mb-0-75">Notificaciones y Cambios</p>
       <div class="action-grid">
         <button class="btn-action btn-green" id="btnMeFuiAntes">
           <i data-lucide="check-circle"></i> Me fui antes
@@ -72,39 +72,39 @@
     </div>
 
     <!-- Modal de Acciones -->
-    <div id="actionModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:100;display:flex;align-items:center;justify-content:center;padding:1rem;">
-      <div class="card" style="width:100%;max-width:400px;background:rgba(15,23,42,0.95);border:1px solid rgba(255,255,255,0.2);">
-        <h3 id="actionModalTitle" style="margin-bottom:1rem;text-align:center;font-size:1.2rem;font-weight:700;">Selecciona el viaje</h3>
-        <p id="actionModalDesc" style="text-align:center;color:#94a3b8;font-size:0.85rem;margin-bottom:1.5rem;"></p>
-        <div id="actionModalContent" style="display:flex;flex-direction:column;gap:0.75rem;"></div>
-        <div style="display:flex; gap:0.5rem; margin-top:1.5rem;">
-          <button id="btnActionModalBoth" class="btn-action btn-slate hidden" style="flex:1;">Ambos viajes</button>
-          <button id="closeActionModal" class="btn-action btn-rose" style="flex:1;">Cancelar</button>
+    <div id="actionModal" class="hidden modal-overlay">
+      <div class="card modal-card">
+        <h3 id="actionModalTitle" class="modal-title">Selecciona el viaje</h3>
+        <p id="actionModalDesc" class="modal-desc"></p>
+        <div id="actionModalContent" class="modal-content-area"></div>
+        <div class="flex gap-2 mt-1-5">
+          <button id="btnActionModalBoth" class="btn-action btn-slate hidden flex-1">Ambos viajes</button>
+          <button id="closeActionModal" class="btn-action btn-rose flex-1">Cancelar</button>
         </div>
       </div>
     </div>
 
     <!-- Modal ¿Dónde Esperas? -->
-    <div id="esperaModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem;">
-      <div class="card" style="width:100%;max-width:380px;background:rgba(10,15,30,0.98);border:1px solid rgba(59,130,246,0.3);text-align:center;padding:2rem;">
-        <div style="width:64px;height:64px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
-          <i data-lucide="map-pin" style="width:28px;height:28px;color:#60a5fa;"></i>
+    <div id="esperaModal" class="hidden modal-overlay z-200">
+      <div class="card modal-card max-w-380 text-center p-2">
+        <div class="w-64 h-64 bg-blue-glow rounded-full flex items-center justify-center mx-auto mb-1-25">
+          <i data-lucide="map-pin" class="icon-medium text-blue-400"></i>
         </div>
-        <h3 style="font-size:1.35rem;font-weight:800;color:#f8fafc;margin-bottom:0.4rem;">¿Dónde esperas?</h3>
-        <p style="color:#64748b;font-size:0.85rem;margin-bottom:1.75rem;line-height:1.5;">Indica tu punto de espera para que el chofer y los voluntarios puedan ubicarte.</p>
-        <div style="display:flex;flex-direction:column;gap:0.75rem;">
-          <button id="btnEsperaCamino" style="display:flex;align-items:center;gap:0.9rem;padding:1rem 1.25rem;border-radius:0.85rem;border:2px solid rgba(52,211,153,0.3);background:rgba(52,211,153,0.08);color:#6ee7b7;font-size:1rem;font-weight:700;cursor:pointer;transition:all 0.2s;">
-            <span style="font-size:1.4rem;">🚶</span>
-            <div style="text-align:left;">
-              <div>En el camino</div>
-              <div style="font-size:0.72rem;opacity:0.7;font-weight:500;">El chofer te buscará en la ruta</div>
+        <h3 class="text-xl-3 font-bold text-white mb-0-4">¿Dónde esperas?</h3>
+        <p class="text-slate-500 text-sm mb-1-5 lh-1-5">Indica tu punto de espera para que el chofer y los voluntarios puedan ubicarte.</p>
+        <div class="flex flex-col gap-3">
+          <button id="btnEsperaCamino" class="btn-espera btn-espera-camino">
+            <span class="espera-icon-text">🚶</span>
+            <div class="espera-info">
+              <div class="espera-label">En el camino</div>
+              <div class="espera-sub">El chofer te buscará en la ruta</div>
             </div>
           </button>
-          <button id="btnEsperaParada" style="display:flex;align-items:center;gap:0.9rem;padding:1rem 1.25rem;border-radius:0.85rem;border:2px solid rgba(59,130,246,0.3);background:rgba(59,130,246,0.08);color:#93c5fd;font-size:1rem;font-weight:700;cursor:pointer;transition:all 0.2s;">
-            <span style="font-size:1.4rem;">📍</span>
-            <div style="text-align:left;">
-              <div>En la parada</div>
-              <div style="font-size:0.72rem;opacity:0.7;font-weight:500;">Estaré esperando en el punto fijo</div>
+          <button id="btnEsperaParada" class="btn-espera btn-espera-parada">
+            <span class="espera-icon-text">📍</span>
+            <div class="espera-info">
+              <div class="espera-label">En la parada</div>
+              <div class="espera-sub">Estaré esperando en el punto fijo</div>
             </div>
           </button>
         </div>
@@ -112,8 +112,8 @@
     </div>
 
     <!-- Lista Pública Button (shown after confirmation) -->
-    <div id="publicListContainer" class="hidden" style="text-align: center; margin-top: 1rem;">
-      <a href="lista.html" class="btn-action btn-blue" style="width: 200px; margin: 0 auto; text-decoration: none;">
+    <div id="publicListContainer" class="hidden text-center mt-4">
+      <a href="lista.html" class="btn-action btn-blue no-underline mx-auto" style="width: 200px;">
         <i data-lucide="list"></i> Ver Lista Pública
       </a>
     </div>
