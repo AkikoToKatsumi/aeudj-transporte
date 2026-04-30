@@ -1487,7 +1487,7 @@ tr:last-child td {
 
 .font-mono-tracking-tighter {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
-  tracking-tighter: -0.05em !important;
+  letter-spacing: -0.05em !important;
 }
 
 .bg-blue-10 {
