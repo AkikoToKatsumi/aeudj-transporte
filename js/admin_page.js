@@ -93,8 +93,7 @@ async function initAdminDashboard() {
   loadDashboardData();
   initSessionControl();
 
-  // 5. Setup Forms
-  initForms();
+
 
   // 6. Real-Time Sync para Votos
   supabase.channel('admin-votos-realtime')
@@ -157,8 +156,7 @@ function initClickEvents() {
   const qaCancelBtn = document.getElementById('qa-cancel-btn');
   if (qaCancelBtn) qaCancelBtn.addEventListener('click', () => window.resetQuickAddForm());
 
-  const btnCloseAddStaff = document.getElementById('btnCloseAddStaff');
-  if (btnCloseAddStaff) btnCloseAddStaff.addEventListener('click', () => window.hideAddStaffModal());
+
 
   // Audit section
   const auditSearch = document.getElementById('auditSearch');
@@ -989,58 +987,7 @@ window.assignVolunteerToSlot = async (day, time, volunteerId) => {
   loadHorariosData();
 };
 
-function initForms() {
-  const form = document.getElementById('createStaffForm');
-  if (!form) return;
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const status = document.getElementById('staffStatus');
-    if (status) {
-        status.textContent = 'Procesando...';
-        status.className = 'mt-4 p-5 rounded-2xl text-center text-[10px] font-black uppercase tracking-[0.2em] bg-blue-500/10 text-blue-400 border border-blue-500/20';
-        status.classList.remove('hidden');
-    }
-
-    try {
-      const nombre = document.getElementById('staffNombre').value;
-      const matricula = document.getElementById('staffMatricula').value;
-      const password = document.getElementById('staffPassword').value;
-      const rol = document.getElementById('staffRol').value;
-
-      const pseudoEmail = `${matricula}@aeudj.com`;
-      
-      const { data: auth, error: authErr } = await supabase.auth.signUp({ 
-        email: pseudoEmail, 
-        password: password 
-      });
-
-      if (authErr) throw authErr;
-
-      const { error: profileErr } = await supabase.from('profiles').insert([
-        { id: auth.user.id, nombre, matricula, rol }
-      ]);
-
-      if (profileErr) throw profileErr;
-
-      if (status) {
-          status.textContent = 'Usuario registrado con éxito';
-          status.className = 'mt-4 p-5 rounded-2xl text-center text-[10px] font-black uppercase tracking-[0.2em] bg-green-500/10 text-green-400 border border-green-500/20';
-      }
-      
-      setTimeout(() => {
-        if (typeof window.hideAddStaffModal === 'function') window.hideAddStaffModal();
-        loadStaffData();
-      }, 1500);
-
-    } catch (err) {
-      if (status) {
-          status.textContent = err.message || 'Error en el registro';
-          status.className = 'mt-4 p-5 rounded-2xl text-center text-[10px] font-black uppercase tracking-[0.2em] bg-red-500/10 text-red-400 border border-red-500/20';
-      }
-    }
-  });
-}
 
 window.clearTodayVotes = async function() {
   const isDeep = confirm('¿Quieres realizar una LIMPIEZA PROFUNDA?\n\n- "Aceptar": Borra Votos, Faltas y Penalidades (Reseteo Total).\n- "Cancelar": Solo borra los votos de hoy.');

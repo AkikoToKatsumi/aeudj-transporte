@@ -384,68 +384,7 @@
         </div>
       </section>
 
-      <!-- Add Staff Modal -->
-      <div id="addStaffModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[100] flex items-center justify-center hidden p-4">
-        <div class="glass-card w-full max-w-xl p-12 relative animate-in fade-in zoom-in duration-300 rounded-[3rem] border-white/10 shadow-[0_30px_100px_rgba(0,0,0,0.5)]">
-          <button id="btnCloseAddStaff" class="absolute top-8 right-8 text-gray-600 hover:text-white transition-all hover:rotate-90">
-            <i data-lucide="x" class="w-8 h-8"></i>
-          </button>
-          
-          <div class="mb-10 text-center">
-            <h3 class="text-4xl font-black text-white mb-3 tracking-tighter">Nuevo Usuario</h3>
-            <p class="text-sm text-gray-500 font-bold uppercase tracking-[0.15em] opacity-60">Creación de cuenta administrativa</p>
-          </div>
-          
-          <form id="createStaffForm" class="space-y-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div class="space-y-3">
-                <label class="text-[10px] font-black text-gray-500 uppercase tracking-[0.25em] ml-2">Nombre Completo</label>
-                <div class="relative group">
-                  <i data-lucide="user" class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 group-focus-within:text-blue-500 transition-colors"></i>
-                  <input type="text" id="staffNombre" placeholder="Nombre y Apellidos" class="w-full bg-slate-950/80 border-2 border-white/5 text-white text-sm font-bold rounded-[1.5rem] py-5 pl-14 pr-6 focus:border-blue-500/50 outline-none transition-all placeholder:text-gray-700" required>
-                </div>
-              </div>
-              <div class="space-y-3">
-                <label class="text-[10px] font-black text-gray-500 uppercase tracking-[0.25em] ml-2">Matrícula / ID</label>
-                <div class="relative group">
-                  <i data-lucide="hash" class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 group-focus-within:text-blue-500 transition-colors"></i>
-                  <input type="text" id="staffMatricula" placeholder="10-0000" class="w-full bg-slate-950/80 border-2 border-white/5 text-white text-sm font-bold rounded-[1.5rem] py-5 pl-14 pr-6 focus:border-blue-500/50 outline-none transition-all placeholder:text-gray-700" required>
-                </div>
-              </div>
-            </div>
 
-            <div class="space-y-3">
-              <label class="text-[10px] font-black text-gray-500 uppercase tracking-[0.25em] ml-2">Contraseña de Acceso</label>
-              <div class="relative group">
-                <i data-lucide="lock" class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 group-focus-within:text-blue-500 transition-colors"></i>
-                <input type="password" id="staffPassword" placeholder="••••••••••••" class="w-full bg-slate-950/80 border-2 border-white/5 text-white text-sm font-bold rounded-[1.5rem] py-5 pl-14 pr-6 focus:border-blue-500/50 outline-none transition-all placeholder:text-gray-700" required>
-              </div>
-            </div>
-
-            <div class="space-y-3">
-              <label class="text-[10px] font-black text-gray-500 uppercase tracking-[0.25em] ml-2">Rol Asignado</label>
-              <div class="relative group">
-                <i data-lucide="shield" class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 group-focus-within:text-blue-500 transition-colors"></i>
-                <select id="staffRol" class="w-full bg-slate-950/80 border-2 border-white/5 text-white text-sm font-bold rounded-[1.5rem] py-5 pl-14 pr-12 focus:border-blue-500/50 outline-none transition-all appearance-none cursor-pointer custom-select-arrow">
-                  <option value="estudiante">Estudiante</option>
-                  <option value="estudiante, comité">Estudiante (Miembro del Comité)</option>
-                  <option value="voluntario">Voluntario</option>
-                  <option value="voluntario, comité">Voluntario (Miembro del Comité)</option>
-                  <option value="administrador">Administrador</option>
-                  <option value="administrador, comité">Administrador (Miembro del Comité)</option>
-                  <option value="chofer">Chofer</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="pt-6">
-              <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 text-white font-black text-[11px] py-6 rounded-[1.5rem] transition-all shadow-2xl shadow-blue-500/30 uppercase tracking-[0.3em]">Registrar Nuevo Usuario</button>
-            </div>
-            
-            <div id="staffStatus" class="hidden p-5 rounded-2xl text-center text-[10px] font-black uppercase tracking-[0.2em] border border-white/5"></div>
-          </form>
-        </div>
-      </div>
 
       <!-- Horarios Management Screen -->
       <section id="screen-horarios" class="admin-screen hidden">

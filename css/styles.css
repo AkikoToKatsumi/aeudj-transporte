@@ -2553,17 +2553,7 @@ body.admin-page::after {
     padding: 1rem !important;
   }
 
-  #addStaffModal .glass-card {
-    padding: 1.5rem !important;
-    border-radius: 2rem !important;
-    width: 100% !important;
-    max-width: calc(100vw - 2rem) !important;
-    margin: auto !important;
-  }
 
-  #addStaffModal h3 {
-    font-size: 2rem !important;
-  }
 
   .overflow-x-auto {
     -webkit-overflow-scrolling: touch;
