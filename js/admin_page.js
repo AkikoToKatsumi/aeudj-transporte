@@ -868,7 +868,7 @@ async function renderAdminHorarioGrid() {
     times = times.filter(t => t.time === '7:00 AM' || t.time === '12:10 PM');
   }
 
-  const { data: allUsers } = await supabase.from('profiles').select('*').eq('rol', 'voluntario');
+  const { data: allUsers } = await supabase.from('profiles').select('*').ilike('rol', '%voluntario%');
   const volunteers = allUsers || [];
   
   grid.innerHTML = '';
@@ -933,7 +933,7 @@ async function renderAdminHorarioGrid() {
 }
 
 window.assignVolunteerToSlot = async (day, time, volunteerId) => {
-  const { data: allUsers, error: fetchErr } = await supabase.from('profiles').select('*').eq('rol', 'voluntario');
+  const { data: allUsers, error: fetchErr } = await supabase.from('profiles').select('*').ilike('rol', '%voluntario%');
   if (fetchErr) {
     window.showAdminToast('Error de red', 'error');
     return;
