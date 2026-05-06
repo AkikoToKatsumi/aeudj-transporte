@@ -1647,15 +1647,23 @@ window.marcarAsistenciaAdmin = async (p, action) => {
       throw new Error('Bloqueado por RLS: No tienes permisos.');
     }
     if (!subio) {
-      await supabase.from('faltas').insert({
-        usuario_id: p.usuario_id,
-        voto_id:    p.id,
-        nombre:     p.nombre,
-        matricula:  p.matricula,
-        email:      p.email || '',
-        horario:    p.horario,
-        fecha:      p.fecha,
-      });
+      const { data: existing } = await supabase.from('faltas').select('id').eq('voto_id', p.id).maybeSingle();
+      if (!existing) {
+        await supabase.from('faltas').insert({
+          usuario_id: p.usuario_id,
+          voto_id:    p.id,
+          nombre:     p.nombre,
+          matricula:  p.matricula,
+          email:      p.email || '',
+          horario:    p.horario,
+          fecha:      p.fecha,
+        });
+      }
+    } else {
+      await supabase.from('faltas').delete().eq('voto_id', p.id);
+    }
+    
+    if (p.usuario_id) {
       const { count } = await supabase.from('faltas').select('id', { count: 'exact', head: true }).eq('usuario_id', p.usuario_id);
       const penalizado = count >= 3;
       await supabase.from('penalidades').upsert({
@@ -1668,9 +1676,15 @@ window.marcarAsistenciaAdmin = async (p, action) => {
         fecha_penalidad: penalizado ? getCycleDate() : null,
         updated_at:      new Date().toISOString(),
       }, { onConflict: 'usuario_id' });
-      window.showAdminToast(`Falta registrada a ${p.nombre}. Total: ${count}/3`, count >= 3 ? 'warning' : 'error');
+      
+      if (!subio) {
+        window.showAdminToast(`Falta registrada a ${p.nombre}. Total: ${count}/3`, count >= 3 ? 'warning' : 'error');
+      } else {
+        window.showAdminToast(`Asistencia confirmada para ${p.nombre}`, 'success');
+      }
     } else {
-      window.showAdminToast(`Asistencia confirmada para ${p.nombre}`, 'success');
+      if (!subio) window.showAdminToast(`Falta registrada a ${p.nombre}.`, 'error');
+      else window.showAdminToast(`Asistencia confirmada para ${p.nombre}`, 'success');
     }
   } catch(err) {
     console.error(err);

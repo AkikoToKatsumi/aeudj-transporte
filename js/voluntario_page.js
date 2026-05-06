@@ -372,47 +372,60 @@ async function marcarAsistencia(p, action) {
       throw new Error('Bloqueado por RLS: No tienes permisos para modificar este registro en la base de datos.');
     }
 
-    if (!subio) {
-      // 2. Register falta
-      await supabase.from('faltas').insert({
-        usuario_id: p.usuario_id,
-        voto_id:    p.id,
-        nombre:     p.nombre,
-        matricula:  p.matricula,
-        email:      p.email || '',
-        horario:    p.horario,
-        fecha:      p.fecha,
-      });
+      if (!subio) {
+        // 2. Register falta if it doesn't exist
+        const { data: existing } = await supabase.from('faltas').select('id').eq('voto_id', p.id).maybeSingle();
+        if (!existing) {
+          await supabase.from('faltas').insert({
+            usuario_id: p.usuario_id,
+            voto_id:    p.id,
+            nombre:     p.nombre,
+            matricula:  p.matricula,
+            email:      p.email || '',
+            horario:    p.horario,
+            fecha:      p.fecha,
+          });
+        }
+      } else {
+        // Remove falta if they switched from no-subio to subio
+        await supabase.from('faltas').delete().eq('voto_id', p.id);
+      }
 
       // 3. Count total faltas for this user
-      const { count } = await supabase
-        .from('faltas')
-        .select('id', { count: 'exact', head: true })
-        .eq('usuario_id', p.usuario_id);
+      if (p.usuario_id) {
+        const { count } = await supabase
+          .from('faltas')
+          .select('id', { count: 'exact', head: true })
+          .eq('usuario_id', p.usuario_id);
 
-      // 4. Upsert in penalidades
-      const penalizado = count >= 3;
-      await supabase.from('penalidades').upsert({
-        usuario_id:      p.usuario_id,
-        nombre:          p.nombre,
-        matricula:       p.matricula,
-        email:           p.email || '',
-        total_faltas:    count,
-        penalizado,
-        fecha_penalidad: penalizado ? getCycleDate() : null,
-        updated_at:      new Date().toISOString(),
-      }, { onConflict: 'usuario_id' });
+        // 4. Upsert in penalidades
+        const penalizado = count >= 3;
+        await supabase.from('penalidades').upsert({
+          usuario_id:      p.usuario_id,
+          nombre:          p.nombre,
+          matricula:       p.matricula,
+          email:           p.email || '',
+          total_faltas:    count,
+          penalizado,
+          fecha_penalidad: penalizado ? getCycleDate() : null,
+          updated_at:      new Date().toISOString(),
+        }, { onConflict: 'usuario_id' });
 
-      // 5. Send email if just hit 3
-      if (penalizado && count === 3) {
-        await enviarCorreoPenalidad(p, count);
-        showToast(`⚠️ ${p.nombre} penalizado/a con ${count} faltas. Correo enviado.`, 'warning');
+        if (!subio) {
+          // 5. Send email if just hit 3
+          if (penalizado && count === 3) {
+            await enviarCorreoPenalidad(p, count);
+            showToast(`⚠️ ${p.nombre} penalizado/a con ${count} faltas. Correo enviado.`, 'warning');
+          } else {
+            showToast(`Falta registrada. Total: ${count}/3`, count >= 2 ? 'warning' : 'error');
+          }
+        } else {
+          showToast('✅ Asistencia confirmada', 'success');
+        }
       } else {
-        showToast(`Falta registrada. Total: ${count}/3`, count >= 2 ? 'warning' : 'error');
+        if (!subio) showToast(`Falta registrada.`, 'error');
+        else showToast('✅ Asistencia confirmada', 'success');
       }
-    } else {
-      showToast('✅ Asistencia confirmada', 'success');
-    }
   } catch(err) {
     console.error('Error marcando asistencia:', err);
     showToast('Error al guardar. Intenta de nuevo.', 'error');
