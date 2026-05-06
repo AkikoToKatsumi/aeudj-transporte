@@ -103,13 +103,21 @@ async function loadData() {
           <div style="display:flex;gap:0.5rem;align-items:center;">
             <span class="section-direction ${ida ? 'dir-ida' : 'dir-vuelta'}">${ida ? '↗ Ida' : '↙ Vuelta'}</span>
             <span class="section-count">${pasajeros.length} persona${pasajeros.length !== 1 ? 's' : ''}</span>
+            <i data-lucide="chevron-down" class="chevron"></i>
           </div>
         </div>
         <div class="passenger-list" id="list-${encodeURIComponent(horario)}"></div>
       `;
       container.appendChild(section);
 
+      const headerEl = section.querySelector('.section-header');
       const listEl = section.querySelector('.passenger-list');
+      
+      headerEl.addEventListener('click', () => {
+        const chevron = headerEl.querySelector('.chevron');
+        const isOpen = listEl.classList.toggle('open');
+        if (chevron) chevron.classList.toggle('open', isOpen);
+      });
       pasajeros.forEach((p, idx) => {
         const t = new Date(p.created_at);
         let hours = t.getHours();

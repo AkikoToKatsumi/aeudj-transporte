@@ -73,6 +73,16 @@ h1 { font-size: 2.2rem; font-weight: 800; color: #fbbf24; margin-bottom: 0.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  cursor: pointer;
+}
+.chevron {
+  transition: transform 0.3s ease;
+  width: 16px;
+  height: 16px;
+  color: #64748b;
+}
+.chevron.open {
+  transform: rotate(180deg);
 }
 .section-title { font-size: 1.1rem; font-weight: 800; color: #fff; }
 .section-direction {
@@ -84,7 +94,8 @@ h1 { font-size: 2.2rem; font-weight: 800; color: #fbbf24; margin-bottom: 0.5rem;
 .dir-vuelta { background: rgba(139,92,246,0.15); color: #c4b5fd; }
 .section-count { font-size: 0.75rem; color: #64748b; font-weight: 600; }
 
-.passenger-list { display: flex; flex-direction: column; }
+.passenger-list { display: none; }
+.passenger-list.open { display: flex; flex-direction: column; }
 .passenger-row {
   display: flex;
   align-items: center;
