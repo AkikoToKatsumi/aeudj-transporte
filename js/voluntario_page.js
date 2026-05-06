@@ -113,8 +113,10 @@ async function loadData() {
     
     let fetchedVotos = data || [];
     const isAdmin = currentUser && (currentUser.rol.includes('admin') || currentUser.rol.includes('desarrolladora') || currentUser.rol.includes('comité'));
+    const isVolunteer = currentUser && currentUser.rol.includes('voluntario');
     
-    if (!isAdmin && currentUser) {
+    // Si no es admin ni voluntario con acceso total, filtramos por su horario asignado
+    if (!isAdmin && !isVolunteer && currentUser) {
       // Determinar qué día de la semana es (Lunes, Martes, etc.)
       const d = new Date(cycleDate + 'T12:00:00'); 
       const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -226,7 +228,7 @@ function renderList() {
           <div class="row-name"></div>
           <div class="flex items-center gap-2 flex-wrap">
             <div class="row-mat"></div>
-            <div class="flex gap-2"></div>
+            <div class="flex gap-2 badges-area"></div>
           </div>
         </div>
         <div class="row-time"></div>
