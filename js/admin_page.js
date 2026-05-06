@@ -1729,46 +1729,39 @@ window.loadAuditData = async function() {
   const dateVal = dpEl ? dpEl.value : getCycleDate();
 
   try {
-    const [votosRes, faltasRes, penRes] = await Promise.all([
-      supabase.from('votos').select('id', { count: 'exact', head: true }).eq('fecha', dateVal),
-      supabase.from('faltas').select('id', { count: 'exact', head: true }).eq('fecha', dateVal),
+    const [votosRes, penRes] = await Promise.all([
+      supabase.from('votos').select('*').eq('fecha', dateVal).order('created_at', { ascending: false }),
       supabase.from('penalidades').select('id', { count: 'exact', head: true }).eq('penalizado', true),
     ]);
+    if (votosRes.error) throw votosRes.error;
+
+    const uniqueMap = new Map();
+    const IDA_KW = ['Jarabacoa -> La Vega', 'Jarabacoa \u2192 La Vega'];
+    const getDir = h => IDA_KW.some(k => h.includes(k)) ? 'ida' : 'vuelta';
+    
+    (votosRes.data || []).forEach(r => {
+      const key = `${r.matricula || r.usuario_id}-${getDir(r.horario)}`;
+      if (!uniqueMap.has(key) || new Date(r.created_at) > new Date(uniqueMap.get(key).created_at)) {
+        uniqueMap.set(key, r);
+      }
+    });
+    const uniqueVotos = Array.from(uniqueMap.values());
+    
+    const totalReservas = uniqueVotos.length;
+    const totalFaltasHoy = uniqueVotos.filter(v => v.se_monto === 0).length;
 
     const a1 = document.getElementById('auditStatVotos');
     const a2 = document.getElementById('auditStatFaltas');
     const a3 = document.getElementById('auditStatPenalidades');
-    if (a1) a1.textContent = votosRes.count ?? '–';
-    if (a2) a2.textContent = faltasRes.count ?? '–';
+    if (a1) a1.textContent = totalReservas;
+    if (a2) a2.textContent = totalFaltasHoy;
     if (a3) a3.textContent = penRes.count ?? '–';
 
     let data = [];
     if (auditActiveTab === 'votos') {
-      const { data: resRows, error } = await supabase
-        .from('votos').select('*')
-        .eq('fecha', dateVal)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      let rows = resRows || [];
-
-      const uniqueMap = new Map();
-      const IDA_KW = ['Jarabacoa -> La Vega', 'Jarabacoa \u2192 La Vega'];
-      const getDir = h => IDA_KW.some(k => h.includes(k)) ? 'ida' : 'vuelta';
-      
-      rows.forEach(r => {
-        const key = `${r.matricula || r.usuario_id}-${getDir(r.horario)}`;
-        if (!uniqueMap.has(key) || new Date(r.created_at) > new Date(uniqueMap.get(key).created_at)) {
-          uniqueMap.set(key, r);
-        }
-      });
-      data = Array.from(uniqueMap.values());
+      data = uniqueVotos;
     } else if (auditActiveTab === 'faltas') {
-      const { data: rows, error } = await supabase
-        .from('faltas').select('*')
-        .eq('fecha', dateVal)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      data = rows || [];
+      data = uniqueVotos.filter(v => v.se_monto === 0);
     } else if (auditActiveTab === 'penalidades') {
       const { data: rows, error } = await supabase
         .from('penalidades').select('*')
