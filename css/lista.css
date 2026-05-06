@@ -110,6 +110,7 @@ h1 { font-size: 2.2rem; font-weight: 800; color: #fbbf24; margin-bottom: 0.5rem;
   display: inline-flex; align-items: center; gap: 0.3rem;
 }
 .badge-confirmado { background: rgba(52,211,153,0.1); color: #34d399; }
+.badge-espera { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
 .badge-point { background: rgba(59,130,246,0.1); color: #60a5fa; margin-top: 0.3rem; }
 .badge-camino { background: rgba(139,92,246,0.1); color: #c4b5fd; margin-top: 0.3rem; }
 .passenger-time { font-size: 0.65rem; color: #475569; font-weight: 700; margin-top: 0.3rem; }

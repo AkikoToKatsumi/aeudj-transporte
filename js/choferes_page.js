@@ -105,12 +105,18 @@ async function loadData() {
     let totalEspera = 0;
     const groups = {};
 
+    const groupCounters = {};
+
     (votos || []).forEach(v => {
       if (!groups[v.horario]) {
         groups[v.horario] = { confirmados: [], espera: [], todos_pasados: true };
       }
+      if (!groupCounters[v.horario]) groupCounters[v.horario] = 0;
       
-      if (v.en_espera) {
+      groupCounters[v.horario]++;
+      const esEsperaVisual = v.en_espera || groupCounters[v.horario] > 30;
+
+      if (esEsperaVisual) {
         groups[v.horario].espera.push(v);
       } else {
         groups[v.horario].confirmados.push(v);
@@ -183,10 +189,11 @@ async function loadData() {
         allPassengers.forEach((p, idx) => {
           const row = document.createElement('div');
           row.className = 'p-row';
+          const isWaitlist = p.en_espera || (idx >= 30);
           row.innerHTML = `
             <div class="p-num">${idx + 1}</div>
-            <div class="p-name ${p.en_espera ? 'text-amber-400' : 'text-slate-200'}">${p.nombre || 'Sin nombre'}</div>
-            ${p.en_espera ? '<div class="badge-espera">Lista de Espera</div>' : ''}
+            <div class="p-name ${isWaitlist ? 'text-amber-400' : 'text-slate-200'}">${p.nombre || 'Sin nombre'}</div>
+            ${isWaitlist ? '<div class="badge-espera">Lista de Espera</div>' : ''}
           `;
           listContent.appendChild(row);
         });

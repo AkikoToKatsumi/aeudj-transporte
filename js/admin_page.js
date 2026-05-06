@@ -279,13 +279,19 @@ async function loadDashboardData() {
 
     const timeGroups = {};
     const listado = {};
+    const groupCounters = {}; // Para el límite de 30
 
     currentVotos.forEach(v => {
       if (!listado[v.horario]) listado[v.horario] = [];
       listado[v.horario].push(v);
 
       if (!timeGroups[v.horario]) timeGroups[v.horario] = { confirmados: 0, espera: 0 };
-      if (v.en_espera) {
+      if (!groupCounters[v.horario]) groupCounters[v.horario] = 0;
+
+      groupCounters[v.horario]++;
+      const esEsperaVisual = v.en_espera || groupCounters[v.horario] > 30;
+
+      if (esEsperaVisual) {
          espera++;
          timeGroups[v.horario].espera++;
       } else {
@@ -507,8 +513,20 @@ function renderVotosDetail() {
   const pvStatTotal    = document.getElementById('pvStatTotal');
   const pvStatEspera   = document.getElementById('pvStatEspera');
   const pvStatHorarios = document.getElementById('pvStatHorarios');
-  if (pvStatTotal)    pvStatTotal.textContent    = pvAllVotos.filter(v => !v.en_espera).length || '-';
-  if (pvStatEspera)   pvStatEspera.textContent   = pvAllVotos.filter(v =>  v.en_espera).length;
+  
+  // Calcular estadísticas basadas en el límite de 30 por horario
+  let totalConfirmadosVisual = 0;
+  let totalEsperaVisual = 0;
+  const tempGroups = {};
+  pvAllVotos.forEach(v => {
+    if (!tempGroups[v.horario]) tempGroups[v.horario] = 0;
+    tempGroups[v.horario]++;
+    if (v.en_espera || tempGroups[v.horario] > 30) totalEsperaVisual++;
+    else totalConfirmadosVisual++;
+  });
+
+  if (pvStatTotal)    pvStatTotal.textContent    = totalConfirmadosVisual || '-';
+  if (pvStatEspera)   pvStatEspera.textContent   = totalEsperaVisual;
   if (pvStatHorarios) pvStatHorarios.textContent = new Set(pvAllVotos.map(v => v.horario)).size || '-';
 
   container.innerHTML = '';
@@ -568,9 +586,10 @@ function renderVotosDetail() {
       row.querySelector('.pv-mat').textContent = (p.matricula || '') + (p.universidad ? ' · ' + p.universidad : '');
       row.querySelector('.pv-time').textContent = time;
       
+      const isWaitlist = p.en_espera || (idx >= 30);
       const badge = row.querySelector('.pv-badge');
-      badge.className = 'pv-badge ' + (p.en_espera ? 'pv-badge-espera' : 'pv-badge-ok');
-      badge.textContent = p.en_espera ? 'Espera' : 'Confirmado';
+      badge.className = 'pv-badge ' + (isWaitlist ? 'pv-badge-espera' : 'pv-badge-ok');
+      badge.textContent = isWaitlist ? 'Espera' : 'Confirmado';
 
       const pointDiv = row.querySelector('.pv-point');
       if (p.punto_espera === 'camino') {
@@ -1564,7 +1583,7 @@ function renderAdminLista() {
         <div class="pl-info">
           <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
             <div class="pl-name">${sanitize(p.nombre) || 'Sin nombre'}</div>
-            ${p.en_espera ? '<span class="pl-espera-tag">Espera</span>' : ''}
+            ${(p.en_espera || idx >= 30) ? '<span class="pl-espera-tag">Espera</span>' : ''}
             ${puntoEsperaBadge}
           </div>
           <div class="pl-mat">${sanitize(p.matricula) || ''}</div>

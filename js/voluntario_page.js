@@ -247,7 +247,9 @@ function renderList() {
       row.querySelector('.row-time').textContent = time;
       
       const badgesArea = row.querySelector('.badges-area');
-      if (p.en_espera) {
+      const isWaitlist = p.en_espera || (idx >= 30);
+      
+      if (isWaitlist) {
         const span = document.createElement('span');
         span.className = 'badge-espera';
         span.textContent = 'Espera';

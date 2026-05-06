@@ -121,6 +121,7 @@ async function loadData() {
         const row = document.createElement('div');
         row.className = 'passenger-row';
         
+        const isWaitlist = p.en_espera || (idx >= 30);
         row.innerHTML = `
           <div class="passenger-num">${idx + 1}</div>
           <div class="passenger-main">
@@ -129,8 +130,8 @@ async function loadData() {
               <div class="passenger-meta">${p.matricula || ''} • ${p.universidad || ''}</div>
             </div>
             <div class="passenger-status">
-              <span class="badge-base badge-confirmado">
-                <i data-lucide="check" style="width:10px;height:10px;"></i> CONFIRMADO
+              <span class="badge-base ${isWaitlist ? 'badge-espera' : 'badge-confirmado'}">
+                <i data-lucide="${isWaitlist ? 'clock' : 'check'}" style="width:10px;height:10px;"></i> ${isWaitlist ? 'LISTA DE ESPERA' : 'CONFIRMADO'}
               </span>
               <div class="badges-area" style="display:flex; gap:0.3rem;"></div>
               <div class="passenger-time">${time}</div>
