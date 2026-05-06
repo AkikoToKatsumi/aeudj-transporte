@@ -816,17 +816,29 @@ window.deleteUserNew = async (userId) => {
       if (!confirmed) return;
   }
   
-  window.showAdminToast('Eliminando...', 'info');
-  const { data, error } = await supabase.from('profiles').delete().eq('id', userId).select();
+  window.showAdminToast('Eliminando registros...', 'info');
   
-  if (error) {
-    console.error('Delete error:', error);
-    window.showAdminToast(error.message || 'Error al eliminar usuario', 'error');
-  } else if (!data || data.length === 0) {
-    window.showAdminToast('Permiso denegado por políticas de seguridad (RLS)', 'error');
-  } else {
-    window.showAdminToast('Usuario eliminado correctamente', 'success');
-    await loadStaffData();
+  try {
+    // 1. Borrar dependencias (penalidades, faltas, votos) para evitar errores de llave foránea
+    await supabase.from('penalidades').delete().eq('usuario_id', userId);
+    await supabase.from('faltas').delete().eq('usuario_id', userId);
+    await supabase.from('votos').delete().eq('usuario_id', userId);
+    
+    // 2. Borrar el perfil público
+    const { data, error } = await supabase.from('profiles').delete().eq('id', userId).select();
+    
+    if (error) {
+      console.error('Delete error:', error);
+      window.showAdminToast(error.message || 'Error al eliminar usuario', 'error');
+    } else if (!data || data.length === 0) {
+      window.showAdminToast('Permiso denegado por políticas de seguridad (RLS)', 'error');
+    } else {
+      window.showAdminToast('Usuario y sus registros eliminados correctamente', 'success');
+      await loadStaffData();
+    }
+  } catch (err) {
+    console.error('Process error:', err);
+    window.showAdminToast('Error inesperado al limpiar registros', 'error');
   }
 };
 
