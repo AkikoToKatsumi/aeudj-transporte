@@ -394,30 +394,38 @@ h1 {
 }
 
 .att-btn {
-  padding: 0.6rem 1rem;
-  border-radius: 0.85rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 800;
-  border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--text-muted);
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.05);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+
+.att-btn.subio {
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.25);
+}
+
+.att-btn.no-subio {
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.25);
 }
 
 .att-btn.subio:hover, .att-btn.subio.active {
-  background: rgba(16, 185, 129, 0.15);
-  color: var(--accent-green);
-  border-color: rgba(16, 185, 129, 0.3);
+  background: rgba(52, 211, 153, 0.18);
+  border-color: #34d399;
 }
 
 .att-btn.no-subio:hover, .att-btn.no-subio.active {
-  background: rgba(239, 68, 68, 0.15);
-  color: var(--accent-red);
-  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(248, 113, 113, 0.18);
+  border-color: #f87171;
 }
 
 /* Notify Bar */

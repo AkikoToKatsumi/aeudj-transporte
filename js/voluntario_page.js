@@ -233,12 +233,8 @@ function renderList() {
         </div>
         <div class="row-time"></div>
         <div class="attendance-btns">
-          <button class="att-btn subio ${isSubio ? 'active' : ''}" data-id="${p.id}" data-action="subio">
-            <i data-lucide="check"></i>
-          </button>
-          <button class="att-btn no-subio ${isNoSubio ? 'active' : ''}" data-id="${p.id}" data-action="no-subio">
-            <i data-lucide="x"></i>
-          </button>
+          <button type="button" class="att-btn subio ${isSubio ? 'active' : ''}" data-id="${p.id}" data-action="subio">\u2705 Subi\u00f3</button>
+          <button type="button" class="att-btn no-subio ${isNoSubio ? 'active' : ''}" data-id="${p.id}" data-action="no-subio">\u274c No subi\u00f3</button>
         </div>
       `;
       
@@ -273,8 +269,15 @@ function renderList() {
           // Update local state immediately
           attendanceState[p.id] = action;
           
-          // Call renderList immediately to hide the group if it's completely finished
-          renderList();
+          // Update UI manually to prevent collapsing the list
+          row.querySelectorAll('.att-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+
+          // Update the Presentes counter
+          const statPresentes = document.getElementById('statPresentes');
+          if (statPresentes) {
+            statPresentes.textContent = Object.values(attendanceState).filter(v => v === 'subio').length;
+          }
 
           // Save to Supabase (in background)
           marcarAsistencia(p, action);
