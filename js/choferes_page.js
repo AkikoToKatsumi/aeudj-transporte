@@ -84,6 +84,14 @@ if (logoutBtn) {
   });
 }
 
+const refreshBtn = document.getElementById('refreshBtn');
+if (refreshBtn) {
+  refreshBtn.addEventListener('click', () => {
+    loadData();
+    showToast('Datos actualizados', 'success');
+  });
+}
+
 async function loadData() {
   const cycleDate = getCycleDate();
   const fechaBadge = document.getElementById('currentDate');

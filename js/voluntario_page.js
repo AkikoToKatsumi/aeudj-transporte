@@ -59,6 +59,14 @@ if (logoutBtn) {
   });
 }
 
+const btnRefresh = document.getElementById('btnRefresh');
+if (btnRefresh) {
+  btnRefresh.addEventListener('click', () => {
+    loadData();
+    showToast('Datos actualizados', 'success');
+  });
+}
+
 let currentUser = null;
 try {
   const raw = localStorage.getItem('aeudj_user');
