@@ -531,6 +531,7 @@ async function loadVolScheduleGrid() {
     const { data: { user } } = await supabase.auth.getUser();
     volCurrentUserId = user?.id || null;
 
+    // Load all volunteers that could take slots
     const { data: volunteers, error } = await supabase
       .from('profiles')
       .select('id, nombre, horario_asignado')
@@ -538,6 +539,18 @@ async function loadVolScheduleGrid() {
 
     if (error) throw error;
     volAllVolunteers = volunteers || [];
+
+    // If current user is not in the list (e.g. they have admin/comité role),
+    // fetch their profile separately and add them so their taken slots show correctly
+    const alreadyIncluded = volAllVolunteers.some(v => v.id === volCurrentUserId);
+    if (!alreadyIncluded && volCurrentUserId) {
+      const { data: myProfile } = await supabase
+        .from('profiles')
+        .select('id, nombre, horario_asignado')
+        .eq('id', volCurrentUserId)
+        .single();
+      if (myProfile) volAllVolunteers = [...volAllVolunteers, myProfile];
+    }
 
     renderVolSlots(volAllVolunteers, todayKey);
   } catch (err) {
