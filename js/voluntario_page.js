@@ -524,38 +524,43 @@ async function loadVolScheduleGrid() {
   if (!grid) return;
   grid.innerHTML = '<div class="vol-grid-loading"><div class="spinner" style="width:30px;height:30px;"></div></div>';
 
-  // Today's date as key: "2026-05-15"
   const todayKey = getCycleDate();
 
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    volCurrentUserId = user?.id || null;
+    // 1. Get current auth user
+    const { data: { user }, error: authErr } = await supabase.auth.getUser();
+    if (authErr || !user) throw new Error('No autenticado');
+    volCurrentUserId = user.id;
 
-    // Load all volunteers that could take slots
-    const { data: volunteers, error } = await supabase
+    // 2. Always fetch current user's own profile first (RLS always allows self-read)
+    const { data: myProfile, error: myErr } = await supabase
       .from('profiles')
       .select('id, nombre, horario_asignado')
-      .ilike('rol', '%voluntario%');
+      .eq('id', volCurrentUserId)
+      .single();
 
-    if (error) throw error;
-    volAllVolunteers = volunteers || [];
+    if (myErr) throw myErr;
 
-    // If current user is not in the list (e.g. they have admin/comité role),
-    // fetch their profile separately and add them so their taken slots show correctly
-    const alreadyIncluded = volAllVolunteers.some(v => v.id === volCurrentUserId);
-    if (!alreadyIncluded && volCurrentUserId) {
-      const { data: myProfile } = await supabase
-        .from('profiles')
-        .select('id, nombre, horario_asignado')
-        .eq('id', volCurrentUserId)
-        .single();
-      if (myProfile) volAllVolunteers = [...volAllVolunteers, myProfile];
-    }
+    // 3. Try to fetch other volunteers (may be restricted by RLS for some users)
+    const { data: others } = await supabase
+      .from('profiles')
+      .select('id, nombre, horario_asignado')
+      .ilike('rol', '%voluntario%')
+      .neq('id', volCurrentUserId); // exclude self, already loaded
+
+    // 4. Merge: own profile always included, others if available
+    volAllVolunteers = [
+      ...(myProfile ? [myProfile] : []),
+      ...(others || []),
+    ];
 
     renderVolSlots(volAllVolunteers, todayKey);
   } catch (err) {
     console.error('Error cargando horarios:', err);
-    grid.innerHTML = '<div class="vol-grid-loading" style="color:#f87171;">Error al cargar. Intenta de nuevo.</div>';
+    grid.innerHTML = `<div class="vol-grid-loading" style="color:#f87171;flex-direction:column;gap:0.5rem;">
+      <span>⚠️ Error al cargar horarios</span>
+      <span style="font-size:0.72rem;opacity:0.6;">${err.message || 'Intenta de nuevo'}</span>
+    </div>`;
   }
 }
 
