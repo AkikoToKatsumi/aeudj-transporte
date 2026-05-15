@@ -484,6 +484,18 @@
           </div>
         </div>
 
+        <!-- Search and Date Filter -->
+        <div class="flex gap-3 mb-4 items-center flex-wrap">
+          <div class="flex-grow glass-card flex items-center px-3 py-2 gap-2" style="background: rgba(255,255,255,0.03);">
+            <i data-lucide="search" class="text-slate-500 w-4 h-4"></i>
+            <input type="text" id="penSearch" placeholder="Buscar por nombre o matrícula..." class="bg-transparent border-0 text-white outline-none w-full text-sm">
+          </div>
+          <div class="glass-card flex items-center px-3 py-2 gap-2" style="background: rgba(255,255,255,0.03);">
+            <i data-lucide="calendar" class="text-slate-500 w-4 h-4"></i>
+            <input type="date" id="penDate" class="bg-transparent border-0 text-white outline-none text-sm cursor-pointer color-scheme-dark">
+          </div>
+        </div>
+
         <!-- Tabs -->
         <div class="pen-tabs">
           <button class="pen-tab active" data-pen-tab="penalizados">⚠️ Penalizados</button>

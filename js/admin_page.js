@@ -1,6 +1,11 @@
 // Usamos el cliente global de Supabase cargado en el HTML
 const supabase = window.supabase;
 
+// Global state for Penalidades filtering
+let allPenalidades = [];
+let allFaltasHistorial = [];
+let activePenTab = 'penalizados';
+
 if (!supabase) {
   console.error('Supabase client not found! Ensure the library is loaded in the HTML.');
 }
@@ -182,6 +187,12 @@ function initClickEvents() {
 
   const auditDatePick = document.getElementById('auditDatePick');
   if (auditDatePick) auditDatePick.addEventListener('change', () => window.loadAuditData());
+
+  // Penalidades Search/Date
+  const penSearch = document.getElementById('penSearch');
+  if (penSearch) penSearch.addEventListener('input', () => window.filterPenalidades());
+  const penDate = document.getElementById('penDate');
+  if (penDate) penDate.addEventListener('change', () => window.filterPenalidades());
 }
 
 function initNavigation() {
@@ -1333,8 +1344,10 @@ async function loadPenalidadesData() {
         }
     }
 
-    renderPenalizados(penalArr);
-    renderHistorial(faltaArr);
+    allPenalidades = pens || [];
+    allFaltasHistorial = faltas || [];
+
+    window.filterPenalidades(); // Aplicar filtro inicial
 
     document.querySelectorAll('.pen-tab').forEach(btn => {
       btn.onclick = () => {
@@ -1343,10 +1356,11 @@ async function loadPenalidadesData() {
         const p2 = document.getElementById('penTab-historial');
         if (p1) p1.classList.add('hidden');
         if (p2) p2.classList.add('hidden');
-        const tab = btn.dataset.penTab;
-        const target = document.getElementById(`penTab-${tab}`);
+        activePenTab = btn.dataset.penTab;
+        const target = document.getElementById(`penTab-${activePenTab}`);
         if (target) target.classList.remove('hidden');
-        btn.classList.add(tab === 'historial' ? 'active-blue' : 'active');
+        btn.classList.add(activePenTab === 'historial' ? 'active-blue' : 'active');
+        window.filterPenalidades();
       };
     });
 
@@ -1355,6 +1369,27 @@ async function loadPenalidadesData() {
     console.error('Error cargando penalidades:', err);
   }
 }
+
+window.filterPenalidades = () => {
+  const query = document.getElementById('penSearch')?.value.toLowerCase() || '';
+  const dateVal = document.getElementById('penDate')?.value || '';
+
+  if (activePenTab === 'penalizados') {
+    const filtered = allPenalidades.filter(p => {
+      const matchesName = (p.nombre?.toLowerCase().includes(query) || p.matricula?.toLowerCase().includes(query));
+      const matchesDate = !dateVal || (p.fecha_penalidad && p.fecha_penalidad === dateVal);
+      return matchesName && matchesDate;
+    });
+    renderPenalizados(filtered);
+  } else {
+    const filtered = allFaltasHistorial.filter(f => {
+      const matchesName = (f.nombre?.toLowerCase().includes(query) || f.matricula?.toLowerCase().includes(query));
+      const matchesDate = !dateVal || (f.fecha && f.fecha === dateVal);
+      return matchesName && matchesDate;
+    });
+    renderHistorial(filtered);
+  }
+};
 
 function renderPenalizados(pens) {
   const container = document.getElementById('penalizadosTable');
