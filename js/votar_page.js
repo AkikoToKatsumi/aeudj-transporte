@@ -37,24 +37,67 @@ const staffMenu     = document.getElementById('staffMenu');
 const logoutBtn     = document.getElementById('logoutBtn');
 
 // ── HELPERS ─────────────────────────────────────────────
-function getCycleDate(group) {
-  const now  = new Date();
-  const hora = now.getHours();
-  let targetDate = now;
-  // Matutina: voting at night for next morning → date is tomorrow
-  if (group === 'manana' && hora >= 22) {
-    targetDate = new Date(now);
-    targetDate.setDate(targetDate.getDate() + 1);
+// Variable global para caché de tiempo
+let cachedDRDate = null;
+let lastTimeFetch = 0;
+
+async function getDRDate() {
+  const nowMs = Date.now();
+  if (cachedDRDate && (nowMs - lastTimeFetch < 60000)) {
+    return cachedDRDate;
   }
-  const y = targetDate.getFullYear();
-  const m = String(targetDate.getMonth() + 1).padStart(2, '0');
-  const d = String(targetDate.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
+  try {
+    const res = await fetch(window.location.href.split('?')[0] + '?_t=' + nowMs, { method: 'HEAD', cache: 'no-store' });
+    const dateStr = res.headers.get('Date');
+    if (dateStr) {
+      const serverDate = new Date(dateStr);
+      // UTC-4 para República Dominicana
+      const drTimeMs = serverDate.getTime() - (4 * 60 * 60 * 1000);
+      const drDate = new Date(drTimeMs);
+      cachedDRDate = {
+        year: drDate.getUTCFullYear(),
+        month: drDate.getUTCMonth(),
+        date: drDate.getUTCDate(),
+        hours: drDate.getUTCHours()
+      };
+      lastTimeFetch = nowMs;
+      return cachedDRDate;
+    }
+  } catch(e) {}
+  
+  const now = new Date();
+  return {
+    year: now.getFullYear(),
+    month: now.getMonth(),
+    date: now.getDate(),
+    hours: now.getHours()
+  };
 }
 
-function getGroupFromTime() {
-  const h = new Date().getHours();
-  return (h >= 22 || h < 10) ? 'manana' : 'tarde';
+async function getCycleDate(group) {
+  const dr = await getDRDate();
+  
+  let targetYear = dr.year;
+  let targetMonth = dr.month;
+  let targetDate = dr.date;
+  
+  // Matutina: voting at night for next morning → date is tomorrow
+  if (group === 'manana' && dr.hours >= 22) {
+    const d = new Date(Date.UTC(dr.year, dr.month, dr.date + 1));
+    targetYear = d.getUTCFullYear();
+    targetMonth = d.getUTCMonth();
+    targetDate = d.getUTCDate();
+  }
+  
+  const y = targetYear;
+  const m = String(targetMonth + 1).padStart(2, '0');
+  const dStr = String(targetDate).padStart(2, '0');
+  return `${y}-${m}-${dStr}`;
+}
+
+async function getGroupFromTime() {
+  const dr = await getDRDate();
+  return (dr.hours >= 22 || dr.hours < 10) ? 'manana' : 'tarde';
 }
 
 async function getActiveGroup() {
@@ -68,7 +111,8 @@ async function getActiveGroup() {
       return { group: data.active_session, override: true };
     }
   } catch(e) {}
-  return { group: getGroupFromTime(), override: false };
+  const group = await getGroupFromTime();
+  return { group, override: false };
 }
 
 function showSessionBanner(group, override) {
@@ -143,12 +187,12 @@ function buildStaffMenu(user) {
 }
 
 // ── RENDER HORARIOS ─────────────────────────────────────
-function renderHorarios(group) {
+async function renderHorarios(group) {
   if (!scheduleGrid) return;
   let visible = SCHEDULES.filter(s => s.group === group);
 
   // Si es Sábado (día 6), solo permitimos 7:00 AM y 12:10 PM
-  const cycleDateStr = getCycleDate(group);
+  const cycleDateStr = await getCycleDate(group);
   const dateParts = cycleDateStr.split('-');
   const d = new Date(dateParts[0], dateParts[1] - 1, dateParts[2], 12, 0, 0);
   if (d.getDay() === 6) {
@@ -257,7 +301,7 @@ async function showForm() {
   if (confirmedView) confirmedView.classList.remove('visible');
   const publicList = document.getElementById('publicListContainer');
   if (publicList) publicList.classList.add('hidden');
-  renderHorarios(group);
+  await renderHorarios(group);
 }
 
 function showConfirmed(votes) {
@@ -271,7 +315,7 @@ function showConfirmed(votes) {
 // ── CHECK EXISTING VOTES ────────────────────────────────
 async function checkYaVotado() {
   const { group, override } = await getActiveGroup();
-  const cycleDate = getCycleDate(group);
+  const cycleDate = await getCycleDate(group);
   showSessionBanner(group, override);
   try {
     const { data, error } = await supabase
@@ -366,7 +410,7 @@ if (submitBtn) {
       submitBtn.disabled = true;
       setStatus('Guardando tu selección...');
       const { group } = await getActiveGroup();
-      const cycleDate = getCycleDate(group);
+      const cycleDate = await getCycleDate(group);
 
       pendingSubmitData = { group, cycleDate };
       const modal = document.getElementById('esperaModal');
@@ -461,7 +505,7 @@ async function executeAction(voteObj) {
   let voteDate = '';
   if (voteObj === 'ambos') {
     const { group } = await getActiveGroup();
-    voteDate = getCycleDate(group);
+    voteDate = await getCycleDate(group);
   } else {
     voteDate = voteObj.fecha;
   }
