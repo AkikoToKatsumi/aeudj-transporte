@@ -3559,7 +3559,7 @@ input:checked+.slider:before {
   font-size: 0.875rem;
   outline: none;
   width: 100%;
-  colorscheme: dark;
+  color-scheme: dark;
 }
 
 #penSearch::placeholder {
