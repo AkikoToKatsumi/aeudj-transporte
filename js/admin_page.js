@@ -1499,27 +1499,118 @@ function renderHistorial(faltas) {
     return;
   }
 
-  let html = `<table class="pen-table">
-    <thead><tr>
-      <th>Nombre</th>
-      <th>Matrícula</th>
-      <th>Horario</th>
-      <th>Fecha</th>
-      <th>Registrado</th>
-    </tr></thead><tbody>`;
-
+  // Group faltas by usuario_id
+  const grouped = {};
   faltas.forEach(f => {
-    const registrado = new Date(f.created_at).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
-    html += `<tr>
-      <td class="name-cell">${sanitize(f.nombre) || '—'}</td>
-      <td class="mat-cell">${sanitize(f.matricula) || '—'}</td>
-      <td style="font-size:0.8rem;">${sanitize(f.horario) || '—'}</td>
-      <td style="font-size:0.8rem;">${sanitize(f.fecha) || '—'}</td>
-      <td style="font-size:0.75rem;color:#64748b;">${registrado}</td>
-    </tr>`;
+    const key = f.usuario_id || f.matricula || f.nombre;
+    if (!grouped[key]) {
+      grouped[key] = {
+        nombre:    f.nombre,
+        matricula: f.matricula,
+        email:     f.email,
+        faltas:    []
+      };
+    }
+    grouped[key].faltas.push(f);
   });
 
-  html += '</tbody></table>';
+  // Sort students by number of faltas descending
+  const sorted = Object.values(grouped).sort((a, b) => b.faltas.length - a.faltas.length);
+
+  let html = '';
+
+  sorted.forEach(student => {
+    const total = student.faltas.length;
+    const cls   = total >= 3 ? 'high' : total >= 2 ? 'med' : 'low';
+    const riskColor = total >= 3 ? '#f87171' : total >= 2 ? '#fbbf24' : '#34d399';
+    const riskBg    = total >= 3
+      ? 'rgba(239,68,68,0.08)'
+      : total >= 2
+      ? 'rgba(245,158,11,0.08)'
+      : 'rgba(16,185,129,0.08)';
+    const riskBorder = total >= 3
+      ? 'rgba(239,68,68,0.2)'
+      : total >= 2
+      ? 'rgba(245,158,11,0.2)'
+      : 'rgba(16,185,129,0.2)';
+
+    // Sort faltas by date desc
+    const faltasOrdenadas = [...student.faltas].sort((a, b) =>
+      new Date(b.created_at || b.fecha) - new Date(a.created_at || a.fecha)
+    );
+
+    html += `
+      <div class="hist-student-card" style="
+        background: ${riskBg};
+        border: 1px solid ${riskBorder};
+        border-radius: 1rem;
+        margin-bottom: 0.75rem;
+        overflow: hidden;
+      ">
+        <!-- Student header -->
+        <div style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0.9rem 1.25rem;
+          gap: 1rem;
+          flex-wrap: wrap;
+          cursor: pointer;
+        " onclick="this.parentElement.querySelector('.hist-detail').classList.toggle('hidden')">
+          <div style="display:flex; align-items:center; gap:0.75rem;">
+            <div style="
+              width: 36px; height: 36px; border-radius: 50%;
+              background: ${riskBg}; border: 2px solid ${riskColor};
+              display: flex; align-items: center; justify-content: center;
+              font-weight: 900; font-size: 0.95rem; color: ${riskColor};
+              flex-shrink: 0;
+            ">${total}</div>
+            <div>
+              <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">${sanitize(student.nombre) || '—'}</div>
+              <div style="font-size: 0.75rem; color: #64748b; font-family: monospace;">${sanitize(student.matricula) || '—'}</div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.75rem;">
+            <span class="falta-count ${cls}">${total} / 3 faltas</span>
+            <span style="color:#475569; font-size:0.75rem;">▼ ver detalle</span>
+          </div>
+        </div>
+
+        <!-- Faltas detail (collapsible) -->
+        <div class="hist-detail" style="
+          border-top: 1px solid ${riskBorder};
+          overflow: hidden;
+        ">
+          <table style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr style="background: rgba(0,0,0,0.15);">
+                <th style="padding:0.6rem 1.25rem; text-align:left; font-size:0.65rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:#475569;">#</th>
+                <th style="padding:0.6rem 1.25rem; text-align:left; font-size:0.65rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:#475569;">Horario</th>
+                <th style="padding:0.6rem 1.25rem; text-align:left; font-size:0.65rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:#475569;">Fecha viaje</th>
+                <th style="padding:0.6rem 1.25rem; text-align:left; font-size:0.65rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:#475569;">Registrado</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${faltasOrdenadas.map((f, i) => {
+                const registrado = f.created_at
+                  ? new Date(f.created_at).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })
+                  : '—';
+                const fechaViaje = f.fecha
+                  ? new Date(f.fecha + 'T12:00:00').toLocaleDateString('es-ES', { weekday:'short', day:'2-digit', month:'short', year:'numeric' })
+                  : '—';
+                return `<tr style="border-top: 1px solid rgba(255,255,255,0.04);">
+                  <td style="padding:0.65rem 1.25rem; color:#475569; font-size:0.78rem; font-weight:700;">${i + 1}</td>
+                  <td style="padding:0.65rem 1.25rem; color:#e2e8f0; font-size:0.82rem;">${sanitize(f.horario) || '—'}</td>
+                  <td style="padding:0.65rem 1.25rem; color:#94a3b8; font-size:0.8rem;">${fechaViaje}</td>
+                  <td style="padding:0.65rem 1.25rem; color:#64748b; font-size:0.75rem;">${registrado}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  });
+
   container.innerHTML = html;
 }
 
