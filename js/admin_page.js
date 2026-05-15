@@ -120,11 +120,8 @@ function initClickEvents() {
   const btnClearVotes = document.getElementById('btnClearVotes');
   if (btnClearVotes) btnClearVotes.addEventListener('click', () => window.clearTodayVotes());
 
-  const btnGoToVotes = document.getElementById('btnGoToVotes');
+    const btnGoToVotes = document.getElementById('btnGoToVotes');
   if (btnGoToVotes) btnGoToVotes.addEventListener('click', () => switchScreen('votos'));
-
-  const btnRefreshStaff = document.getElementById('btnRefreshStaff');
-  if (btnRefreshStaff) btnRefreshStaff.addEventListener('click', () => window.refreshCurrentScreen());
 
   // Staff search
   const staffSearch = document.getElementById('staffSearchNew');
@@ -164,9 +161,6 @@ function initClickEvents() {
 
   const auditDatePick = document.getElementById('auditDatePick');
   if (auditDatePick) auditDatePick.addEventListener('change', () => window.loadAuditData());
-
-  const btnRefreshAudit = document.getElementById('btnRefreshAudit');
-  if (btnRefreshAudit) btnRefreshAudit.addEventListener('click', () => window.loadAuditData());
 }
 
 function initNavigation() {
