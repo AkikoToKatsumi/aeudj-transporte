@@ -5,6 +5,13 @@ if (!supabase) {
   console.error('Supabase client not found! Ensure the library is loaded in the HTML.');
 }
 
+// ── EmailJS CONFIG ──
+const EMAILJS_SERVICE  = 'service_afofocu';
+const EMAILJS_TEMPLATE = 'template_ryyejnp';
+const EMAILJS_PUBLIC   = 'nFSfa8vIE5hozX8Ok';
+// Inicializar EmailJS
+if (window.emailjs) emailjs.init(EMAILJS_PUBLIC);
+
 function getCycleDate() {
   const now = new Date();
   const hora = now.getHours();
@@ -104,6 +111,20 @@ async function initAdminDashboard() {
       if(dash && !dash.classList.contains('hidden')) loadDashboardData();
       if(votes && !votes.classList.contains('hidden')) loadVotosDetail();
       if(plist && !plist.classList.contains('hidden')) loadAdminLista();
+    }).subscribe();
+
+  // Sync para Penalidades y Faltas
+  supabase.channel('admin-penalidades-sync')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'penalidades' }, () => {
+      const pen = document.getElementById('screen-penalidades');
+      if(pen && !pen.classList.contains('hidden')) loadPenalidadesData();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'faltas' }, () => {
+      const pen = document.getElementById('screen-penalidades');
+      if(pen && !pen.classList.contains('hidden')) loadPenalidadesData();
+      // También logs si está visible
+      const logs = document.getElementById('screen-logs');
+      if(logs && !logs.classList.contains('hidden')) window.loadAuditData();
     }).subscribe();
 
   // 7. Setup Events
@@ -1360,20 +1381,33 @@ function renderPenalizados(pens) {
     const penalizado = p.penalizado;
     const fecha = p.fecha_penalidad ? new Date(p.fecha_penalidad).toLocaleDateString('es-ES') : '---';
 
-    html += `<tr>
-      <td class="name-cell">${sanitize(p.nombre) || '---'}</td>
-      <td class="mat-cell">${sanitize(p.matricula) || '---'}</td>
-      <td style="font-size:0.78rem;color:#64748b;">${sanitize(p.email) || '---'}</td>
-      <td><span class="falta-count ${cls}">${faltas} / 3</span></td>
-      <td><span class="pen-badge ${penalizado ? 'penalizado' : 'activo'}">${penalizado ? '🚫 Penalizado' : '✅ Activo'}</span></td>
-      <td style="font-size:0.78rem;">${fecha}</td>
-      <td>${penalizado
-        ? `<button class="btn-levantar" data-uid="${p.usuario_id}" data-nombre="${p.nombre}">
-            🔓 Levantar
-           </button>`
-        : '<span style="color:#475569;font-size:0.75rem;opacity:0.5;">—</span>'
-      }</td>
-    </tr>`;
+      const showNotify = faltas >= 2;
+
+      html += `<tr>
+        <td class="name-cell">${sanitize(p.nombre) || '---'}</td>
+        <td class="mat-cell">${sanitize(p.matricula) || '---'}</td>
+        <td style="font-size:0.78rem;color:#64748b;">${sanitize(p.email) || '---'}</td>
+        <td><span class="falta-count ${cls}">${faltas} / 3</span></td>
+        <td><span class="pen-badge ${penalizado ? 'penalizado' : 'activo'}">${penalizado ? '🚫 Penalizado' : '✅ Activo'}</span></td>
+        <td style="font-size:0.78rem;">${fecha}</td>
+        <td>
+          <div class="flex gap-2">
+            ${penalizado
+              ? `<button class="btn-levantar" data-uid="${p.usuario_id}" data-nombre="${p.nombre}">
+                  🔓 Levantar
+                 </button>`
+              : ''
+            }
+            ${showNotify
+              ? `<button class="btn-notificar" data-uid="${p.usuario_id}" data-nombre="${p.nombre}" data-email="${p.email}" data-faltas="${faltas}">
+                  ✉️ Notificar
+                 </button>`
+              : ''
+            }
+            ${!penalizado && !showNotify ? '<span style="color:#475569;font-size:0.75rem;opacity:0.5;">—</span>' : ''}
+          </div>
+        </td>
+      </tr>`;
   });
 
   html += '</tbody></table>';
@@ -1394,6 +1428,28 @@ function renderPenalizados(pens) {
       btn.textContent = 'Procesando...';
       await levantarPenalidad(uid);
       loadPenalidadesData();
+    });
+  });
+
+  container.querySelectorAll('.btn-notificar').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const { uid, nombre, email, faltas } = btn.dataset;
+      btn.disabled = true;
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Enviando...';
+      if (window.lucide) window.lucide.createIcons();
+
+      try {
+        await enviarCorreoPenalidad({ nombre, email, matricula: '' }, faltas);
+        window.showAdminToast(`Notificación enviada a ${nombre}`);
+      } catch (err) {
+        console.error(err);
+        window.showAdminToast('Error al enviar notificación', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        if (window.lucide) window.lucide.createIcons();
+      }
     });
   });
 
@@ -1445,6 +1501,24 @@ async function levantarPenalidad(usuarioId) {
   } catch(err) {
     console.error('Error levantando penalidad:', err);
     alert('Error al levantar la penalidad. Intenta de nuevo.');
+  }
+}
+
+async function enviarCorreoPenalidad(p, totalFaltas) {
+  if (!window.emailjs || EMAILJS_PUBLIC === 'TU_PUBLIC_KEY') {
+    console.warn('EmailJS no configurado.');
+    return;
+  }
+  try {
+    await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+      to_name:      p.nombre,
+      to_email:     p.email,
+      total_faltas: totalFaltas,
+      fecha:        new Date().toLocaleDateString('es-ES'),
+    });
+  } catch(e) {
+    console.error('Error enviando email:', e);
+    throw e;
   }
 }
 
@@ -1692,6 +1766,13 @@ window.marcarAsistenciaAdmin = async (p, action) => {
       if (!subio) window.showAdminToast(`Falta registrada a ${p.nombre}.`, 'error');
       else window.showAdminToast(`Asistencia confirmada para ${p.nombre}`, 'success');
     }
+
+    // Actualizar estado local y UI
+    adminAttendanceState[p.id] = action;
+    renderAdminLista();
+    loadDashboardData();
+    // También recargar penalidades por si el admin cambia de pestaña
+    loadPenalidadesData();
   } catch(err) {
     console.error(err);
     window.showAdminToast('Error al guardar asistencia', 'error');
