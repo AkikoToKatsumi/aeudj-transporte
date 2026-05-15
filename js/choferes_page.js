@@ -175,12 +175,8 @@ async function loadData() {
             Ver Pasajeros <i data-lucide="chevron-down"></i>
           </button>
           <div class="passenger-list-content" id="content-list-${encodeURIComponent(horario)}"></div>
-          <div class="notify-bar">
-             <button class="notify-btn"><i data-lucide="send"></i> En camino</button>
-             <button class="notify-btn"><i data-lucide="map-pin"></i> Llegó</button>
-             <button class="notify-btn"><i data-lucide="clock"></i> Saliendo</button>
-             <div style="width:1px; background:rgba(255,255,255,0.1); margin:0 0.2rem;"></div>
-             <button class="notify-btn whatsapp"><i data-lucide="message-circle"></i> WhatsApp</button>
+          <div class="notify-bar" style="justify-content: center;">
+             <button class="notify-btn whatsapp"><i data-lucide="message-circle"></i> Enviar aviso por WhatsApp</button>
           </div>
         `;
 
@@ -220,11 +216,8 @@ async function loadData() {
         };
         
         const notifyBtns = section.querySelectorAll('.notify-btn');
-        if (notifyBtns.length >= 4) {
-          notifyBtns[0].onclick = (e) => window.sendTripNotification(horario, 'camino', e.currentTarget);
-          notifyBtns[1].onclick = (e) => window.sendTripNotification(horario, 'llego', e.currentTarget);
-          notifyBtns[2].onclick = (e) => window.sendTripNotification(horario, 'sale', e.currentTarget);
-          notifyBtns[3].onclick = (e) => window.sendWhatsAppNotification(horario, e.currentTarget);
+        if (notifyBtns.length > 0) {
+          notifyBtns[0].onclick = (e) => window.sendWhatsAppNotification(horario, e.currentTarget);
         }
       }
 
@@ -243,91 +236,8 @@ async function loadData() {
   }
 }
 
-window.sendTripNotification = async (horario, tipo, btn) => {
-   const ogText = btn.innerHTML;
-   btn.disabled = true;
-   btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Enviando...';
-   if (window.lucide) window.lucide.createIcons();
-
-   try {
-    const cycleDate = getCycleDate();
-    // 1. Obtener votos del horario
-    const { data: vs, error: errVotos } = await supabase
-      .from('votos')
-      .select('email, usuario_id')
-      .eq('fecha', cycleDate)
-      .eq('horario', horario);
-
-    if (errVotos) throw errVotos;
-
-    // 2. Coleccionar emails de los votos
-    let emails = (vs || []).map(v => v.email).filter(e => e && e.includes('@'));
-
-    // 3. Si faltan emails, buscarlos en perfiles por usuario_id (solo si el ID es válido)
-    const missingUserIds = (vs || [])
-      .filter(v => (!v.email || !v.email.includes('@')) && v.usuario_id)
-      .map(v => v.usuario_id);
-    
-    if (missingUserIds.length > 0) {
-      const { data: profs } = await supabase
-        .from('profiles')
-        .select('email')
-        .in('id', missingUserIds);
-      
-      if (profs) {
-        profs.forEach(p => {
-          if (p.email && !emails.includes(p.email)) emails.push(p.email);
-        });
-      }
-    }
-
-    if (emails.length === 0) {
-      throw new Error('No se encontraron correos para este viaje. Verifica que los estudiantes tengan su correo en su perfil.');
-    }
-
-    const messages = {
-      camino: { titulo: "🚌 El autobús va hacia la parada", msg: "Te informamos que el autobús ya está en camino hacia el punto de recogida para el viaje de las " + horario + "." },
-      llego:  { titulo: "📍 El autobús ha llegado", msg: "¡Atención! El autobús del horario " + horario + " ya se encuentra en la parada. Por favor, acércate." },
-      sale:   { titulo: "🚀 El autobús está saliendo", msg: "Última llamada: El autobús del horario " + horario + " está por salir o acaba de salir de la parada." }
-    };
-
-    const templateParams = {
-      titulo: messages[tipo].titulo,
-      mensaje: messages[tipo].msg,
-      to_email: emails.join(',')
-    };
-
-    const response = await window.emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, templateParams, EMAILJS_PUBLIC);
-
-    if (response.status === 200) {
-      alert('✅ EL MENSAJE FUE ENVIADO CORRECTAMENTE A TODOS LOS ESTUDIANTES.');
-      showToast(`Enviado a ${emails.length} personas`);
-    } else {
-      throw new Error('Respuesta inesperada de EmailJS: ' + response.status);
-    }
-
-  } catch(err) {
-    console.error('Error completo:', err);
-    let errorMsg = 'Error desconocido';
-    if (typeof err === 'string') errorMsg = err;
-    else if (err.message) errorMsg = err.message;
-    else if (err.text) errorMsg = err.text;
-    else errorMsg = JSON.stringify(err);
-
-    if (errorMsg.includes('Failed to fetch') || errorMsg.includes('TypeError')) {
-      errorMsg = "Error de conexión. Esto suele ocurrir si un bloqueador de anuncios (AdBlock) está bloqueando EmailJS. Desactívalo e intenta de nuevo.";
-    }
-    alert('Detalle del error: ' + errorMsg);
-    showToast('Error en el envío', 'error');
-  } finally {
-    btn.innerHTML = ogText;
-    btn.disabled = false;
-    if (window.lucide) window.lucide.createIcons();
-  }
-};
-
-window.sendWhatsAppNotification = (horario, btn) => {
-   const msg = `🚌 *AEUDJ Transporte*\n\nInformamos que el autobús del horario *${horario}* ya se encuentra en proceso.\n\n¡Por favor estar atentos a la parada!`;
+window.sendWhatsAppNotification = (horario) => {
+   const msg = `🚌 *AEUDJ Transporte*\n\nInformamos que el autobús del horario *${horario}* está saliendo. Por favor, estén listos en su parada.`;
    const encoded = encodeURIComponent(msg);
    window.open(`https://wa.me/?text=${encoded}`, '_blank');
 };
