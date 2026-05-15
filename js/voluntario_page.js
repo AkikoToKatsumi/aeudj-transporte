@@ -645,18 +645,3 @@ async function updateVolunteerSlot(dateKey, timeStr, action) {
     showToast('Error al guardar', 'error');
   }
 }
-lse {
-    scheds[day] = scheds[day].filter(t => t !== timeStr);
-    showToast('Turno liberado', 'success');
-  }
-
-  const { error } = await supabase.from('profiles')
-    .update({ horario_asignado: JSON.stringify(scheds) })
-    .eq('id', volCurrentUserId);
-
-  if (error) {
-    console.error('Error guardando turno:', error);
-    showToast('Error al guardar', 'error');
-  }
-}
-
