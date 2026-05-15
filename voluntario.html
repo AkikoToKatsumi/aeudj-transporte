@@ -23,6 +23,9 @@
         <i data-lucide="arrow-left"></i> Volver
       </a>
       <div style="display:flex; gap:0.5rem;">
+        <button id="btnHorarios" class="nav-btn purple">
+          <i data-lucide="calendar-clock"></i> Horarios
+        </button>
         <button id="btnRefresh" class="nav-btn blue">
           <i data-lucide="refresh-cw"></i> Refrescar
         </button>
@@ -31,6 +34,33 @@
         </button>
       </div>
     </nav>
+
+    <!-- ===== MODAL: Disponibilidad de Horarios ===== -->
+    <div id="modalHorarios" class="vol-modal-overlay hidden">
+      <div class="vol-modal-panel">
+        <div class="vol-modal-header">
+          <div>
+            <h2 class="vol-modal-title">📅 Disponibilidad de Horarios</h2>
+            <p class="vol-modal-subtitle">Selecciona los horarios que puedes cubrir hoy</p>
+          </div>
+          <button id="closeModalHorarios" class="vol-modal-close">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+
+        <!-- Schedule grid -->
+        <div id="volHorarioGrid" class="vol-schedule-grid">
+          <div class="vol-grid-loading"><div class="spinner" style="width:30px;height:30px;"></div></div>
+        </div>
+
+        <div class="vol-modal-footer">
+          <p class="vol-modal-hint">
+            <i data-lucide="info" style="width:14px;height:14px;"></i>
+            Haz clic en un horario para tomar o liberar tu disponibilidad
+          </p>
+        </div>
+      </div>
+    </div>
 
     <header>
       <h1>Panel Voluntario</h1>

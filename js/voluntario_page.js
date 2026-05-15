@@ -467,3 +467,196 @@ supabase
     () => { loadData(); }
   )
   .subscribe();
+
+// ══════════════════════════════════════════════
+// MODAL DE DISPONIBILIDAD DE HORARIOS
+// ══════════════════════════════════════════════
+
+const SCHEDULES = [
+  { time: '7:00 AM',  route: 'Jarabacoa → La Vega', dir: 'ida'    },
+  { time: '9:00 AM',  route: 'Jarabacoa → La Vega', dir: 'ida'    },
+  { time: '12:10 PM', route: 'La Vega → Jarabacoa', dir: 'vuelta' },
+  { time: '1:00 PM',  route: 'Jarabacoa → La Vega', dir: 'ida'    },
+  { time: '2:15 PM',  route: 'La Vega → Jarabacoa', dir: 'vuelta' },
+  { time: '3:00 PM',  route: 'Jarabacoa → La Vega', dir: 'ida'    },
+  { time: '4:10 PM',  route: 'La Vega → Jarabacoa', dir: 'vuelta' },
+  { time: '5:00 PM',  route: 'Jarabacoa → La Vega', dir: 'ida'    },
+  { time: '6:00 PM',  route: 'La Vega → Jarabacoa', dir: 'vuelta' },
+  { time: '8:00 PM',  route: 'La Vega → Jarabacoa', dir: 'vuelta' },
+  { time: '10:00 PM', route: 'La Vega → Jarabacoa', dir: 'vuelta' },
+];
+
+let volAllVolunteers = [];
+let volCurrentUserId = null;
+
+// Abrir / cerrar modal
+document.getElementById('btnHorarios')?.addEventListener('click', () => openHorariosModal());
+document.getElementById('closeModalHorarios')?.addEventListener('click', () => closeHorariosModal());
+document.getElementById('modalHorarios')?.addEventListener('click', (e) => {
+  if (e.target === document.getElementById('modalHorarios')) closeHorariosModal();
+});
+
+function openHorariosModal() {
+  const modal = document.getElementById('modalHorarios');
+  if (!modal) return;
+
+  // Update subtitle with today's readable date
+  const sub = modal.querySelector('.vol-modal-subtitle');
+  if (sub) {
+    const today = new Date().toLocaleDateString('es-ES', {
+      weekday: 'long', day: 'numeric', month: 'long'
+    });
+    const todayFormatted = today.charAt(0).toUpperCase() + today.slice(1);
+    sub.textContent = `📆 ${todayFormatted} — Selecciona los horarios que puedes cubrir hoy`;
+  }
+
+  modal.classList.remove('hidden');
+  loadVolScheduleGrid();
+  if (window.lucide) window.lucide.createIcons();
+}
+
+function closeHorariosModal() {
+  document.getElementById('modalHorarios')?.classList.add('hidden');
+}
+
+async function loadVolScheduleGrid() {
+  const grid = document.getElementById('volHorarioGrid');
+  if (!grid) return;
+  grid.innerHTML = '<div class="vol-grid-loading"><div class="spinner" style="width:30px;height:30px;"></div></div>';
+
+  // Today's date as key: "2026-05-15"
+  const todayKey = getCycleDate();
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    volCurrentUserId = user?.id || null;
+
+    const { data: volunteers, error } = await supabase
+      .from('profiles')
+      .select('id, nombre, horario_asignado')
+      .ilike('rol', '%voluntario%');
+
+    if (error) throw error;
+    volAllVolunteers = volunteers || [];
+
+    renderVolSlots(volAllVolunteers, todayKey);
+  } catch (err) {
+    console.error('Error cargando horarios:', err);
+    grid.innerHTML = '<div class="vol-grid-loading" style="color:#f87171;">Error al cargar. Intenta de nuevo.</div>';
+  }
+}
+
+function getAssignedForSlot(volunteers, dateKey, timeStr) {
+  return volunteers.filter(v => {
+    if (!v.horario_asignado) return false;
+    try {
+      const scheds = typeof v.horario_asignado === 'string'
+        ? JSON.parse(v.horario_asignado)
+        : v.horario_asignado;
+      return Array.isArray(scheds[dateKey]) && scheds[dateKey].includes(timeStr);
+    } catch { return false; }
+  });
+}
+
+function renderVolSlots(volunteers, dateKey) {
+  const grid = document.getElementById('volHorarioGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  SCHEDULES.forEach(slot => {
+    const timeStr  = `${slot.time} ${slot.route}`;
+    const assigned = getAssignedForSlot(volunteers, dateKey, timeStr);
+    const isIda    = slot.dir === 'ida';
+    const isMine   = assigned.some(v => v.id === volCurrentUserId);
+    const isTaken  = assigned.length > 0 && !isMine;
+
+    const card = document.createElement('div');
+    card.className = `vol-slot-card ${isMine ? 'mine' : isTaken ? 'taken' : 'empty'}`;
+
+    const assigneeName = assigned.length > 0
+      ? assigned.map(v => v.nombre?.split(' ')[0] || 'Voluntario').join(', ')
+      : null;
+
+    card.innerHTML = `
+      <div class="vol-slot-time">${slot.time}</div>
+      <div class="vol-slot-route">${slot.route}</div>
+      <div class="vol-slot-dir ${isIda ? 'ida' : 'vuelta'}">${isIda ? '↗ IDA' : '↙ VUELTA'}</div>
+      <div class="vol-slot-volunteer ${isMine ? 'mine-name' : isTaken ? 'other-name' : 'empty-name'}">
+        ${isMine ? '✅ Tú' : isTaken ? `👤 ${assigneeName}` : '— Sin cubrir'}
+      </div>
+      ${isMine ? `
+        <div class="vol-slot-mine-badge"><i data-lucide="check" style="width:12px;height:12px;color:#fff;"></i></div>
+        <button class="vol-slot-action release" data-time="${timeStr}">Liberar turno</button>
+      ` : !isTaken ? `
+        <button class="vol-slot-action take" data-time="${timeStr}">Tomar turno</button>
+      ` : ''}
+    `;
+
+    const btn = card.querySelector('.vol-slot-action');
+    if (btn) {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        btn.disabled = true;
+        btn.textContent = 'Guardando...';
+        const action = btn.classList.contains('take') ? 'take' : 'release';
+        await updateVolunteerSlot(dateKey, timeStr, action);
+        await loadVolScheduleGrid();
+        if (window.lucide) window.lucide.createIcons();
+      });
+    }
+
+    grid.appendChild(card);
+  });
+
+  if (window.lucide) window.lucide.createIcons();
+}
+
+async function updateVolunteerSlot(dateKey, timeStr, action) {
+  if (!volCurrentUserId) return;
+
+  const myProfile = volAllVolunteers.find(v => v.id === volCurrentUserId);
+  if (!myProfile) return;
+
+  let scheds = {};
+  try {
+    if (myProfile.horario_asignado) {
+      scheds = typeof myProfile.horario_asignado === 'string'
+        ? JSON.parse(myProfile.horario_asignado)
+        : { ...myProfile.horario_asignado };
+    }
+  } catch { scheds = {}; }
+
+  if (!scheds[dateKey]) scheds[dateKey] = [];
+
+  if (action === 'take') {
+    if (!scheds[dateKey].includes(timeStr)) scheds[dateKey].push(timeStr);
+    showToast('✅ Turno tomado', 'success');
+  } else {
+    scheds[dateKey] = scheds[dateKey].filter(t => t !== timeStr);
+    showToast('Turno liberado', 'success');
+  }
+
+  const { error } = await supabase.from('profiles')
+    .update({ horario_asignado: JSON.stringify(scheds) })
+    .eq('id', volCurrentUserId);
+
+  if (error) {
+    console.error('Error guardando turno:', error);
+    showToast('Error al guardar', 'error');
+  }
+}
+lse {
+    scheds[day] = scheds[day].filter(t => t !== timeStr);
+    showToast('Turno liberado', 'success');
+  }
+
+  const { error } = await supabase.from('profiles')
+    .update({ horario_asignado: JSON.stringify(scheds) })
+    .eq('id', volCurrentUserId);
+
+  if (error) {
+    console.error('Error guardando turno:', error);
+    showToast('Error al guardar', 'error');
+  }
+}
+
