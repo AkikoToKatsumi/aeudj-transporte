@@ -127,7 +127,7 @@ async function loadData() {
       }
     });
 
-    const activeHorarios = Object.keys(groups).filter(h => !groups[h].todos_pasados);
+    const activeHorarios = Object.keys(groups);
 
     activeHorarios.forEach(h => {
       totalViajeros += groups[h].confirmados.length + groups[h].espera.length;
@@ -190,9 +190,24 @@ async function loadData() {
           const row = document.createElement('div');
           row.className = 'p-row';
           const isWaitlist = p.en_espera || (idx >= 30);
+          
+          let puntoBadge = '';
+          if (p.punto_espera === 'camino') {
+            puntoBadge = '<span style="font-size: 0.75rem; background: rgba(59, 130, 246, 0.2); color: #60a5fa; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">🚶 Camino</span>';
+          } else if (p.punto_espera === 'parada') {
+            puntoBadge = '<span style="font-size: 0.75rem; background: rgba(16, 185, 129, 0.2); color: #34d399; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">📍 Parada</span>';
+          }
+
+          let montoBadge = '';
+          if (p.se_monto === true) {
+            montoBadge = '<span style="font-size: 0.75rem; background: rgba(52, 211, 153, 0.2); color: #34d399; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">✓ Subió</span>';
+          } else if (p.se_monto === false) {
+            montoBadge = '<span style="font-size: 0.75rem; background: rgba(248, 113, 113, 0.2); color: #f87171; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">✗ Faltó</span>';
+          }
+
           row.innerHTML = `
             <div class="p-num">${idx + 1}</div>
-            <div class="p-name ${isWaitlist ? 'text-amber-400' : 'text-slate-200'}">${p.nombre || 'Sin nombre'}</div>
+            <div class="p-name ${isWaitlist ? 'text-amber-400' : 'text-slate-200'}">${p.nombre || 'Sin nombre'} ${puntoBadge} ${montoBadge}</div>
             ${isWaitlist ? '<div class="badge-espera">Lista de Espera</div>' : ''}
           `;
           listContent.appendChild(row);
