@@ -97,41 +97,7 @@ aeudj-transporte/
     └── email-init.js     # Inicialización del cliente EmailJS
 ```
 
----
 
-## 🚀 Instalación y Configuración
-
-### Paso 1: Clonar el Repositorio
-```bash
-git clone https://github.com/AkikoToKatsumi/aeudj-transporte.git
-cd aeudj-transporte
-```
-
-### Paso 2: Configurar Supabase
-1. Ve a [Supabase Console](https://supabase.com) y crea un nuevo proyecto.
-2. Crea las tablas necesarias en la base de datos (PostgreSQL) mediante el editor de SQL:
-   - `profiles`: Datos de estudiantes y personal (id, nombre, matricula, telefono, rol, etc.).
-   - `votos`: Registros de reserva diarios (id, email, nombre, horario, fecha, se_monto, en_espera, etc.).
-   - `voting_config`: Configuración global del sistema.
-   - `faltas`: Registro de inasistencias de estudiantes.
-   - `penalidades`: Estudiantes inhabilitados temporalmente.
-3. Configura las reglas de acceso (RLS - *Row Level Security*) correspondientes a cada tabla.
-4. Habilita los proveedores de autenticación en **Authentication** > **Providers** (Email).
-5. Despliega la Edge Function `obtener-lista-segura` en tu proyecto de Supabase si deseas contar con filtros de acceso seguros.
-
-### Paso 3: Vincular Credenciales del Backend
-Edita el archivo [supabase-config.js](file:///d:/Datos/Documents/GitHub/AEUDJ-HTML.github.io/supabase-config.js) en la raíz del proyecto y reemplaza las constantes con los valores proporcionados en la configuración de tu proyecto Supabase:
-
-```javascript
-const SUPABASE_URL = 'https://TU_PROYECTO_ID.supabase.co';
-const SUPABASE_KEY = 'TU_SUPABASE_ANON_KEY';
-```
-
-### Paso 4: Pruebas Locales y Despliegue
-*   **Desarrollo Local**: Puedes levantar un servidor web local simple (por ejemplo, con la extensión *Live Server* de VS Code o ejecutando `npm install` y `npm run dev` si cuentas con scripts de inicio).
-*   **Producción**: Puedes subir el proyecto a **GitHub Pages** (configurando la rama `main` como origen en la pestaña *Settings > Pages* de tu repositorio de GitHub) o importarlo directamente en **Vercel** para beneficiarte de la seguridad configurada en `vercel.json`.
-
----
 
 ## 📄 Licencia
 
