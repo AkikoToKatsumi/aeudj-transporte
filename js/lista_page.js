@@ -1,7 +1,7 @@
 // Usamos el cliente global de Supabase
 const supabase = window.supabase;
 
-const SCHEDULES_IDA = ['Jarabacoa -> La Vega','Jarabacoa → La Vega'];
+const SCHEDULES_IDA = ['Jarabacoa -> La Vega', 'Jarabacoa → La Vega'];
 
 function isIda(horario) {
   return SCHEDULES_IDA.some(s => horario.includes(s));
@@ -22,9 +22,9 @@ function getCycleDate() {
 }
 
 function formatDate(d) {
-  const [y,m,day] = d.split('-');
-  const months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-  return `${parseInt(day)} de ${months[parseInt(m)-1]} de ${y}`;
+  const [y, m, day] = d.split('-');
+  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+  return `${parseInt(day)} de ${months[parseInt(m) - 1]} de ${y}`;
 }
 
 async function loadData() {
@@ -38,25 +38,45 @@ async function loadData() {
     let { data: votos, error } = await supabase
       .from('votos').select('*')
       .eq('fecha', cycleDate)
-      .order('horario', { ascending: true })
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: true }); // Orden estricto por llegada inicial
 
     if (error) throw error;
     
-    // ── DEDUPLICACIÓN ──
+    // ── DEDUPLICACIÓN ESTRICTA (Normaliza flechas -> y →) ──
     const uniqueVotosMap = new Map();
     
     votos.forEach(v => {
+      const horarioNormalizado = v.horario.replace('->', '→').trim();
       const personId = v.matricula || v.usuario_id;
-      const direction = isIda(v.horario) ? 'ida' : 'vuelta';
-      const key = `${personId}-${direction}`;
+      const key = `${personId}-${horarioNormalizado}`;
       
-      if (!uniqueVotosMap.has(key) || new Date(v.created_at) > new Date(uniqueVotosMap.get(key).created_at)) {
+      if (!uniqueVotosMap.has(key)) {
+        v.horario = horarioNormalizado;
         uniqueVotosMap.set(key, v);
       }
     });
     
     votos = Array.from(uniqueVotosMap.values()).filter(v => v.se_monto === null);
+
+    // ── SISTEMA DE PENALIZACIÓN SILENCIOSA ──
+    votos.sort((a, b) => {
+      const limpiarMatricula = (m) => String(m || '').replace(/[\s-]+/g, '').trim();
+      
+      const matriculaA = limpiarMatricula(a.matricula);
+      const matriculaB = limpiarMatricula(b.matricula);
+
+      const sospechosos = ['20260509', '20240823'];
+
+      const aEsSospechoso = sospechosos.includes(matriculaA);
+      const bEsSospechoso = sospechosos.includes(matriculaB);
+
+      // Si "a" es tramposo, lo empuja abajo. Si "b" lo es, empuja a "b" abajo.
+      if (aEsSospechoso && !bEsSospechoso) return 1;
+      if (!aEsSospechoso && bEsSospechoso) return -1;
+
+      // Si ambos juegan limpio, mantiene el orden de llegada cronológico real
+      return new Date(a.created_at) - new Date(b.created_at);
+    });
 
     container.innerHTML = '';
 
@@ -71,8 +91,8 @@ async function loadData() {
     }
 
     // Stats
-    const totalUniq = new Set(votos.map(v=>v.usuario_id)).size;
-    const idaCount  = votos.filter(v=>isIda(v.horario)).length;
+    const totalUniq = new Set(votos.map(v => v.usuario_id)).size;
+    const idaCount   = votos.filter(v => isIda(v.horario)).length;
     const vueltaCount = votos.length - idaCount;
     const statTotal = document.getElementById('statTotal');
     const statIda = document.getElementById('statIda');
@@ -118,13 +138,11 @@ async function loadData() {
         const isOpen = listEl.classList.toggle('open');
         if (chevron) chevron.classList.toggle('open', isOpen);
       });
+
       pasajeros.forEach((p, idx) => {
-        const t = new Date(p.created_at);
-        let hours = t.getHours();
-        const minutes = t.getMinutes().toString().padStart(2, '0');
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12 || 12;
-        const time = `${hours}:${minutes} ${ampm}`;
+        // ── RELOJ FORZADO EN ZONA HORARIA DE REPÚBLICA DOMINICANA ──
+        const options = { timeZone: 'America/Santo_Domingo', hour: 'numeric', minute: '2-digit', hour12: true };
+        const time = new Date(p.created_at).toLocaleTimeString('en-US', options);
         
         const row = document.createElement('div');
         row.className = 'passenger-row';
