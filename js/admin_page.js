@@ -1435,18 +1435,21 @@ async function loadPenalidadesData() {
 window.filterPenalidades = (resetPage = true) => {
   const query = document.getElementById('penSearch')?.value.toLowerCase() || '';
   const dateVal = document.getElementById('penDate')?.value || '';
-  const showOnlyPenalized = document.getElementById('penShowOnlyPenalized')?.checked !== false;
+  const showOnlyPenalized = document.getElementById('penShowOnlyPenalized')?.checked === true;
 
   if (resetPage) penCurrentPage = 0;
 
   if (activePenTab === 'penalizados') {
     const filtered = allPenalidadesCombined.filter(p => {
-      if (showOnlyPenalized && !query && p.total_faltas < 3) {
-        return false;
+      // Si el checkbox está activo, solo mostrar penalizados (3+)
+      if (showOnlyPenalized && p.total_faltas < 3) return false;
+      // Sin checkbox, mostrar todos con al menos 1 falta
+      if (!showOnlyPenalized && p.total_faltas < 1) return false;
+      // Filtro de búsqueda por nombre o matrícula
+      if (query) {
+        return p.nombre?.toLowerCase().includes(query) || p.matricula?.toLowerCase().includes(query);
       }
-      const matchesName = (p.nombre?.toLowerCase().includes(query) || p.matricula?.toLowerCase().includes(query));
-      const matchesDate = !dateVal || (p.fecha_penalidad && p.fecha_penalidad === dateVal);
-      return matchesName && matchesDate;
+      return true;
     });
     renderPenalizados(filtered);
   } else {
@@ -1464,7 +1467,10 @@ function renderPenalizados(pens) {
   const container = document.getElementById('penalizadosTable');
   if (!container) return;
   if (!pens.length) {
-    container.innerHTML = '<div class="empty-pen">✅ No hay estudiantes penalizados.</div>';
+    const showOnlyPenalized = document.getElementById('penShowOnlyPenalized')?.checked === true;
+    container.innerHTML = showOnlyPenalized
+      ? '<div class="empty-pen">✅ Ningún estudiante tiene 3 o más faltas actualmente.</div>'
+      : '<div class="empty-pen">✅ No hay faltas registradas en el sistema desde el inicio.</div>';
     return;
   }
 
