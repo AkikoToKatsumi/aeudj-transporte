@@ -1338,6 +1338,9 @@ if (logoutBtn) {
 
 // ── PENALIDADES ───────────────────────────────────────────────────────────────
 let allPenalidadesCombined = [];
+let penCurrentPage = 0;
+let histCurrentPage = 0;
+const PEN_PAGE_SIZE = 15;
 
 async function loadPenalidadesData() {
   try {
@@ -1380,19 +1383,32 @@ async function loadPenalidadesData() {
       if (p.usuario_id) pensMap[p.usuario_id] = p;
     });
 
+    // Count real faltas per user directly from the faltas table
+    // This catches students who have faltas but no penalidades row yet
+    const faltasCountMap = {};
+    faltaArr.forEach(f => {
+      const uid = f.usuario_id;
+      if (uid) faltasCountMap[uid] = (faltasCountMap[uid] || 0) + 1;
+    });
+
     allPenalidadesCombined = profilesArr.map(prof => {
       const pEntry = pensMap[prof.id] || {};
+      // Use the max of: what penalidades table says vs actual faltas rows
+      const realCount = faltasCountMap[prof.id] || 0;
+      const total_faltas = Math.max(pEntry.total_faltas || 0, realCount);
       return {
         usuario_id: prof.id,
         nombre: prof.nombre,
         matricula: prof.matricula,
         email: prof.email || '',
-        total_faltas: pEntry.total_faltas || 0,
-        penalizado: pEntry.penalizado || false,
+        total_faltas,
+        penalizado: pEntry.penalizado || (total_faltas >= 3),
         fecha_penalidad: pEntry.fecha_penalidad || null
       };
     }).sort((a, b) => b.total_faltas - a.total_faltas);
 
+    penCurrentPage = 0;
+    histCurrentPage = 0;
     window.filterPenalidades(); // Aplicar filtro inicial
 
     document.querySelectorAll('.pen-tab').forEach(btn => {
@@ -1416,10 +1432,12 @@ async function loadPenalidadesData() {
   }
 }
 
-window.filterPenalidades = () => {
+window.filterPenalidades = (resetPage = true) => {
   const query = document.getElementById('penSearch')?.value.toLowerCase() || '';
   const dateVal = document.getElementById('penDate')?.value || '';
   const showOnlyPenalized = document.getElementById('penShowOnlyPenalized')?.checked !== false;
+
+  if (resetPage) penCurrentPage = 0;
 
   if (activePenTab === 'penalizados') {
     const filtered = allPenalidadesCombined.filter(p => {
@@ -1432,6 +1450,7 @@ window.filterPenalidades = () => {
     });
     renderPenalizados(filtered);
   } else {
+    if (resetPage) histCurrentPage = 0;
     const filtered = allFaltasHistorial.filter(f => {
       const matchesName = (f.nombre?.toLowerCase().includes(query) || f.matricula?.toLowerCase().includes(query));
       const matchesDate = !dateVal || (f.fecha && f.fecha === dateVal);
@@ -1449,6 +1468,11 @@ function renderPenalizados(pens) {
     return;
   }
 
+  const totalPages = Math.ceil(pens.length / PEN_PAGE_SIZE);
+  penCurrentPage = Math.min(penCurrentPage, totalPages - 1);
+  const start = penCurrentPage * PEN_PAGE_SIZE;
+  const pageItems = pens.slice(start, start + PEN_PAGE_SIZE);
+
   let html = `<table class="pen-table">
     <thead><tr>
       <th>Nombre</th>
@@ -1460,7 +1484,7 @@ function renderPenalizados(pens) {
       <th>Acción</th>
     </tr></thead><tbody>`;
 
-  pens.forEach(p => {
+  pageItems.forEach(p => {
     const faltas = p.total_faltas;
     const cls = faltas >= 3 ? 'high' : faltas >= 2 ? 'med' : 'low';
     const penalizado = p.penalizado;
@@ -1496,7 +1520,27 @@ function renderPenalizados(pens) {
   });
 
   html += '</tbody></table>';
+
+  // Pagination controls
+  if (totalPages > 1) {
+    html += `<div class="pen-pagination">
+      <button class="pen-page-btn" id="penPrevBtn" ${penCurrentPage === 0 ? 'disabled' : ''}>
+        <i data-lucide="chevron-up"></i>
+      </button>
+      <span class="pen-page-info">Pág. ${penCurrentPage + 1} / ${totalPages} &nbsp;·&nbsp; ${pens.length} registros</span>
+      <button class="pen-page-btn" id="penNextBtn" ${penCurrentPage >= totalPages - 1 ? 'disabled' : ''}>
+        <i data-lucide="chevron-down"></i>
+      </button>
+    </div>`;
+  }
+
   container.innerHTML = html;
+
+  // Wire pagination
+  const prevBtn = container.querySelector('#penPrevBtn');
+  const nextBtn = container.querySelector('#penNextBtn');
+  if (prevBtn) prevBtn.addEventListener('click', () => { penCurrentPage--; window.filterPenalidades(false); });
+  if (nextBtn) nextBtn.addEventListener('click', () => { penCurrentPage++; window.filterPenalidades(false); });
 
   container.querySelectorAll('.btn-levantar').forEach(btn => {
     btn.addEventListener('click', async () => {
