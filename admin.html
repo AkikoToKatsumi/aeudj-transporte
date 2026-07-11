@@ -1,19 +1,30 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Panel Administracion - AEUDJ</title>
   <link rel="icon" href="img/comite.jpg" type="image/jpg">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/admin_screens.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"
+    integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug"
+    crossorigin="anonymous"></script>
   <script src="supabase-config.js"></script>
-  <script src="https://unpkg.com/lucide@0.446.0/dist/umd/lucide.min.js" integrity="sha384-5fTWUMSLG5/4ucEwwZpaf9Ew58F5f5D8I3ZoRHaRkEgCYNwW+PQX5QZ0WUmpKpQh" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/lucide@0.446.0/dist/umd/lucide.min.js"
+    integrity="sha384-5fTWUMSLG5/4ucEwwZpaf9Ew58F5f5D8I3ZoRHaRkEgCYNwW+PQX5QZ0WUmpKpQh"
+    crossorigin="anonymous"></script>
   <script src="js/custom-alert.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js" integrity="sha384-G436+Z2nlA8+PNoeRvWdxKbvOf8E/y+lYxqht2iBwNHTQDV5CJr3+AGVj8fGZi5t" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3.11.0/dist/email.min.js" integrity="sha384-2BNGrQ48jXhJZb0u9FfgOUGJQsbuoecOc1/bdu0oRviV7oc0g5gFTyYsSd7YICDP" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js"
+    integrity="sha384-G436+Z2nlA8+PNoeRvWdxKbvOf8E/y+lYxqht2iBwNHTQDV5CJr3+AGVj8fGZi5t"
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3.11.0/dist/email.min.js"
+    integrity="sha384-2BNGrQ48jXhJZb0u9FfgOUGJQsbuoecOc1/bdu0oRviV7oc0g5gFTyYsSd7YICDP"
+    crossorigin="anonymous"></script>
 </head>
+
 <body data-page="admin" class="admin-page">
   <div class="admin-wrapper">
     <!-- Sidebar Navigation -->
@@ -54,7 +65,7 @@
           <span>Penalidades</span>
           <span id="penalBadge" class="badge-red-mini">0</span>
         </a>
-        
+
         <div style="margin: 1.5rem 1rem 0.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem;"></div>
         <a href="#" class="nav-item hover:bg-blue-500/10 transition-colors nav-item-special" data-screen="pasarlista">
           <i data-lucide="clipboard-check" class="text-blue-400"></i>
@@ -90,7 +101,8 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           <div class="stat-card glass-card p-6">
             <div class="flex items-center gap-4 mb-4">
-              <div class="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+              <div
+                class="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
                 <i data-lucide="users" class="text-blue-400 w-6 h-6"></i>
               </div>
               <div>
@@ -100,10 +112,11 @@
             </div>
             <p class="text-[10px] text-gray-600 font-medium">Cupos confirmados hoy</p>
           </div>
-          
+
           <div class="stat-card glass-card p-6">
             <div class="flex items-center gap-4 mb-4">
-              <div class="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
+              <div
+                class="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
                 <i data-lucide="clock" class="text-orange-400 w-6 h-6"></i>
               </div>
               <div>
@@ -116,7 +129,8 @@
 
           <div class="stat-card glass-card p-6">
             <div class="flex items-center gap-4 mb-4">
-              <div class="w-12 h-12 rounded-2xl bg-green-500/10 flex items-center justify-center border border-green-500/20">
+              <div
+                class="w-12 h-12 rounded-2xl bg-green-500/10 flex items-center justify-center border border-green-500/20">
                 <i data-lucide="banknote" class="text-green-400 w-6 h-6"></i>
               </div>
               <div>
@@ -137,7 +151,8 @@
             </div>
             <div id="currentSessionBanner" class="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-center">
               <p id="sessionDisplay" class="text-xs font-bold text-white">☀️ Matutina</p>
-              <p id="sessionStatusText" class="text-[9px] text-blue-400/70 mt-1 uppercase font-mono tracking-tighter">Modo Automático</p>
+              <p id="sessionStatusText" class="text-[9px] text-blue-400/70 mt-1 uppercase font-mono tracking-tighter">
+                Modo Automático</p>
             </div>
           </div>
         </div>
@@ -149,7 +164,9 @@
               <h3 class="text-lg font-bold text-white flex items-center gap-2">
                 <i data-lucide="bar-chart-3" class="text-blue-400 w-5 h-5"></i> Demanda por Horario
               </h3>
-              <button type="button" class="btn-pill-outline btn-small text-red-400 hover:bg-red-500/10 transition-colors border-red-30-light bg-red-05" id="btnClearVotes">
+              <button type="button"
+                class="btn-pill-outline btn-small text-red-400 hover:bg-red-500/10 transition-colors border-red-30-light bg-red-05"
+                id="btnClearVotes">
                 <i data-lucide="trash-2" class="icon-inline text-red-400"></i> Limpiar Hoy
               </button>
             </div>
@@ -191,9 +208,18 @@
       <!-- Passengers List Screen -->
       <section id="screen-votos" class="admin-screen hidden">
         <div class="pv-stats">
-          <div class="pv-stat"><div class="pv-stat-num" id="pvStatTotal" style="color:#60a5fa;">-</div><div class="pv-stat-lbl">Confirmados</div></div>
-          <div class="pv-stat"><div class="pv-stat-num" id="pvStatEspera" style="color:#fb923c;">0</div><div class="pv-stat-lbl">En Espera</div></div>
-          <div class="pv-stat"><div class="pv-stat-num" id="pvStatHorarios" style="color:#c4b5fd;">-</div><div class="pv-stat-lbl">Horarios</div></div>
+          <div class="pv-stat">
+            <div class="pv-stat-num" id="pvStatTotal" style="color:#60a5fa;">-</div>
+            <div class="pv-stat-lbl">Confirmados</div>
+          </div>
+          <div class="pv-stat">
+            <div class="pv-stat-num" id="pvStatEspera" style="color:#fb923c;">0</div>
+            <div class="pv-stat-lbl">En Espera</div>
+          </div>
+          <div class="pv-stat">
+            <div class="pv-stat-num" id="pvStatHorarios" style="color:#c4b5fd;">-</div>
+            <div class="pv-stat-lbl">Horarios</div>
+          </div>
         </div>
         <div class="pv-toolbar">
           <span class="pv-filter-lbl">Filtrar:</span>
@@ -202,7 +228,10 @@
           <button type="button" class="pv-filter-btn" data-pv-filter="vuelta">&#x2199; Vuelta</button>
         </div>
         <div id="passengerListDetail">
-          <div class="pv-empty"><div class="pv-spin"></div><p>Cargando pasajeros...</p></div>
+          <div class="pv-empty">
+            <div class="pv-spin"></div>
+            <p>Cargando pasajeros...</p>
+          </div>
         </div>
       </section>
 
@@ -235,7 +264,10 @@
 
         <!-- Passenger list container -->
         <div id="adminListContainer">
-          <div class="pl-empty"><div class="pl-spin"></div><p>Cargando datos...</p></div>
+          <div class="pl-empty">
+            <div class="pl-spin"></div>
+            <p>Cargando datos...</p>
+          </div>
         </div>
 
       </section>
@@ -296,16 +328,22 @@
               <div class="staff-panel-title">📋 Directorio de Personal</div>
               <div class="staff-search-wrap">
                 <span class="staff-search-icon">🔍</span>
-                <input class="staff-search-input" type="text" id="staffSearchNew" placeholder="Buscar por nombre, matrícula o teléfono…">
+                <input class="staff-search-input" type="text" id="staffSearchNew"
+                  placeholder="Buscar por nombre, matrícula o teléfono…">
               </div>
             </div>
 
             <div class="staff-filter-tabs">
-              <button class="staff-filter-tab active" id="tab-todos">Todos <span class="opacity-6 ml-4" id="tab-count-todos">0</span></button>
-              <button class="staff-filter-tab" id="tab-administrador">Admins <span style="opacity:.6;margin-left:4px" id="tab-count-admin">0</span></button>
-              <button class="staff-filter-tab" id="tab-voluntario">Voluntarios <span style="opacity:.6;margin-left:4px" id="tab-count-voluntario">0</span></button>
-              <button class="staff-filter-tab" id="tab-estudiante">Estudiantes <span style="opacity:.6;margin-left:4px" id="tab-count-estudiante">0</span></button>
-              <button class="staff-filter-tab" id="tab-chofer">Choferes <span style="opacity:.6;margin-left:4px" id="tab-count-chofer">0</span></button>
+              <button class="staff-filter-tab active" id="tab-todos">Todos <span class="opacity-6 ml-4"
+                  id="tab-count-todos">0</span></button>
+              <button class="staff-filter-tab" id="tab-administrador">Admins <span style="opacity:.6;margin-left:4px"
+                  id="tab-count-admin">0</span></button>
+              <button class="staff-filter-tab" id="tab-voluntario">Voluntarios <span style="opacity:.6;margin-left:4px"
+                  id="tab-count-voluntario">0</span></button>
+              <button class="staff-filter-tab" id="tab-estudiante">Estudiantes <span style="opacity:.6;margin-left:4px"
+                  id="tab-count-estudiante">0</span></button>
+              <button class="staff-filter-tab" id="tab-chofer">Choferes <span style="opacity:.6;margin-left:4px"
+                  id="tab-count-chofer">0</span></button>
             </div>
 
             <div class="staff-table-container custom-scroll">
@@ -315,6 +353,7 @@
                     <th>Miembro</th>
                     <th>Rol</th>
                     <th>Matrícula</th>
+                    <th>Faltas</th>
                     <th style="text-align:right">Acciones</th>
                   </tr>
                 </thead>
@@ -351,8 +390,10 @@
               <div class="staff-qa-field" id="qa-password-container">
                 <label class="staff-qa-label">Contraseña</label>
                 <div class="pos-relative flex items-center">
-                  <input class="staff-qa-input pr-2-5 w-full" id="qa-password" type="password" placeholder="Mínimo 6 caracteres">
-                  <button type="button" id="toggleQAPassword" class="pos-absolute right-10 bg-none border-none cursor-pointer text-slate-400 text-lg outline-none">👁️</button>
+                  <input class="staff-qa-input pr-2-5 w-full" id="qa-password" type="password"
+                    placeholder="Mínimo 6 caracteres">
+                  <button type="button" id="toggleQAPassword"
+                    class="pos-absolute right-10 bg-none border-none cursor-pointer text-slate-400 text-lg outline-none">👁️</button>
                 </div>
               </div>
               <div class="staff-qa-field">
@@ -370,16 +411,17 @@
 
               <div style="display:flex; gap:0.5rem; margin-top:1rem;">
                 <button class="staff-btn-add-full flex-1" id="qa-submit-btn">👤 Agregar al Directorio</button>
-                <button class="staff-btn-add-full hidden flex-0-3 bg-red-20 text-red-light border-red-30" id="qa-cancel-btn">❌</button>
+                <button class="staff-btn-add-full hidden flex-0-3 bg-red-20 text-red-light border-red-30"
+                  id="qa-cancel-btn">❌</button>
               </div>
             </div>
-            
+
             <!-- Activity Panel placeholder -->
             <div class="staff-activity-panel hidden" id="staff-activity-container">
-               <div class="staff-panel-title" style="margin-bottom:1rem;font-size:.875rem">🕐 Actividad Reciente</div>
-               <div id="staff-activity-list"></div>
+              <div class="staff-panel-title" style="margin-bottom:1rem;font-size:.875rem">🕐 Actividad Reciente</div>
+              <div id="staff-activity-list"></div>
             </div>
-            
+
           </div>
         </div>
       </section>
@@ -401,9 +443,11 @@
           </div>
 
           <!-- Blue header bar (exact replica) -->
-          <div id="adminScheduleHeader" class="bg-blue-gradient rounded-1-2 p-1-4 text-center mb-1-25 flex items-center justify-center gap-0-7">
+          <div id="adminScheduleHeader"
+            class="bg-blue-gradient rounded-1-2 p-1-4 text-center mb-1-25 flex items-center justify-center gap-0-7">
             <i data-lucide="calendar" class="text-white w-6 h-6"></i>
-            <h4 id="adminActiveDayLabel" class="text-white text-1-1 font-900 margin-0 letter-spacing-0-08 uppercase">Horarios del Lunes</h4>
+            <h4 id="adminActiveDayLabel" class="text-white text-1-1 font-900 margin-0 letter-spacing-0-08 uppercase">
+              Horarios del Lunes</h4>
           </div>
 
           <!-- 4-column schedule grid -->
@@ -441,8 +485,8 @@
 
         <!-- Toolbar -->
         <div class="audit-toolbar">
-          <input type="search"  class="audit-search" id="auditSearch"   placeholder="🔍  Buscar por nombre o matrícula…">
-          <input type="date"    class="audit-date"   id="auditDatePick">
+          <input type="search" class="audit-search" id="auditSearch" placeholder="🔍  Buscar por nombre o matrícula…">
+          <input type="date" class="audit-date" id="auditDatePick">
         </div>
 
         <!-- Tabs -->
@@ -456,7 +500,10 @@
         <div class="audit-table-wrap">
           <div class="custom-scroll overflow-x-auto">
             <div id="auditTableContainer">
-              <div class="audit-empty"><div class="audit-spinner"></div><p>Cargando registros…</p></div>
+              <div class="audit-empty">
+                <div class="audit-spinner"></div>
+                <p>Cargando registros…</p>
+              </div>
             </div>
           </div>
         </div>
@@ -468,17 +515,20 @@
         <!-- Summary cards -->
         <div class="grid grid-cols-3 gap-3 mb-6">
           <div class="stat-card glass-card">
-            <div class="stat-header"><i data-lucide="alert-circle" class="text-red-400"></i><span class="stat-label">Penalizados</span></div>
+            <div class="stat-header"><i data-lucide="alert-circle" class="text-red-400"></i><span
+                class="stat-label">Penalizados</span></div>
             <div id="penStatPen" class="stat-value" style="color:#f87171;">0</div>
             <p class="stat-sub">Con 3+ faltas</p>
           </div>
           <div class="stat-card glass-card">
-            <div class="stat-header"><i data-lucide="x-circle" class="text-yellow-400"></i><span class="stat-label">Total Faltas</span></div>
+            <div class="stat-header"><i data-lucide="x-circle" class="text-yellow-400"></i><span
+                class="stat-label">Total Faltas</span></div>
             <div id="penStatFaltas" class="stat-value" style="color:#fbbf24;">0</div>
             <p class="stat-sub">Históricas acumuladas</p>
           </div>
           <div class="stat-card glass-card">
-            <div class="stat-header"><i data-lucide="check-circle" class="text-green-400"></i><span class="stat-label">Levantadas</span></div>
+            <div class="stat-header"><i data-lucide="check-circle" class="text-green-400"></i><span
+                class="stat-label">Levantadas</span></div>
             <div id="penStatLevantadas" class="stat-value" style="color:#34d399;">0</div>
             <p class="stat-sub">Pagaron y se resolvió</p>
           </div>
@@ -494,6 +544,14 @@
             <i data-lucide="calendar" style="width:16px;height:16px;"></i>
             <input type="date" id="penDate">
           </div>
+          <div class="flex items-center gap-2"
+            style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 0.85rem; padding: 0.6rem 1rem; color: #94a3b8; font-size: 0.82rem; white-space: nowrap; display: flex; align-items: center;">
+            <input type="checkbox" id="penShowOnlyPenalized" checked
+              style="cursor: pointer; width: 14px; height: 14px; margin: 0; accent-color: #3b82f6;">
+            <label for="penShowOnlyPenalized"
+              style="cursor: pointer; user-select: none; margin: 0; padding-left: 0.35rem;">Solo 3+ faltas
+              (Penalizados)</label>
+          </div>
         </div>
 
         <!-- Tabs -->
@@ -505,14 +563,18 @@
         <!-- Tab: Penalizados -->
         <div id="penTab-penalizados" class="glass-card p-0 overflow-hidden">
           <div class="custom-scroll overflow-x-auto">
-            <div id="penalizadosTable" class="p-2"><div class="empty-pen">Cargando...</div></div>
+            <div id="penalizadosTable" class="p-2">
+              <div class="empty-pen">Cargando...</div>
+            </div>
           </div>
         </div>
 
         <!-- Tab: Historial -->
         <div id="penTab-historial" class="glass-card p-0 overflow-hidden hidden">
           <div class="custom-scroll overflow-x-auto">
-            <div id="historialTable" class="p-2"><div class="empty-pen">Cargando...</div></div>
+            <div id="historialTable" class="p-2">
+              <div class="empty-pen">Cargando...</div>
+            </div>
           </div>
         </div>
       </section>
@@ -522,4 +584,5 @@
   <script type="module" src="js/admin_page.js"></script>
 
 </body>
+
 </html>
