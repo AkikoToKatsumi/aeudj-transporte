@@ -2058,12 +2058,52 @@ window.loadAuditData = async function () {
     } else if (auditActiveTab === 'faltas') {
       data = uniqueVotos.filter(v => v.se_monto === 0);
     } else if (auditActiveTab === 'penalidades') {
-      const { data: rows, error } = await supabase
-        .from('penalidades').select('*')
-        .eq('penalizado', true)
-        .order('updated_at', { ascending: false });
-      if (error) throw error;
-      data = rows || [];
+      // Obtener todas las faltas agrupadas por estudiante (no solo los penalizados)
+      const { data: faltasRows, error: fErr } = await supabase
+        .from('faltas')
+        .select('usuario_id, nombre, matricula, email, horario, fecha, created_at')
+        .order('created_at', { ascending: false });
+      if (fErr) throw fErr;
+
+      // También obtener las filas de penalidades para saber quiénes están penalizados
+      const { data: penRows } = await supabase
+        .from('penalidades')
+        .select('usuario_id, total_faltas, penalizado, fecha_penalidad, updated_at');
+      const penMap = {};
+      (penRows || []).forEach(p => { if (p.usuario_id) penMap[p.usuario_id] = p; });
+
+      // Agrupar faltas por estudiante
+      const grouped = {};
+      (faltasRows || []).forEach(f => {
+        const uid = f.usuario_id || f.matricula || f.nombre;
+        if (!grouped[uid]) {
+          grouped[uid] = {
+            usuario_id: f.usuario_id,
+            nombre: f.nombre,
+            matricula: f.matricula,
+            email: f.email,
+            faltas_detalle: [],
+            ultima_falta: f.created_at,
+          };
+        }
+        grouped[uid].faltas_detalle.push(f);
+        if (new Date(f.created_at) > new Date(grouped[uid].ultima_falta)) {
+          grouped[uid].ultima_falta = f.created_at;
+        }
+      });
+
+      // Convertir a array y cruzar con penalidades
+      data = Object.values(grouped).map(g => {
+        const pen = penMap[g.usuario_id] || {};
+        const realCount = g.faltas_detalle.length;
+        return {
+          ...g,
+          total_faltas: Math.max(pen.total_faltas || 0, realCount),
+          penalizado: pen.penalizado || realCount >= 3,
+          fecha_penalidad: pen.fecha_penalidad || null,
+          updated_at: pen.updated_at || g.ultima_falta,
+        };
+      }).sort((a, b) => b.total_faltas - a.total_faltas);
     }
 
     auditAllRows = data;
@@ -2110,7 +2150,7 @@ function renderAuditTable(rows) {
   } else if (auditActiveTab === 'faltas') {
     html += `<th>#</th><th>Pasajero</th><th>Horario</th><th>Fecha Viaje</th><th>Registrado</th>`;
   } else {
-    html += `<th>#</th><th>Pasajero</th><th>Total Faltas</th><th>Estado</th><th>Última Actualización</th>`;
+    html += `<th>#</th><th>Pasajero</th><th>Faltas Acum.</th><th>Estado</th><th>Última Act.</th>`;
   }
 
   html += '</tr></thead><tbody>';
@@ -2143,13 +2183,17 @@ function renderAuditTable(rows) {
     } else {
       const faltasNum = r.total_faltas || 0;
       const color = faltasNum >= 3 ? '#f87171' : faltasNum >= 2 ? '#fbbf24' : '#34d399';
+      const bgColor = faltasNum >= 3 ? 'rgba(239,68,68,0.1)' : faltasNum >= 2 ? 'rgba(245,158,11,0.1)' : 'rgba(16,185,129,0.1)';
+      const borderColor = faltasNum >= 3 ? 'rgba(239,68,68,0.25)' : faltasNum >= 2 ? 'rgba(245,158,11,0.25)' : 'rgba(16,185,129,0.25)';
       const penBadge = r.penalizado
         ? '<span class="audit-badge penalidad">🚫 Penalizado</span>'
-        : '<span class="audit-badge activo">✅ Activo</span>';
+        : faltasNum >= 2
+          ? '<span class="audit-badge falta">⚠️ En riesgo</span>'
+          : '<span class="audit-badge activo">✅ Activo</span>';
       html += `
         <td class="audit-time">${i + 1}</td>
         <td><div class="audit-name">${sanitize(r.nombre) || '—'}</div><div class="audit-mat">${sanitize(r.matricula) || ''}</div></td>
-        <td><span style="font-weight:800;color:${color};">${faltasNum}</span><span style="color:#475569;font-size:.7rem;"> / 3</span></td>
+        <td><span style="display:inline-flex;align-items:center;justify-content:center;padding:0.25rem 0.75rem;border-radius:2rem;font-weight:800;font-size:0.82rem;background:${bgColor};border:1px solid ${borderColor};color:${color};">${faltasNum} / 3</span></td>
         <td>${penBadge}</td>
         <td class="audit-time">${fmtDateTime(r.updated_at)}</td>
       `;
