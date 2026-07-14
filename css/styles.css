@@ -3488,6 +3488,45 @@ input:checked+.slider:before {
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
+/* Faltas active indicators */
+.active-faltas-container {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.active-faltas-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.active-falta-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.active-falta-dot.inactive {
+  background: #334155;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+}
+
+.active-falta-dot.active {
+  background: #ef4444;
+  box-shadow: 0 0 6px #ef4444;
+}
+
+@keyframes pulse-red {
+  0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 8px #ef4444; }
+  50% { opacity: .4; transform: scale(0.85); box-shadow: 0 0 2px #ef4444; }
+}
+
+.active-falta-dot.pulse-red {
+  background: #ef4444;
+  animation: pulse-red 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
 /* Botón levantar */
 .btn-levantar {
   display: inline-flex;

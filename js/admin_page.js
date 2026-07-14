@@ -654,23 +654,34 @@ async function loadStaffData() {
   if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:3rem;opacity:0.5;font-weight:bold;letter-spacing:0.2em;">SINCRONIZANDO...</td></tr>';
 
   try {
-    const [profilesRes, penRes] = await Promise.all([
+    const [profilesRes, penRes, faltasRes] = await Promise.all([
       supabase.from('profiles').select('*').order('nombre'),
-      supabase.from('penalidades').select('usuario_id, total_faltas')
+      supabase.from('penalidades').select('usuario_id, total_faltas'),
+      supabase.from('faltas').select('usuario_id')
     ]);
 
     if (profilesRes.error) throw profilesRes.error;
     if (penRes.error) throw penRes.error;
+    if (faltasRes.error) throw faltasRes.error;
 
     const penalidadesMap = {};
     (penRes.data || []).forEach(p => {
       if (p.usuario_id) penalidadesMap[p.usuario_id] = p.total_faltas;
     });
 
-    staffData = (profilesRes.data || []).map(u => ({
-      ...u,
-      total_faltas: penalidadesMap[u.id] || 0
-    }));
+    const activeFaltasMap = {};
+    (faltasRes.data || []).forEach(f => {
+      if (f.usuario_id) activeFaltasMap[f.usuario_id] = (activeFaltasMap[f.usuario_id] || 0) + 1;
+    });
+
+    staffData = (profilesRes.data || []).map(u => {
+      const activeCount = activeFaltasMap[u.id] || 0;
+      const penCount = penalidadesMap[u.id] || 0;
+      return {
+        ...u,
+        total_faltas: Math.max(penCount, activeCount)
+      };
+    });
 
     updateStaffCounts();
     renderStaffTableNew();
@@ -1350,10 +1361,13 @@ async function loadPenalidadesData() {
       .from('faltas').select('*').order('created_at', { ascending: false });
     const { data: profiles } = await supabase
       .from('profiles').select('id, nombre, matricula, email').order('nombre');
+    const { data: histVotes } = await supabase
+      .from('votos').select('*').eq('se_monto', 0).range(0, 5000);
 
     const penalArr = pens || [];
     const faltaArr = faltas || [];
     const profilesArr = profiles || [];
+    const histVotesArr = histVotes || [];
 
     const penalizados = penalArr.filter(p => p.penalizado).length;
     const levantadas = penalArr.filter(p => !p.penalizado && p.total_faltas === 0 && p.fecha_penalidad).length;
@@ -1362,7 +1376,7 @@ async function loadPenalidadesData() {
     const penStatFaltas = document.getElementById('penStatFaltas');
     const penStatLevantadas = document.getElementById('penStatLevantadas');
     if (penStatPen) penStatPen.textContent = penalizados;
-    if (penStatFaltas) penStatFaltas.textContent = faltaArr.length;
+    if (penStatFaltas) penStatFaltas.textContent = histVotesArr.length;
     if (penStatLevantadas) penStatLevantadas.textContent = levantadas;
 
     const badge = document.getElementById('penalBadge');
@@ -1376,36 +1390,43 @@ async function loadPenalidadesData() {
     }
 
     allPenalidades = pens || [];
-    allFaltasHistorial = faltas || [];
+    allFaltasHistorial = histVotesArr;
 
     const pensMap = {};
     allPenalidades.forEach(p => {
       if (p.usuario_id) pensMap[p.usuario_id] = p;
     });
 
-    // Count real faltas per user directly from the faltas table
-    // This catches students who have faltas but no penalidades row yet
-    const faltasCountMap = {};
+    const activeFaltasCountMap = {};
     faltaArr.forEach(f => {
       const uid = f.usuario_id;
-      if (uid) faltasCountMap[uid] = (faltasCountMap[uid] || 0) + 1;
+      if (uid) activeFaltasCountMap[uid] = (activeFaltasCountMap[uid] || 0) + 1;
+    });
+
+    const histFaltasCountMap = {};
+    histVotesArr.forEach(f => {
+      const uid = f.usuario_id;
+      if (uid) histFaltasCountMap[uid] = (histFaltasCountMap[uid] || 0) + 1;
     });
 
     allPenalidadesCombined = profilesArr.map(prof => {
       const pEntry = pensMap[prof.id] || {};
-      // Use the max of: what penalidades table says vs actual faltas rows
-      const realCount = faltasCountMap[prof.id] || 0;
-      const total_faltas = Math.max(pEntry.total_faltas || 0, realCount);
+      const activeFaltas = activeFaltasCountMap[prof.id] || 0;
+      const histFaltas = histFaltasCountMap[prof.id] || 0;
+      
+      const penalizado = pEntry.penalizado !== undefined ? pEntry.penalizado : (activeFaltas >= 3);
+      
       return {
         usuario_id: prof.id,
         nombre: prof.nombre,
         matricula: prof.matricula,
         email: prof.email || '',
-        total_faltas,
-        penalizado: pEntry.penalizado || (total_faltas >= 3),
+        active_faltas: activeFaltas,
+        historical_faltas: histFaltas,
+        penalizado: penalizado,
         fecha_penalidad: pEntry.fecha_penalidad || null
       };
-    }).sort((a, b) => b.total_faltas - a.total_faltas);
+    }).sort((a, b) => b.active_faltas - a.active_faltas || b.historical_faltas - a.historical_faltas);
 
     penCurrentPage = 0;
     histCurrentPage = 0;
@@ -1441,11 +1462,8 @@ window.filterPenalidades = (resetPage = true) => {
 
   if (activePenTab === 'penalizados') {
     const filtered = allPenalidadesCombined.filter(p => {
-      // Si el checkbox está activo, solo mostrar penalizados (3+)
-      if (showOnlyPenalized && p.total_faltas < 3) return false;
-      // Sin checkbox, mostrar todos con al menos 1 falta
-      if (!showOnlyPenalized && p.total_faltas < 1) return false;
-      // Filtro de búsqueda por nombre o matrícula
+      if (showOnlyPenalized && !p.penalizado) return false;
+      if (!showOnlyPenalized && p.active_faltas < 1 && p.historical_faltas < 1) return false;
       if (query) {
         return p.nombre?.toLowerCase().includes(query) || p.matricula?.toLowerCase().includes(query);
       }
@@ -1469,8 +1487,8 @@ function renderPenalizados(pens) {
   if (!pens.length) {
     const showOnlyPenalized = document.getElementById('penShowOnlyPenalized')?.checked === true;
     container.innerHTML = showOnlyPenalized
-      ? '<div class="empty-pen">✅ Ningún estudiante tiene 3 o más faltas actualmente.</div>'
-      : '<div class="empty-pen">✅ No hay faltas registradas en el sistema desde el inicio.</div>';
+      ? '<div class="empty-pen">✅ Ningún estudiante está penalizado actualmente.</div>'
+      : '<div class="empty-pen">✅ No hay faltas registradas en el sistema.</div>';
     return;
   }
 
@@ -1484,25 +1502,39 @@ function renderPenalizados(pens) {
       <th>Nombre</th>
       <th>Matrícula</th>
       <th>Email</th>
-      <th>Faltas</th>
+      <th>Faltas Activas</th>
+      <th>Historial</th>
       <th>Estado</th>
       <th>Fecha Pen.</th>
       <th>Acción</th>
     </tr></thead><tbody>`;
 
   pageItems.forEach(p => {
-    const faltas = p.total_faltas;
-    const cls = faltas >= 3 ? 'high' : faltas >= 2 ? 'med' : 'low';
+    const activeFaltas = p.active_faltas;
+    const histFaltas = p.historical_faltas;
+    const cls = activeFaltas >= 3 ? 'high' : activeFaltas >= 2 ? 'med' : 'low';
     const penalizado = p.penalizado;
     const fecha = p.fecha_penalidad ? new Date(p.fecha_penalidad).toLocaleDateString('es-ES') : '---';
 
-    const showNotify = faltas >= 2;
+    const showNotify = activeFaltas >= 2;
 
     html += `<tr>
         <td class="name-cell">${sanitize(p.nombre) || '---'}</td>
         <td class="mat-cell">${sanitize(p.matricula) || '---'}</td>
         <td style="font-size:0.78rem;color:#64748b;">${sanitize(p.email) || '---'}</td>
-        <td><span class="falta-count ${cls}">${faltas} / 3</span></td>
+        <td>
+          <div class="active-faltas-container">
+            <span class="falta-count ${cls}">${activeFaltas} / 3</span>
+            <div class="active-faltas-dots">
+              <span class="active-falta-dot ${activeFaltas >= 1 ? 'active' : 'inactive'}"></span>
+              <span class="active-falta-dot ${activeFaltas >= 2 ? 'active' : 'inactive'}"></span>
+              <span class="active-falta-dot ${activeFaltas >= 3 ? 'pulse-red' : 'inactive'}"></span>
+            </div>
+          </div>
+        </td>
+        <td>
+          <span style="font-size:0.82rem;font-weight:600;color:#94a3b8;background:rgba(255,255,255,0.03);padding:0.2rem 0.5rem;border-radius:0.4rem;border:1px solid rgba(255,255,255,0.05);">${histFaltas} ${histFaltas === 1 ? 'falta' : 'faltas'}</span>
+        </td>
         <td><span class="pen-badge ${penalizado ? 'penalizado' : 'activo'}">${penalizado ? '🚫 Penalizado' : '✅ Activo'}</span></td>
         <td style="font-size:0.78rem;">${fecha}</td>
         <td>
@@ -1514,7 +1546,7 @@ function renderPenalizados(pens) {
         : ''
       }
             ${showNotify
-        ? `<button class="btn-notificar" data-uid="${p.usuario_id}" data-nombre="${p.nombre}" data-email="${p.email}" data-faltas="${faltas}">
+        ? `<button class="btn-notificar" data-uid="${p.usuario_id}" data-nombre="${p.nombre}" data-email="${p.email}" data-faltas="${activeFaltas}">
                   ✉️ Notificar
                  </button>`
         : ''
@@ -1527,7 +1559,6 @@ function renderPenalizados(pens) {
 
   html += '</tbody></table>';
 
-  // Pagination controls
   if (totalPages > 1) {
     html += `<div class="pen-pagination">
       <button class="pen-page-btn" id="penPrevBtn" ${penCurrentPage === 0 ? 'disabled' : ''}>
