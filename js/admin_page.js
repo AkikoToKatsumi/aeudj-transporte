@@ -1550,7 +1550,7 @@ function renderPenalizados(pens) {
       <th>Nombre</th>
       <th>Matrícula</th>
       <th>Email</th>
-      <th>Faltas Activas</th>
+      <th>Penalidad Activa</th>
       <th>Historial</th>
       <th>Estado</th>
       <th>Fecha Pen.</th>
@@ -1560,7 +1560,9 @@ function renderPenalizados(pens) {
   pageItems.forEach(p => {
     const activeFaltas = p.active_faltas;
     const histFaltas = p.historical_faltas;
-    const cls = activeFaltas >= 3 ? 'high' : activeFaltas >= 2 ? 'med' : 'low';
+    const penActivas = Math.floor(activeFaltas / 3);
+    const warnings = activeFaltas % 3;
+    const cls = penActivas > 0 ? 'high' : warnings >= 2 ? 'med' : 'low';
     const penalizado = p.penalizado;
 
     const showNotify = activeFaltas >= 2;
@@ -1571,11 +1573,11 @@ function renderPenalizados(pens) {
         <td style="font-size:0.78rem;color:#64748b;">${sanitize(p.email) || '---'}</td>
         <td>
           <div class="active-faltas-container">
-            <span class="falta-count ${cls}">${activeFaltas} / 3</span>
-            <div class="active-faltas-dots">
-              <span class="active-falta-dot ${activeFaltas >= 1 ? 'active' : 'inactive'}"></span>
-              <span class="active-falta-dot ${activeFaltas >= 2 ? 'active' : 'inactive'}"></span>
-              <span class="active-falta-dot ${activeFaltas >= 3 ? 'pulse-red' : 'inactive'}"></span>
+            <span class="falta-count ${cls}">${penActivas} ${penActivas === 1 ? 'Penalidad' : 'Penalidades'}</span>
+            <div class="active-faltas-dots" title="${warnings} de 3 advertencias para la siguiente penalidad">
+              <span class="active-falta-dot ${warnings >= 1 ? 'active' : 'inactive'}"></span>
+              <span class="active-falta-dot ${warnings >= 2 ? 'active' : 'inactive'}"></span>
+              <span class="active-falta-dot ${penActivas > 0 ? 'pulse-red' : 'inactive'}"></span>
             </div>
           </div>
         </td>
@@ -1591,12 +1593,9 @@ function renderPenalizados(pens) {
         </td>
         <td>
           <div class="flex gap-2">
-            ${(penalizado || activeFaltas > 0)
-        ? `<button class="btn-levantar" data-uid="${p.usuario_id}" data-nombre="${sanitize(p.nombre)}">
-                  🔓 Levantar
-                 </button>`
-        : '<span style="color:#475569;font-size:0.75rem;opacity:0.5;">—</span>'
-      }
+            <button class="btn-levantar" data-uid="${p.usuario_id}" data-nombre="${sanitize(p.nombre)}" ${activeFaltas > 0 ? '' : 'disabled style="opacity:0.35;cursor:not-allowed;"'}>
+              🔓 Levantar
+            </button>
             ${showNotify
         ? `<button class="btn-notificar" data-uid="${p.usuario_id}" data-nombre="${sanitize(p.nombre)}" data-email="${sanitize(p.email)}" data-faltas="${activeFaltas}">
                   ✉️ Notificar
@@ -2327,18 +2326,22 @@ function renderAuditTable(rows) {
 }
 
 window.showFaltasDetalleModal = async function (userId, nombre, matricula, email, activeFaltas) {
+  if (!userId) {
+    console.error("showFaltasDetalleModal: userId is undefined or null");
+    return;
+  }
   const ov = document.createElement('div');
-  ov.className = 'aeudj-overlay';
+  ov.className = 'faltas-detail-overlay';
   ov.innerHTML = `
-    <div class="aeudj-dialog" style="max-width: 500px; text-align: left; padding: 2rem; border-radius: 1.5rem; position: relative;">
+    <div class="faltas-detail-dialog" style="text-align: left; position: relative;">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; gap:1rem;">
         <div>
-          <h3 class="aeudj-title" style="margin:0; font-size:1.2rem; color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif;">📅 Historial de Inasistencias</h3>
-          <p style="font-size:0.8rem; color:#94a3b8; margin:4px 0 0 0;">${sanitize(nombre)} · <span style="font-family:monospace;">${sanitize(matricula)}</span></p>
+          <h3 class="aeudj-title" style="margin:0; font-size:1.2rem; color: #fbbf24; font-family: 'Plus Jakarta Sans', sans-serif;">📅 Historial de Inasistencias</h3>
+          <p style="font-size:0.8rem; color:#94a3b8; margin:4px 0 0 0;">${sanitize(nombre)} · <span style="font-family:monospace;color:#fbbf24;">${sanitize(matricula)}</span></p>
         </div>
         <button id="modal-close-btn" style="background:none; border:none; color:#64748b; font-size:1.5rem; cursor:pointer; line-height:1; padding:0; outline:none;">&times;</button>
       </div>
-      <div class="aeudj-divider" style="margin: 0 -2rem 1.25rem;"></div>
+      <div class="aeudj-divider" style="margin: 0 -2rem 1.25rem; height:1px; background:rgba(255,255,255,0.06);"></div>
       
       <div style="margin-bottom:1.5rem;">
         <span style="font-size:0.72rem; font-weight:700; text-transform:uppercase; color:#64748b; letter-spacing:0.05em; display:block; margin-bottom:0.75rem;">Faltas Registradas (Historial)</span>
@@ -2359,14 +2362,12 @@ window.showFaltasDetalleModal = async function (userId, nombre, matricula, email
   `;
   document.body.appendChild(ov);
 
-  requestAnimationFrame(() => {
-    ov.style.display = 'flex';
-    requestAnimationFrame(() => ov.classList.add('visible'));
-  });
+  ov.offsetHeight; // Forzar reflow del navegador para aplicar la transición de opacidad y escala
+  ov.classList.add('visible');
 
   const closeOverlay = () => {
     ov.classList.remove('visible');
-    setTimeout(() => { ov.remove(); }, 280);
+    setTimeout(() => { ov.remove(); }, 300);
   };
 
   ov.querySelector('#modal-close-btn').onclick = closeOverlay;
