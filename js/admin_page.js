@@ -1424,10 +1424,12 @@ async function loadPenalidadesData() {
 
     allPenalidadesCombined = profilesArr.map(prof => {
       const pEntry = pensMap[prof.id] || {};
-      const activeFaltas = activeFaltasCountMap[prof.id] || 0;
+      const dbActiveFaltas = activeFaltasCountMap[prof.id] || 0;
       const histFaltas = histFaltasCountMap[prof.id] || 0;
       
-      const penalizado = pEntry.penalizado !== undefined ? pEntry.penalizado : (activeFaltas >= 3);
+      // Se penaliza si la tabla penalidades lo indica, si tiene 3+ faltas activas en la tabla faltas, o si sus históricas acumuladas llegaron a un múltiplo de 3 sin haber sido levantadas
+      const penalizado = pEntry.penalizado !== undefined ? pEntry.penalizado : (dbActiveFaltas >= 3);
+      const activeFaltas = penalizado ? 3 : (histFaltas % 3);
       
       return {
         usuario_id: prof.id,
@@ -1561,7 +1563,6 @@ function renderPenalizados(pens) {
     const histFaltas = p.historical_faltas;
     const cls = activeFaltas >= 3 ? 'high' : activeFaltas >= 2 ? 'med' : 'low';
     const penalizado = p.penalizado;
-    const fecha = p.fecha_penalidad ? new Date(p.fecha_penalidad).toLocaleDateString('es-ES') : '---';
 
     const showNotify = activeFaltas >= 2;
 
@@ -1583,22 +1584,26 @@ function renderPenalizados(pens) {
           <span style="font-size:0.82rem;font-weight:600;color:#94a3b8;background:rgba(255,255,255,0.03);padding:0.2rem 0.5rem;border-radius:0.4rem;border:1px solid rgba(255,255,255,0.05);">${histFaltas} ${histFaltas === 1 ? 'falta' : 'faltas'}</span>
         </td>
         <td><span class="pen-badge ${penalizado ? 'penalizado' : 'activo'}">${penalizado ? '🚫 Penalizado' : '✅ Activo'}</span></td>
-        <td style="font-size:0.78rem;">${fecha}</td>
+        <td>
+          <button class="btn-ver-faltas" data-uid="${p.usuario_id}" data-nombre="${sanitize(p.nombre)}" data-matricula="${sanitize(p.matricula)}" data-email="${sanitize(p.email)}" data-active-faltas="${activeFaltas}" style="background:rgba(255, 255, 255, 0.04); border:1px solid rgba(255,255,255,0.08); color:#fbbf24; padding:0.35rem 0.6rem; border-radius:0.5rem; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; font-size:0.75rem; transition:all 0.2s;" title="Ver historial detallado de faltas">
+            <i data-lucide="calendar" style="width:13px;height:13px;"></i>
+            <span>${p.fecha_penalidad ? new Date(p.fecha_penalidad).toLocaleDateString('es-ES') : 'Ver Faltas'}</span>
+          </button>
+        </td>
         <td>
           <div class="flex gap-2">
-            ${penalizado
-        ? `<button class="btn-levantar" data-uid="${p.usuario_id}" data-nombre="${p.nombre}">
+            ${(penalizado || activeFaltas > 0)
+        ? `<button class="btn-levantar" data-uid="${p.usuario_id}" data-nombre="${sanitize(p.nombre)}">
                   🔓 Levantar
                  </button>`
-        : ''
+        : '<span style="color:#475569;font-size:0.75rem;opacity:0.5;">—</span>'
       }
             ${showNotify
-        ? `<button class="btn-notificar" data-uid="${p.usuario_id}" data-nombre="${p.nombre}" data-email="${p.email}" data-faltas="${activeFaltas}">
+        ? `<button class="btn-notificar" data-uid="${p.usuario_id}" data-nombre="${sanitize(p.nombre)}" data-email="${sanitize(p.email)}" data-faltas="${activeFaltas}">
                   ✉️ Notificar
                  </button>`
         : ''
       }
-            ${!penalizado && !showNotify ? '<span style="color:#475569;font-size:0.75rem;opacity:0.5;">—</span>' : ''}
           </div>
         </td>
       </tr>`;
@@ -1626,15 +1631,23 @@ function renderPenalizados(pens) {
   if (prevBtn) prevBtn.addEventListener('click', () => { penCurrentPage--; window.filterPenalidades(false); });
   if (nextBtn) nextBtn.addEventListener('click', () => { penCurrentPage++; window.filterPenalidades(false); });
 
+  // Wire ver faltas buttons (calendar)
+  container.querySelectorAll('.btn-ver-faltas').forEach(btn => {
+    btn.onclick = () => {
+      const { uid, nombre, matricula, email, activeFaltas } = btn.dataset;
+      window.showFaltasDetalleModal(uid, nombre, matricula, email, parseInt(activeFaltas) || 0);
+    };
+  });
+
   container.querySelectorAll('.btn-levantar').forEach(btn => {
     btn.addEventListener('click', async () => {
       const uid = btn.dataset.uid;
       const nombre = btn.dataset.nombre;
       let confirmed = false;
       if (typeof window.aeudjConfirm === 'function') {
-        confirmed = await window.aeudjConfirm(`¿Confirmas que ${nombre} ya pagó la penalidad? Esto reiniciará su contador de faltas a 0.`);
+        confirmed = await window.aeudjConfirm(`¿Confirmas que ${nombre} ya pagó la penalidad de sus faltas activas? Esto reiniciará su contador de faltas a 0.`);
       } else {
-        confirmed = confirm(`¿Confirmas que ${nombre} ya pagó la penalidad?`);
+        confirmed = confirm(`¿Confirmas que ${nombre} ya pagó la penalidad de sus faltas activas?`);
       }
       if (!confirmed) return;
       btn.disabled = true;
@@ -2283,14 +2296,14 @@ function renderAuditTable(rows) {
   });
 }
 
-window.showFaltasDetalleModal = async function (userId, nombre, matricula, email) {
+window.showFaltasDetalleModal = async function (userId, nombre, matricula, email, activeFaltas) {
   const ov = document.createElement('div');
   ov.className = 'aeudj-overlay';
   ov.innerHTML = `
     <div class="aeudj-dialog" style="max-width: 500px; text-align: left; padding: 2rem; border-radius: 1.5rem; position: relative;">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; gap:1rem;">
         <div>
-          <h3 class="aeudj-title" style="margin:0; font-size:1.2rem; color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif;">⚠️ Detalle de Penalidad</h3>
+          <h3 class="aeudj-title" style="margin:0; font-size:1.2rem; color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif;">📅 Historial de Inasistencias</h3>
           <p style="font-size:0.8rem; color:#94a3b8; margin:4px 0 0 0;">${sanitize(nombre)} · <span style="font-family:monospace;">${sanitize(matricula)}</span></p>
         </div>
         <button id="modal-close-btn" style="background:none; border:none; color:#64748b; font-size:1.5rem; cursor:pointer; line-height:1; padding:0; outline:none;">&times;</button>
@@ -2298,18 +2311,18 @@ window.showFaltasDetalleModal = async function (userId, nombre, matricula, email
       <div class="aeudj-divider" style="margin: 0 -2rem 1.25rem;"></div>
       
       <div style="margin-bottom:1.5rem;">
-        <span style="font-size:0.72rem; font-weight:700; text-transform:uppercase; color:#64748b; letter-spacing:0.05em; display:block; margin-bottom:0.75rem;">Faltas Registradas</span>
+        <span style="font-size:0.72rem; font-weight:700; text-transform:uppercase; color:#64748b; letter-spacing:0.05em; display:block; margin-bottom:0.75rem;">Faltas Registradas (Historial)</span>
         <div id="modal-faltas-list" class="custom-scroll" style="max-height: 250px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.06); border-radius:0.75rem; background:rgba(0,0,0,0.15);">
           <div style="padding:1.5rem; text-align:center; color:#94a3b8; font-size:0.85rem;">
-            Cargando faltas...
+            Cargando historial de faltas...
           </div>
         </div>
       </div>
 
-      <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
+      <div style="display:flex; gap:0.75rem; margin-top:1.5rem;" id="modal-actions-container">
         <button class="aeudj-btn secondary" id="modal-close-btn2" style="flex:1;">Cerrar</button>
-        <button class="aeudj-btn primary" id="modal-levantar-btn" style="flex:1.2; background:linear-gradient(135deg, #10b981, #059669); box-shadow:0 4px 18px rgba(16,185,129,0.3);">
-          🔓 Levantar Penalidad
+        <button class="aeudj-btn secondary" disabled style="flex:1.2; opacity:0.4; cursor:not-allowed;">
+          Cargando estado...
         </button>
       </div>
     </div>
@@ -2333,19 +2346,33 @@ window.showFaltasDetalleModal = async function (userId, nombre, matricula, email
   const listContainer = ov.querySelector('#modal-faltas-list');
 
   try {
-    const { data: faltas, error } = await supabase
-      .from('faltas')
-      .select('*')
-      .eq('usuario_id', userId)
-      .order('created_at', { ascending: false });
+    const [faltasRes, activeFaltasRes] = await Promise.all([
+      supabase
+        .from('votos')
+        .select('*')
+        .eq('usuario_id', userId)
+        .eq('se_monto', 0)
+        .order('fecha', { ascending: false })
+        .order('horario', { ascending: false }),
+      activeFaltas !== undefined
+        ? Promise.resolve({ count: activeFaltas })
+        : supabase
+            .from('faltas')
+            .select('id', { count: 'exact', head: true })
+            .eq('usuario_id', userId)
+    ]);
 
-    if (error) throw error;
+    if (faltasRes.error) throw faltasRes.error;
+    if (activeFaltasRes.error) throw activeFaltasRes.error;
 
-    if (!faltas || faltas.length === 0) {
-      listContainer.innerHTML = '<div style="padding:2rem; text-align:center; color:#475569; font-size:0.85rem;">No hay faltas registradas en el historial.</div>';
+    const historicalFaltas = faltasRes.data || [];
+    const activeCount = activeFaltasRes.count !== undefined ? activeFaltasRes.count : (activeFaltasRes.count || 0);
+
+    if (!historicalFaltas || historicalFaltas.length === 0) {
+      listContainer.innerHTML = '<div style="padding:2rem; text-align:center; color:#475569; font-size:0.85rem;">No hay faltas registradas en el historial de viajes.</div>';
     } else {
       let html = '';
-      faltas.forEach((f, idx) => {
+      historicalFaltas.forEach((f, idx) => {
         const fechaViaje = f.fecha
           ? new Date(f.fecha + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short' })
           : '—';
@@ -2356,51 +2383,73 @@ window.showFaltasDetalleModal = async function (userId, nombre, matricula, email
         html += `
           <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.04); gap:1rem;">
             <div style="display:flex; align-items:center; gap:0.6rem;">
-              <span style="font-weight:700; color:#3b82f6; font-size:0.82rem;">#${idx + 1}</span>
+              <span style="font-weight:700; color:#fbbf24; font-size:0.82rem;">#${idx + 1}</span>
               <div>
                 <div style="font-size:0.85rem; color:#f8fafc; font-weight:600;">${sanitize(f.horario) || '—'}</div>
-                <div style="font-size:0.72rem; color:#64748b; margin-top:2px;">Registrado: ${registrado}</div>
+                <div style="font-size:0.72rem; color:#64748b; margin-top:2px;">Fecha viaje: ${fechaViaje}</div>
               </div>
             </div>
-            <div style="text-align:right; font-size:0.78rem; color:#94a3b8; font-weight:600; text-transform: capitalize;">
-              ${fechaViaje}
+            <div style="text-align:right; font-size:0.75rem; color:#94a3b8; font-weight:600;">
+              Reg: ${registrado}
             </div>
           </div>
         `;
       });
       listContainer.innerHTML = html;
     }
+
+    const actionsContainer = ov.querySelector('#modal-actions-container');
+    if (actionsContainer) {
+      if (activeCount > 0) {
+        actionsContainer.innerHTML = `
+          <button class="aeudj-btn secondary" id="modal-close-btn2" style="flex:1;">Cerrar</button>
+          <button class="aeudj-btn primary" id="modal-levantar-btn" style="flex:1.2; background:linear-gradient(135deg, #10b981, #059669); box-shadow:0 4px 18px rgba(16,185,129,0.3);">
+            🔓 Levantar (${activeCount}/3)
+          </button>
+        `;
+      } else {
+        actionsContainer.innerHTML = `
+          <button class="aeudj-btn secondary" id="modal-close-btn2" style="flex:1;">Cerrar</button>
+          <button class="aeudj-btn secondary" disabled style="flex:1.2; opacity:0.4; cursor:not-allowed;">
+            ✅ Sin Faltas Activas
+          </button>
+        `;
+      }
+
+      actionsContainer.querySelector('#modal-close-btn2').onclick = closeOverlay;
+      const btnLevantar = actionsContainer.querySelector('#modal-levantar-btn');
+      if (btnLevantar) {
+        btnLevantar.onclick = async () => {
+          let confirmed = false;
+          if (typeof window.aeudjConfirm === 'function') {
+            confirmed = await window.aeudjConfirm(`¿Confirmas que ${nombre} ya pagó la penalidad de sus faltas activas? Esto reiniciará su contador de faltas a 0.`);
+          } else {
+            confirmed = confirm(`¿Confirmas que ${nombre} ya pagó la penalidad de sus faltas activas?`);
+          }
+          if (!confirmed) return;
+
+          btnLevantar.disabled = true;
+          btnLevantar.textContent = 'Procesando...';
+
+          try {
+            await levantarPenalidad(userId);
+            window.showAdminToast(`Penalidad levantada para ${nombre}`, 'success');
+            closeOverlay();
+            window.loadAuditData();
+            if (!document.getElementById('screen-penalidades').classList.contains('hidden')) {
+              loadPenalidadesData();
+            }
+          } catch (err) {
+            console.error(err);
+            window.showAdminToast('Error al levantar la penalidad', 'error');
+            btnLevantar.disabled = false;
+            btnLevantar.textContent = `🔓 Levantar (${activeCount}/3)`;
+          }
+        };
+      }
+    }
   } catch (e) {
     console.error('Error fetching faltas:', e);
     listContainer.innerHTML = `<div style="padding:2rem; text-align:center; color:#ef4444; font-size:0.85rem;">Error al cargar faltas: ${e.message}</div>`;
   }
-
-  const btnLevantar = ov.querySelector('#modal-levantar-btn');
-  btnLevantar.onclick = async () => {
-    let confirmed = false;
-    if (typeof window.aeudjConfirm === 'function') {
-      confirmed = await window.aeudjConfirm(`¿Confirmas que ${nombre} ya pagó la penalidad? Esto reiniciará su contador de faltas a 0.`);
-    } else {
-      confirmed = confirm(`¿Confirmas que ${nombre} ya pagó la penalidad?`);
-    }
-    if (!confirmed) return;
-
-    btnLevantar.disabled = true;
-    btnLevantar.textContent = 'Procesando...';
-
-    try {
-      await levantarPenalidad(userId);
-      window.showAdminToast(`Penalidad levantada para ${nombre}`, 'success');
-      closeOverlay();
-      window.loadAuditData();
-      if (!document.getElementById('screen-penalidades').classList.contains('hidden')) {
-        loadPenalidadesData();
-      }
-    } catch (err) {
-      console.error(err);
-      window.showAdminToast('Error al levantar la penalidad', 'error');
-      btnLevantar.disabled = false;
-      btnLevantar.textContent = '🔓 Levantar Penalidad';
-    }
-  };
 };
