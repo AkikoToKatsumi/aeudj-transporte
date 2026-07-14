@@ -2360,27 +2360,31 @@ window.showFaltasDetalleModal = async function (userId, nombre, matricula, email
   ov.className = 'faltas-detail-overlay';
   ov.innerHTML = `
     <div class="faltas-detail-dialog" style="text-align: left; position: relative;">
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; gap:1rem;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; gap:1rem;">
         <div>
-          <h3 class="aeudj-title" style="margin:0; font-size:1.2rem; color: #fbbf24; font-family: 'Plus Jakarta Sans', sans-serif;">📅 Historial de Inasistencias</h3>
-          <p style="font-size:0.8rem; color:#94a3b8; margin:4px 0 0 0;">${sanitize(nombre)} · <span style="font-family:monospace;color:#fbbf24;">${sanitize(matricula)}</span></p>
+          <h3 style="margin:0 0 0.3rem 0; font-size:1.15rem; font-weight:800; color: #fbbf24; font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing:-0.01em;">📅 Historial de Inasistencias</h3>
+          <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+            <span style="font-size:0.82rem; color:#e2e8f0; font-weight:600;">${sanitize(nombre)}</span>
+            <span style="font-size:0.7rem; color:#475569;">·</span>
+            <span style="font-family:monospace; font-size:0.78rem; color:#fbbf24; background:rgba(251,191,36,0.08); padding:0.1rem 0.5rem; border-radius:0.35rem; border:1px solid rgba(251,191,36,0.15);">${sanitize(matricula)}</span>
+          </div>
         </div>
-        <button id="modal-close-btn" style="background:none; border:none; color:#64748b; font-size:1.5rem; cursor:pointer; line-height:1; padding:0; outline:none;">&times;</button>
+        <button id="modal-close-btn" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); color:#94a3b8; font-size:1rem; cursor:pointer; line-height:1; padding:0.4rem 0.6rem; border-radius:0.5rem; outline:none; transition:all 0.2s; flex-shrink:0;" title="Cerrar">✕</button>
       </div>
-      <div class="aeudj-divider" style="margin: 0 -2rem 1.25rem; height:1px; background:rgba(255,255,255,0.06);"></div>
-      
-      <div style="margin-bottom:1.5rem;">
-        <span style="font-size:0.72rem; font-weight:700; text-transform:uppercase; color:#64748b; letter-spacing:0.05em; display:block; margin-bottom:0.75rem;">Faltas Registradas (Historial)</span>
-        <div id="modal-faltas-list" class="custom-scroll" style="max-height: 250px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.06); border-radius:0.75rem; background:rgba(0,0,0,0.15);">
-          <div style="padding:1.5rem; text-align:center; color:#94a3b8; font-size:0.85rem;">
+      <div style="height:1px; background:linear-gradient(90deg, rgba(251,191,36,0.2), rgba(255,255,255,0.04), transparent); margin: 0 0 1.25rem 0;"></div>
+
+      <div style="margin-bottom:0;">
+        <span style="font-size:0.68rem; font-weight:800; text-transform:uppercase; color:#475569; letter-spacing:0.08em; display:block; margin-bottom:0.6rem;">Faltas Registradas (Historial)</span>
+        <div id="modal-faltas-list" style="border: 1px solid rgba(255,255,255,0.05); border-radius:0.75rem; background:rgba(0,0,0,0.2); overflow:hidden;">
+          <div style="padding:1.5rem; text-align:center; color:#475569; font-size:0.85rem;">
             Cargando historial de faltas...
           </div>
         </div>
       </div>
 
-      <div style="display:flex; gap:0.75rem; margin-top:1.5rem;" id="modal-actions-container">
+      <div style="display:flex; gap:0.75rem; margin-top:1.25rem; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.04);" id="modal-actions-container">
         <button class="aeudj-btn secondary" id="modal-close-btn2" style="flex:1;">Cerrar</button>
-        <button class="aeudj-btn secondary" disabled style="flex:1.2; opacity:0.4; cursor:not-allowed;">
+        <button class="aeudj-btn secondary" disabled style="flex:1.2; opacity:0.3; cursor:not-allowed; font-size:0.8rem;">
           Cargando estado...
         </button>
       </div>
