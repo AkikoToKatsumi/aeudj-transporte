@@ -554,20 +554,6 @@
           </div>
         </div>
 
-        Displaying Student Penalties Real Data
-        11:33 AM
-        …\AEUDJ-HTML.github.io > $headers = @{ "apikey" =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyand4ZWdlcGt6bnFyaXNicnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNjk0NDIsImV4cCI6MjA5MTc0NTQ0Mn0.TZOhsy0ghfmjK8rd4GWcgbtOLpERKRJ62mjqc5gaYOM";
-        "Authorization" = "Bearer
-        eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyand4ZWdlcGt6bnFyaXNicnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNjk0NDIsImV4cCI6MjA5MTc0NTQ0Mn0.TZOhsy0ghfmjK8rd4GWcgbtOLpERKRJ62mjqc5gaYOM";
-        "Prefer" = "count=exact" }; [PSCustomObject]@{ NoMonto = (Invoke-WebRequest -Uri
-        "https://irjwxegepkznqrisbrys.supabase.co/rest/v1/votos?se_monto=eq.0" -Headers $headers -Method
-        Head).Headers."Content-Range"; Monto = (Invoke-WebRequest -Uri
-        "https://irjwxegepkznqrisbrys.supabase.co/rest/v1/votos?se_monto=eq.1" -Headers $headers -Method
-        Head).Headers."Content-Range"; Profiles = (Invoke-WebRequest -Uri
-        "https://irjwxegepkznqrisbrys.supabase.co/rest/v1/profiles" -Headers $headers -Method
-        Head).Headers."Content-Range" } | ConvertTo-Json
-
         <!-- Tabs -->
         <div class="pen-tabs">
           <button class="pen-tab active" data-pen-tab="penalizados">⚠️ Penalizados</button>

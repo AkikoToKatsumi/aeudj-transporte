@@ -1361,13 +1361,25 @@ async function loadPenalidadesData() {
       .from('faltas').select('*').order('created_at', { ascending: false });
     const { data: profiles } = await supabase
       .from('profiles').select('id, nombre, matricula, email').order('nombre');
-    const { data: histVotes } = await supabase
-      .from('votos').select('*').eq('se_monto', 0).range(0, 5000);
+    let histVotesArr = [];
+    let start = 0;
+    const batchSize = 1000;
+    while (true) {
+      const { data: batch, error: batchErr } = await supabase
+        .from('votos')
+        .select('*')
+        .eq('se_monto', 0)
+        .range(start, start + batchSize - 1);
+      if (batchErr) throw batchErr;
+      if (!batch || batch.length === 0) break;
+      histVotesArr = histVotesArr.concat(batch);
+      if (batch.length < batchSize) break;
+      start += batchSize;
+    }
 
     const penalArr = pens || [];
     const faltaArr = faltas || [];
     const profilesArr = profiles || [];
-    const histVotesArr = histVotes || [];
 
     const penalizados = penalArr.filter(p => p.penalizado).length;
     const levantadas = penalArr.filter(p => !p.penalizado && p.total_faltas === 0 && p.fecha_penalidad).length;
