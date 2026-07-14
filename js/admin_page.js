@@ -1427,8 +1427,8 @@ async function loadPenalidadesData() {
       const dbActiveFaltas = activeFaltasCountMap[prof.id] || 0;
       const histFaltas = histFaltasCountMap[prof.id] || 0;
       
-      const penalizado = pEntry.penalizado !== undefined ? pEntry.penalizado : (dbActiveFaltas >= 3);
-      const activeFaltas = dbActiveFaltas;
+      const activeFaltas = (pEntry.total_faltas !== undefined && pEntry.total_faltas !== null) ? pEntry.total_faltas : histFaltas;
+      const penalizado = (pEntry.penalizado !== undefined && pEntry.penalizado !== null) ? pEntry.penalizado : (activeFaltas >= 3);
       
       return {
         usuario_id: prof.id,
@@ -1794,6 +1794,30 @@ function renderHistorial(faltas, activeDate, activeIndex, totalDays, sortedDates
 
 async function levantarPenalidad(usuarioId) {
   try {
+    // 1. Obtener registro actual en la tabla penalidades
+    const { data: pEntry, error: pErr } = await supabase
+      .from('penalidades')
+      .select('*')
+      .eq('usuario_id', usuarioId)
+      .maybeSingle();
+
+    if (pErr) throw pErr;
+
+    // 2. Si no existe registro en penalidades, obtener la cantidad de faltas históricas de votos
+    let currentFaltasCount = 0;
+    if (pEntry && pEntry.total_faltas !== undefined && pEntry.total_faltas !== null) {
+      currentFaltasCount = pEntry.total_faltas;
+    } else {
+      const { data: histVotes, error: histErr } = await supabase
+        .from('votos')
+        .select('id')
+        .eq('usuario_id', usuarioId)
+        .eq('se_monto', 0);
+      if (histErr) throw histErr;
+      currentFaltasCount = histVotes ? histVotes.length : 0;
+    }
+
+    // 3. Obtener filas activas de la tabla faltas (si existen)
     const { data: activeRows, error: fetchErr } = await supabase
       .from('faltas')
       .select('id')
@@ -1802,8 +1826,8 @@ async function levantarPenalidad(usuarioId) {
 
     if (fetchErr) throw fetchErr;
 
-    const currentCount = activeRows ? activeRows.length : 0;
-    const toDeleteCount = Math.min(3, currentCount);
+    const dbFaltasCount = activeRows ? activeRows.length : 0;
+    const toDeleteCount = Math.min(3, dbFaltasCount);
 
     if (toDeleteCount > 0) {
       const idsToDelete = activeRows.slice(0, toDeleteCount).map(r => r.id);
@@ -1815,18 +1839,20 @@ async function levantarPenalidad(usuarioId) {
       if (deleteErr) throw deleteErr;
     }
 
-    const newCount = Math.max(0, currentCount - 3);
+    // 4. Calcular el nuevo total restando 3
+    const newCount = Math.max(0, currentFaltasCount - 3);
     const stillPenalized = newCount >= 3;
 
+    // 5. Upsert el nuevo registro en penalidades
     const { error: updateErr } = await supabase
       .from('penalidades')
-      .update({
+      .upsert({
+        usuario_id: usuarioId,
         total_faltas: newCount,
         penalizado: stillPenalized,
-        fecha_penalidad: stillPenalized ? new Date().toISOString() : null,
+        fecha_penalidad: stillPenalized ? new Date().toISOString() : (pEntry?.fecha_penalidad || null),
         updated_at: new Date().toISOString()
-      })
-      .eq('usuario_id', usuarioId);
+      }, { onConflict: 'usuario_id' });
 
     if (updateErr) throw updateErr;
   } catch (err) {
@@ -2402,40 +2428,52 @@ window.showFaltasDetalleModal = async function (userId, nombre, matricula, email
     if (!historicalFaltas || historicalFaltas.length === 0) {
       listContainer.innerHTML = '<div style="padding:2rem; text-align:center; color:#475569; font-size:0.85rem;">No hay faltas registradas en el historial de viajes.</div>';
     } else {
-      let html = '';
+      let html = `
+        <div class="logbook-table-container" style="margin: 0; box-shadow: none; border-radius: 0; border: none; background: transparent;">
+          <table class="logbook-table" style="width: 100%;">
+            <thead>
+              <tr>
+                <th style="width: 50px; padding: 0.75rem 1rem;">#</th>
+                <th style="padding: 0.75rem 1rem; text-align: left;">Horario de viaje</th>
+                <th style="width: 160px; padding: 0.75rem 1rem; text-align: left;">Fecha de viaje</th>
+                <th style="width: 180px; padding: 0.75rem 1rem; text-align: left;">Fecha de registro</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
       historicalFaltas.forEach((f, idx) => {
         const fechaViaje = f.fecha
-          ? new Date(f.fecha + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short' })
+          ? new Date(f.fecha + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })
           : '—';
         const registrado = f.created_at
-          ? new Date(f.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+          ? new Date(f.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
           : '—';
 
         html += `
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.04); gap:1rem;">
-            <div style="display:flex; align-items:center; gap:0.6rem;">
-              <span style="font-weight:700; color:#fbbf24; font-size:0.82rem;">#${idx + 1}</span>
-              <div>
-                <div style="font-size:0.85rem; color:#f8fafc; font-weight:600;">${sanitize(f.horario) || '—'}</div>
-                <div style="font-size:0.72rem; color:#64748b; margin-top:2px;">Fecha viaje: ${fechaViaje}</div>
-              </div>
-            </div>
-            <div style="text-align:right; font-size:0.75rem; color:#94a3b8; font-weight:600;">
-              Reg: ${registrado}
-            </div>
-          </div>
+              <tr>
+                <td style="font-weight: 700; color: #fbbf24; padding: 0.75rem 1rem; text-align: center;">${idx + 1}</td>
+                <td style="font-weight: 700; color: #f8fafc; padding: 0.75rem 1rem; text-align: left; font-size: 0.85rem;">${sanitize(f.horario) || '—'}</td>
+                <td style="color:#e2e8f0; font-size:0.82rem; padding: 0.75rem 1rem; text-align: left;">${fechaViaje}</td>
+                <td style="font-size:0.78rem; color:#64748b; padding: 0.75rem 1rem; text-align: left;">${registrado}</td>
+              </tr>
         `;
       });
+      html += `
+            </tbody>
+          </table>
+        </div>
+      `;
       listContainer.innerHTML = html;
     }
 
     const actionsContainer = ov.querySelector('#modal-actions-container');
     if (actionsContainer) {
       if (activeCount > 0) {
+        const liftText = activeCount >= 3 ? '-3 Faltas' : `-${activeCount} Faltas`;
         actionsContainer.innerHTML = `
           <button class="aeudj-btn secondary" id="modal-close-btn2" style="flex:1;">Cerrar</button>
-          <button class="aeudj-btn primary" id="modal-levantar-btn" style="flex:1.2; background:linear-gradient(135deg, #10b981, #059669); box-shadow:0 4px 18px rgba(16,185,129,0.3);">
-            🔓 Levantar (${activeCount}/3)
+          <button class="aeudj-btn primary" id="modal-levantar-btn" style="flex:1.5; background:linear-gradient(135deg, #10b981, #059669); box-shadow:0 4px 18px rgba(16,185,129,0.3);">
+            🔓 Levantar (${liftText})
           </button>
         `;
       } else {
@@ -2452,10 +2490,11 @@ window.showFaltasDetalleModal = async function (userId, nombre, matricula, email
       if (btnLevantar) {
         btnLevantar.onclick = async () => {
           let confirmed = false;
+          const liftQty = activeCount >= 3 ? 3 : activeCount;
           if (typeof window.aeudjConfirm === 'function') {
-            confirmed = await window.aeudjConfirm(`¿Confirmas que ${nombre} ya pagó la penalidad de sus faltas activas? Esto reiniciará su contador de faltas a 0.`);
+            confirmed = await window.aeudjConfirm(`¿Confirmas que ${nombre} ya pagó la penalidad correspondiente? Esto reducirá su contador de faltas activas en ${liftQty}.`);
           } else {
-            confirmed = confirm(`¿Confirmas que ${nombre} ya pagó la penalidad de sus faltas activas?`);
+            confirmed = confirm(`¿Confirmas que ${nombre} ya pagó la penalidad correspondiente? Esto reducirá su contador en ${liftQty}.`);
           }
           if (!confirmed) return;
 
@@ -2474,7 +2513,7 @@ window.showFaltasDetalleModal = async function (userId, nombre, matricula, email
             console.error(err);
             window.showAdminToast('Error al levantar la penalidad', 'error');
             btnLevantar.disabled = false;
-            btnLevantar.textContent = `🔓 Levantar (${activeCount}/3)`;
+            btnLevantar.textContent = `🔓 Levantar`;
           }
         };
       }
