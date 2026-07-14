@@ -462,6 +462,24 @@ function initIndexPage() {
  });
   }
 
+  // Cableado para recuperación de contraseña
+  const forgotBtn = document.getElementById('forgotPasswordBtn');
+  if (forgotBtn) {
+    forgotBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      showForgotPasswordModal();
+    });
+  }
+
+  // Detectar callback de recuperación de contraseña al cargar la página
+  const isRecovery = window.location.hash.includes('type=recovery') || 
+                     window.location.hash.includes('access_token') || 
+                     window.location.search.includes('type=recovery');
+  if (isRecovery) {
+    setTimeout(() => {
+      showResetPasswordModal();
+    }, 1000);
+  }
 }
 
 // ============================================
@@ -2201,5 +2219,161 @@ window.cerrarModalEspera = function() {
  if (modal) modal.classList.add('hidden');
  document.body.style.overflow = '';
 };
+
+// ============================================================
+// RECUPERACIÓN DE CONTRASEÑA (FORGOT PASSWORD / RESET PASSWORD)
+// ============================================================
+
+function showForgotPasswordModal() {
+  const ov = document.createElement('div');
+  ov.className = 'recovery-overlay';
+  ov.innerHTML = `
+    <div class="recovery-dialog" style="text-align: left;">
+      <h3 style="margin: 0 0 0.5rem 0; color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif;">🔒 Recuperar Contraseña</h3>
+      <p style="font-size: 0.8rem; color: #94a3b8; margin: 0 0 1.25rem 0; line-height: 1.4;">
+        Introduce tu correo electrónico registrado. Te enviaremos un enlace seguro para restablecer tu contraseña.
+      </p>
+      
+      <div class="input-wrapper" style="margin-bottom: 1.25rem;">
+        <i data-lucide="mail" class="input-icon"></i>
+        <input type="email" id="recoveryEmail" class="premium-input" placeholder="correo@ejemplo.com" required style="width: 100%;">
+      </div>
+
+      <div style="display: flex; gap: 0.75rem;">
+        <button class="btn-pill-outline" id="recovery-close-btn" style="flex: 1; padding: 0.6rem; font-size: 0.85rem; border-radius: 0.75rem; cursor: pointer;">Cancelar</button>
+        <button class="btn-premium" id="recovery-send-btn" style="flex: 1.5; padding: 0.6rem; font-size: 0.85rem; border-radius: 0.75rem; cursor: pointer; background: linear-gradient(135deg, #3b82f6, #2563eb);">Enviar Enlace</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(ov);
+  
+  if (window.lucide) window.lucide.createIcons();
+
+  ov.offsetHeight;
+  ov.classList.add('visible');
+
+  const close = () => {
+    ov.classList.remove('visible');
+    setTimeout(() => { ov.remove(); }, 300);
+  };
+
+  ov.querySelector('#recovery-close-btn').onclick = close;
+  ov.onclick = (e) => { if (e.target === ov) close(); };
+
+  const sendBtn = ov.querySelector('#recovery-send-btn');
+  const emailInput = ov.querySelector('#recoveryEmail');
+
+  sendBtn.onclick = async () => {
+    const email = emailInput.value.trim();
+    if (!email || !email.includes('@')) {
+      alert('Por favor, introduce un correo electrónico válido.');
+      return;
+    }
+
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Enviando...';
+
+    try {
+      const redirectUrl = window.location.origin + window.location.pathname + '?type=recovery';
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl
+      });
+
+      if (error) throw error;
+
+      alert('¡Enlace enviado! Revisa la bandeja de entrada de tu correo electrónico (y la carpeta de spam).');
+      close();
+    } catch (err) {
+      console.error('Error al enviar recuperación:', err);
+      alert('Error: ' + (err.message || 'No se pudo enviar el correo de recuperación.'));
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Enviar Enlace';
+    }
+  };
+}
+
+function showResetPasswordModal() {
+  if (document.getElementById('reset-password-ov')) return;
+
+  const ov = document.createElement('div');
+  ov.id = 'reset-password-ov';
+  ov.className = 'recovery-overlay';
+  ov.innerHTML = `
+    <div class="recovery-dialog" style="text-align: left;">
+      <h3 style="margin: 0 0 0.5rem 0; color: #fbbf24; font-family: 'Plus Jakarta Sans', sans-serif;">🔑 Nueva Contraseña</h3>
+      <p style="font-size: 0.8rem; color: #94a3b8; margin: 0 0 1.25rem 0; line-height: 1.4;">
+        Establece la nueva contraseña para tu cuenta. Debe tener al menos 6 caracteres.
+      </p>
+      
+      <div class="input-wrapper" style="margin-bottom: 1rem;">
+        <i data-lucide="lock" class="input-icon"></i>
+        <input type="password" id="newPassword" class="premium-input" placeholder="Nueva contraseña" required style="width: 100%;">
+      </div>
+
+      <div class="input-wrapper" style="margin-bottom: 1.25rem;">
+        <i data-lucide="lock" class="input-icon"></i>
+        <input type="password" id="confirmPassword" class="premium-input" placeholder="Confirmar contraseña" required style="width: 100%;">
+      </div>
+
+      <button class="btn-premium btn-block" id="reset-save-btn" style="padding: 0.7rem; font-size: 0.88rem; border-radius: 0.75rem; cursor: pointer; background: linear-gradient(135deg, #10b981, #059669); color: white; width: 100%;">
+        Guardar Nueva Contraseña
+      </button>
+    </div>
+  `;
+  document.body.appendChild(ov);
+  
+  if (window.lucide) window.lucide.createIcons();
+
+  ov.offsetHeight;
+  ov.classList.add('visible');
+
+  const saveBtn = ov.querySelector('#reset-save-btn');
+  const passInput = ov.querySelector('#newPassword');
+  const confInput = ov.querySelector('#confirmPassword');
+
+  saveBtn.onclick = async () => {
+    const password = passInput.value.trim();
+    const confirmPass = confInput.value.trim();
+
+    if (password.length < 6) {
+      alert('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    if (password !== confirmPass) {
+      alert('Las contraseñas no coinciden.');
+      return;
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Guardando...';
+
+    try {
+      const { error } = await supabase.auth.updateUser({ password: password });
+      if (error) throw error;
+
+      alert('¡Tu contraseña ha sido restablecida con éxito! Ya puedes iniciar sesión con tu nueva clave.');
+      
+      window.location.hash = '';
+      if (window.history.pushState) {
+        const newUrl = window.location.origin + window.location.pathname;
+        window.history.pushState({ path: newUrl }, '', newUrl);
+      }
+
+      await supabase.auth.signOut();
+      
+      ov.classList.remove('visible');
+      setTimeout(() => {
+        ov.remove();
+        window.location.reload();
+      }, 300);
+    } catch (err) {
+      console.error('Error al restablecer contraseña:', err);
+      alert('Error: ' + (err.message || 'No se pudo actualizar la contraseña. Inténtalo de nuevo.'));
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Guardar Nueva Contraseña';
+    }
+  };
+}
 
 
