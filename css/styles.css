@@ -3673,6 +3673,76 @@ input:checked+.slider:before {
   justify-content: center;
 }
 
+/* Botón Ver Faltas (Calendario) */
+.btn-ver-faltas {
+  background: rgba(251, 191, 36, 0.08) !important;
+  border: 1px solid rgba(251, 191, 36, 0.25) !important;
+  color: #fbbf24 !important;
+  padding: 0.35rem 0.65rem !important;
+  border-radius: 0.5rem !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.35rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  font-family: inherit !important;
+  transition: all 0.2s ease !important;
+  outline: none !important;
+}
+
+.btn-ver-faltas:hover {
+  background: rgba(251, 191, 36, 0.16) !important;
+  border-color: rgba(251, 191, 36, 0.4) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.12) !important;
+}
+
+.btn-ver-faltas i, .btn-ver-faltas svg {
+  color: #fbbf24 !important;
+  width: 13px !important;
+  height: 13px !important;
+}
+
+/* Modal de Detalle de Faltas Históricas */
+.faltas-detail-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease-out;
+}
+
+.faltas-detail-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.faltas-detail-dialog {
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.98));
+  border: 1.5px solid rgba(251, 191, 36, 0.2);
+  border-radius: 1.5rem;
+  padding: 2rem;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(251, 191, 36, 0.05);
+  transform: scale(0.92) translateY(10px);
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.faltas-detail-overlay.visible .faltas-detail-dialog {
+  transform: scale(1) translateY(0);
+}
+
 /* Botón levantar */
 .btn-levantar {
   display: inline-flex;

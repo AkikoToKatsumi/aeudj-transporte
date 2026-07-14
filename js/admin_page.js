@@ -1427,9 +1427,8 @@ async function loadPenalidadesData() {
       const dbActiveFaltas = activeFaltasCountMap[prof.id] || 0;
       const histFaltas = histFaltasCountMap[prof.id] || 0;
       
-      // Se penaliza si la tabla penalidades lo indica, si tiene 3+ faltas activas en la tabla faltas, o si sus históricas acumuladas llegaron a un múltiplo de 3 sin haber sido levantadas
       const penalizado = pEntry.penalizado !== undefined ? pEntry.penalizado : (dbActiveFaltas >= 3);
-      const activeFaltas = penalizado ? 3 : (histFaltas % 3);
+      const activeFaltas = dbActiveFaltas;
       
       return {
         usuario_id: prof.id,
@@ -1634,7 +1633,11 @@ function renderPenalizados(pens) {
   // Wire ver faltas buttons (calendar)
   container.querySelectorAll('.btn-ver-faltas').forEach(btn => {
     btn.onclick = () => {
-      const { uid, nombre, matricula, email, activeFaltas } = btn.dataset;
+      const uid = btn.getAttribute('data-uid');
+      const nombre = btn.getAttribute('data-nombre');
+      const matricula = btn.getAttribute('data-matricula');
+      const email = btn.getAttribute('data-email');
+      const activeFaltas = btn.getAttribute('data-active-faltas');
       window.showFaltasDetalleModal(uid, nombre, matricula, email, parseInt(activeFaltas) || 0);
     };
   });
@@ -1792,14 +1795,41 @@ function renderHistorial(faltas, activeDate, activeIndex, totalDays, sortedDates
 
 async function levantarPenalidad(usuarioId) {
   try {
-    await supabase.from('penalidades').update({
-      total_faltas: 0,
-      penalizado: false,
-      fecha_penalidad: null,
-      updated_at: new Date().toISOString(),
-    }).eq('usuario_id', usuarioId);
+    const { data: activeRows, error: fetchErr } = await supabase
+      .from('faltas')
+      .select('id')
+      .eq('usuario_id', usuarioId)
+      .order('created_at', { ascending: true });
 
-    await supabase.from('faltas').delete().eq('usuario_id', usuarioId);
+    if (fetchErr) throw fetchErr;
+
+    const currentCount = activeRows ? activeRows.length : 0;
+    const toDeleteCount = Math.min(3, currentCount);
+
+    if (toDeleteCount > 0) {
+      const idsToDelete = activeRows.slice(0, toDeleteCount).map(r => r.id);
+      const { error: deleteErr } = await supabase
+        .from('faltas')
+        .delete()
+        .in('id', idsToDelete);
+
+      if (deleteErr) throw deleteErr;
+    }
+
+    const newCount = Math.max(0, currentCount - 3);
+    const stillPenalized = newCount >= 3;
+
+    const { error: updateErr } = await supabase
+      .from('penalidades')
+      .update({
+        total_faltas: newCount,
+        penalizado: stillPenalized,
+        fecha_penalidad: stillPenalized ? new Date().toISOString() : null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('usuario_id', usuarioId);
+
+    if (updateErr) throw updateErr;
   } catch (err) {
     console.error('Error levantando penalidad:', err);
     alert('Error al levantar la penalidad. Intenta de nuevo.');
