@@ -5,6 +5,7 @@ const supabase = window.supabase;
 let allPenalidades = [];
 let allFaltasHistorial = [];
 let activePenTab = 'penalizados';
+let histActiveDateIndex = 0;
 
 if (!supabase) {
   console.error('Supabase client not found! Ensure the library is loaded in the HTML.');
@@ -1470,9 +1471,8 @@ window.filterPenalidades = (resetPage = true) => {
   const dateVal = document.getElementById('penDate')?.value || '';
   const showOnlyPenalized = document.getElementById('penShowOnlyPenalized')?.checked === true;
 
-  if (resetPage) penCurrentPage = 0;
-
   if (activePenTab === 'penalizados') {
+    if (resetPage) penCurrentPage = 0;
     const filtered = allPenalidadesCombined.filter(p => {
       if (showOnlyPenalized && !p.penalizado) return false;
       if (!showOnlyPenalized && p.active_faltas < 1 && p.historical_faltas < 1) return false;
@@ -1483,13 +1483,48 @@ window.filterPenalidades = (resetPage = true) => {
     });
     renderPenalizados(filtered);
   } else {
-    if (resetPage) histCurrentPage = 0;
-    const filtered = allFaltasHistorial.filter(f => {
-      const matchesName = (f.nombre?.toLowerCase().includes(query) || f.matricula?.toLowerCase().includes(query));
-      const matchesDate = !dateVal || (f.fecha && f.fecha === dateVal);
-      return matchesName && matchesDate;
+    // Filtrar inasistencias por la query de búsqueda
+    const queryFiltered = allFaltasHistorial.filter(f => {
+      if (!query) return true;
+      return f.nombre?.toLowerCase().includes(query) || f.matricula?.toLowerCase().includes(query);
     });
-    renderHistorial(filtered);
+
+    // Agrupar por fecha
+    const groupedByDate = {};
+    queryFiltered.forEach(f => {
+      if (!f.fecha) return;
+      if (!groupedByDate[f.fecha]) {
+        groupedByDate[f.fecha] = [];
+      }
+      groupedByDate[f.fecha].push(f);
+    });
+
+    // Fechas únicas ordenadas descendentemente (más recientes primero)
+    const sortedDates = Object.keys(groupedByDate).sort((a, b) => new Date(b) - new Date(a));
+
+    if (dateVal) {
+      const targetIndex = sortedDates.indexOf(dateVal);
+      if (targetIndex !== -1) {
+        histActiveDateIndex = targetIndex;
+      } else {
+        histActiveDateIndex = -1;
+      }
+    } else {
+      if (resetPage || histActiveDateIndex < 0 || histActiveDateIndex >= sortedDates.length) {
+        histActiveDateIndex = sortedDates.length > 0 ? 0 : -1;
+      }
+    }
+
+    let activeDateStr = 'Sin registros';
+    let activeFaltas = [];
+    if (histActiveDateIndex !== -1 && sortedDates.length > 0) {
+      activeDateStr = sortedDates[histActiveDateIndex];
+      activeFaltas = groupedByDate[activeDateStr] || [];
+    } else if (dateVal) {
+      activeDateStr = dateVal;
+    }
+
+    renderHistorial(activeFaltas, activeDateStr, histActiveDateIndex, sortedDates.length, sortedDates);
   }
 };
 
@@ -1634,127 +1669,112 @@ function renderPenalizados(pens) {
   if (window.lucide) window.lucide.createIcons();
 }
 
-function renderHistorial(faltas) {
+function renderHistorial(faltas, activeDate, activeIndex, totalDays, sortedDates) {
   const container = document.getElementById('historialTable');
   if (!container) return;
-  if (!faltas.length) {
-    container.innerHTML = '<div class="empty-pen">No hay faltas registradas.</div>';
-    return;
+
+  let formattedDate = 'Sin registros';
+  if (activeDate && activeDate !== 'Sin registros') {
+    const d = new Date(activeDate + 'T12:00:00');
+    formattedDate = d.toLocaleDateString('es-ES', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+    formattedDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
   }
 
-  // Group faltas by usuario_id
-  const grouped = {};
-  faltas.forEach(f => {
-    const key = f.usuario_id || f.matricula || f.nombre;
-    if (!grouped[key]) {
-      grouped[key] = {
-        nombre: f.nombre,
-        matricula: f.matricula,
-        email: f.email,
-        faltas: []
-      };
-    }
-    grouped[key].faltas.push(f);
-  });
+  const prevDisabled = activeIndex >= totalDays - 1 || totalDays <= 1;
+  const nextDisabled = activeIndex <= 0 || totalDays <= 1;
 
-  // Sort students by number of faltas descending
-  const sorted = Object.values(grouped).sort((a, b) => b.faltas.length - a.faltas.length);
-
-  let html = '';
-
-  sorted.forEach(student => {
-    const total = student.faltas.length;
-    const cls = total >= 3 ? 'high' : total >= 2 ? 'med' : 'low';
-    const riskColor = total >= 3 ? '#f87171' : total >= 2 ? '#fbbf24' : '#34d399';
-    const riskBg = total >= 3
-      ? 'rgba(239,68,68,0.08)'
-      : total >= 2
-        ? 'rgba(245,158,11,0.08)'
-        : 'rgba(16,185,129,0.08)';
-    const riskBorder = total >= 3
-      ? 'rgba(239,68,68,0.2)'
-      : total >= 2
-        ? 'rgba(245,158,11,0.2)'
-        : 'rgba(16,185,129,0.2)';
-
-    // Sort faltas by date desc
-    const faltasOrdenadas = [...student.faltas].sort((a, b) =>
-      new Date(b.created_at || b.fecha) - new Date(a.created_at || a.fecha)
-    );
-
-    html += `
-      <div class="hist-student-card" style="
-        background: ${riskBg};
-        border: 1px solid ${riskBorder};
-        border-radius: 1rem;
-        margin-bottom: 0.75rem;
-        overflow: hidden;
-      ">
-        <!-- Student header -->
-        <div style="
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0.9rem 1.25rem;
-          gap: 1rem;
-          flex-wrap: wrap;
-          cursor: pointer;
-        " onclick="this.parentElement.querySelector('.hist-detail').classList.toggle('hidden')">
-          <div style="display:flex; align-items:center; gap:0.75rem;">
-            <div style="
-              width: 36px; height: 36px; border-radius: 50%;
-              background: ${riskBg}; border: 2px solid ${riskColor};
-              display: flex; align-items: center; justify-content: center;
-              font-weight: 900; font-size: 0.95rem; color: ${riskColor};
-              flex-shrink: 0;
-            ">${total}</div>
-            <div>
-              <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">${sanitize(student.nombre) || '—'}</div>
-              <div style="font-size: 0.75rem; color: #64748b; font-family: monospace;">${sanitize(student.matricula) || '—'}</div>
-            </div>
-          </div>
-          <div style="display:flex; align-items:center; gap:0.75rem;">
-            <span class="falta-count ${cls}">${total} / 3 faltas</span>
-            <span style="color:#475569; font-size:0.75rem;">▼ ver detalle</span>
-          </div>
+  let tableHtml = '';
+  if (!faltas || faltas.length === 0) {
+    tableHtml = `
+      <div class="logbook-empty-state">
+        <div class="logbook-empty-icon">
+          <i data-lucide="calendar-x" style="width:24px;height:24px;"></i>
         </div>
-
-        <!-- Faltas detail (collapsible) -->
-        <div class="hist-detail" style="
-          border-top: 1px solid ${riskBorder};
-          overflow: hidden;
-        ">
-          <table style="width:100%; border-collapse:collapse;">
-            <thead>
-              <tr style="background: rgba(0,0,0,0.15);">
-                <th style="padding:0.6rem 1.25rem; text-align:left; font-size:0.65rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:#475569;">#</th>
-                <th style="padding:0.6rem 1.25rem; text-align:left; font-size:0.65rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:#475569;">Horario</th>
-                <th style="padding:0.6rem 1.25rem; text-align:left; font-size:0.65rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:#475569;">Fecha viaje</th>
-                <th style="padding:0.6rem 1.25rem; text-align:left; font-size:0.65rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:#475569;">Registrado</th>
+        <div style="font-weight:700;color:#94a3b8;font-size:0.95rem;margin-bottom:0.25rem;">No hay faltas registradas</div>
+        <p style="font-size:0.8rem;color:#64748b;margin:0;max-width:280px;">Ningún estudiante tiene inasistencias reportadas en este día de viaje.</p>
+      </div>
+    `;
+  } else {
+    tableHtml = `
+      <div class="logbook-table-container">
+        <table class="logbook-table">
+          <thead>
+            <tr>
+              <th style="width: 60px;">#</th>
+              <th>Nombre</th>
+              <th>Matrícula</th>
+              <th>Horario de viaje</th>
+              <th>Email</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${faltas.map((f, i) => `
+              <tr>
+                <td style="font-weight: 700; color: #fbbf24;">${i + 1}</td>
+                <td style="font-weight: 700; color: #f8fafc;">${sanitize(f.nombre) || '—'}</td>
+                <td><code style="font-size:0.78rem;color:#fbbf24;background:rgba(251,191,36,0.08);padding:0.15rem 0.4rem;border-radius:0.3rem;border:1px solid rgba(251,191,36,0.15);">${sanitize(f.matricula) || '—'}</code></td>
+                <td style="color:#e2e8f0;font-size:0.82rem;">${sanitize(f.horario) || '—'}</td>
+                <td style="font-size:0.78rem;color:#64748b;">${sanitize(f.email) || '—'}</td>
               </tr>
-            </thead>
-            <tbody>
-              ${faltasOrdenadas.map((f, i) => {
-      const registrado = f.created_at
-        ? new Date(f.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-        : '—';
-      const fechaViaje = f.fecha
-        ? new Date(f.fecha + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })
-        : '—';
-      return `<tr style="border-top: 1px solid rgba(255,255,255,0.04);">
-                  <td style="padding:0.65rem 1.25rem; color:#475569; font-size:0.78rem; font-weight:700;">${i + 1}</td>
-                  <td style="padding:0.65rem 1.25rem; color:#e2e8f0; font-size:0.82rem;">${sanitize(f.horario) || '—'}</td>
-                  <td style="padding:0.65rem 1.25rem; color:#94a3b8; font-size:0.8rem;">${fechaViaje}</td>
-                  <td style="padding:0.65rem 1.25rem; color:#64748b; font-size:0.75rem;">${registrado}</td>
-                </tr>`;
-    }).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>`;
-  });
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
 
-  container.innerHTML = html;
+  const paginationInfo = totalDays > 0 ? `Día ${activeIndex + 1} de ${totalDays}` : 'Día 0 de 0';
+
+  container.innerHTML = `
+    <div class="logbook-card">
+      <div class="logbook-header">
+        <div class="logbook-title-area">
+          <span class="logbook-subtitle">📖 LIBRO DE REGISTRO DE FALTAS</span>
+          <span class="logbook-date-display">${formattedDate}</span>
+        </div>
+        <div class="logbook-nav">
+          <button class="logbook-nav-btn" id="logbookPrevBtn" ${prevDisabled ? 'disabled' : ''} title="Día anterior">
+            <i data-lucide="chevron-left" style="width:20px;height:20px;"></i>
+          </button>
+          <span class="logbook-nav-info">${paginationInfo}</span>
+          <button class="logbook-nav-btn" id="logbookNextBtn" ${nextDisabled ? 'disabled' : ''} title="Día siguiente">
+            <i data-lucide="chevron-right" style="width:20px;height:20px;"></i>
+          </button>
+        </div>
+      </div>
+      
+      ${tableHtml}
+    </div>
+  `;
+
+  const prevBtn = container.querySelector('#logbookPrevBtn');
+  const nextBtn = container.querySelector('#logbookNextBtn');
+
+  if (prevBtn) {
+    prevBtn.onclick = () => {
+      histActiveDateIndex++;
+      const nextDate = sortedDates[histActiveDateIndex];
+      const dateInput = document.getElementById('penDate');
+      if (dateInput && nextDate) {
+        dateInput.value = nextDate;
+      }
+      window.filterPenalidades(false);
+    };
+  }
+
+  if (nextBtn) {
+    nextBtn.onclick = () => {
+      histActiveDateIndex--;
+      const nextDate = sortedDates[histActiveDateIndex];
+      const dateInput = document.getElementById('penDate');
+      if (dateInput && nextDate) {
+        dateInput.value = nextDate;
+      }
+      window.filterPenalidades(false);
+    };
+  }
+
+  if (window.lucide) window.lucide.createIcons();
 }
 
 async function levantarPenalidad(usuarioId) {

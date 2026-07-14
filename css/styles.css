@@ -3527,6 +3527,152 @@ input:checked+.slider:before {
   animation: pulse-red 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+/* Libro de Registro de Faltas (Logbook) */
+.logbook-card {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1.5px dashed rgba(251, 191, 36, 0.25);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  margin-top: 1rem;
+}
+
+.logbook-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px dashed rgba(251, 191, 36, 0.15);
+  padding-bottom: 1.2rem;
+  margin-bottom: 1.2rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.logbook-title-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.logbook-subtitle {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #fbbf24;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  opacity: 0.85;
+}
+
+.logbook-date-display {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #f8fafc;
+  font-family: 'Outfit', sans-serif;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.logbook-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.logbook-nav-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  width: 32px;
+  height: 32px;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.logbook-nav-btn:hover:not(:disabled) {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  transform: scale(1.05);
+}
+
+.logbook-nav-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.logbook-nav-info {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-family: monospace;
+  font-weight: 600;
+}
+
+.logbook-table-container {
+  overflow-x: auto;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.logbook-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.logbook-table th {
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.8rem 1rem;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #475569;
+  letter-spacing: 0.08em;
+}
+
+.logbook-table td {
+  padding: 0.9rem 1rem;
+  font-size: 0.85rem;
+  color: #e2e8f0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.logbook-table tr:last-child td {
+  border-bottom: none;
+}
+
+.logbook-table tr:hover td {
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.logbook-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  gap: 1rem;
+}
+
+.logbook-empty-icon {
+  width: 48px;
+  height: 48px;
+  color: #475569;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Botón levantar */
 .btn-levantar {
   display: inline-flex;
