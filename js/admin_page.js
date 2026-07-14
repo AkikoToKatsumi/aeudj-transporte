@@ -2428,42 +2428,92 @@ window.showFaltasDetalleModal = async function (userId, nombre, matricula, email
     if (!historicalFaltas || historicalFaltas.length === 0) {
       listContainer.innerHTML = '<div style="padding:2rem; text-align:center; color:#475569; font-size:0.85rem;">No hay faltas registradas en el historial de viajes.</div>';
     } else {
-      let html = `
-        <div class="logbook-table-container" style="margin: 0; box-shadow: none; border-radius: 0; border: none; background: transparent;">
-          <table class="logbook-table" style="width: 100%;">
-            <thead>
-              <tr>
-                <th style="width: 50px; padding: 0.75rem 1rem;">#</th>
-                <th style="padding: 0.75rem 1rem; text-align: left;">Horario de viaje</th>
-                <th style="width: 160px; padding: 0.75rem 1rem; text-align: left;">Fecha de viaje</th>
-                <th style="width: 180px; padding: 0.75rem 1rem; text-align: left;">Fecha de registro</th>
-              </tr>
-            </thead>
-            <tbody>
-      `;
-      historicalFaltas.forEach((f, idx) => {
-        const fechaViaje = f.fecha
-          ? new Date(f.fecha + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })
-          : '—';
-        const registrado = f.created_at
-          ? new Date(f.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-          : '—';
+      let modalCurrentPage = 0;
+      const MODAL_PAGE_SIZE = 5;
+      const totalModalPages = Math.ceil(historicalFaltas.length / MODAL_PAGE_SIZE);
+
+      const renderPage = (page) => {
+        const startIdx = page * MODAL_PAGE_SIZE;
+        const pageItems = historicalFaltas.slice(startIdx, startIdx + MODAL_PAGE_SIZE);
+
+        let html = `
+          <div class="logbook-table-container" style="margin: 0; box-shadow: none; border-radius: 0; border: none; background: transparent;">
+            <table class="logbook-table" style="width: 100%;">
+              <thead>
+                <tr>
+                  <th style="width: 50px; padding: 0.75rem 1rem;">#</th>
+                  <th style="padding: 0.75rem 1rem; text-align: left;">Horario de viaje</th>
+                  <th style="width: 160px; padding: 0.75rem 1rem; text-align: left;">Fecha de viaje</th>
+                  <th style="width: 180px; padding: 0.75rem 1rem; text-align: left;">Fecha de registro</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+
+        pageItems.forEach((f, idx) => {
+          const globalIdx = startIdx + idx;
+          const fechaViaje = f.fecha
+            ? new Date(f.fecha + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })
+            : '—';
+          const registrado = f.created_at
+            ? new Date(f.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+            : '—';
+
+          html += `
+                <tr>
+                  <td style="font-weight: 700; color: #fbbf24; padding: 0.75rem 1rem; text-align: center;">${globalIdx + 1}</td>
+                  <td style="font-weight: 700; color: #f8fafc; padding: 0.75rem 1rem; text-align: left; font-size: 0.85rem;">${sanitize(f.horario) || '—'}</td>
+                  <td style="color:#e2e8f0; font-size:0.82rem; padding: 0.75rem 1rem; text-align: left;">${fechaViaje}</td>
+                  <td style="font-size:0.78rem; color:#64748b; padding: 0.75rem 1rem; text-align: left;">${registrado}</td>
+                </tr>
+          `;
+        });
 
         html += `
-              <tr>
-                <td style="font-weight: 700; color: #fbbf24; padding: 0.75rem 1rem; text-align: center;">${idx + 1}</td>
-                <td style="font-weight: 700; color: #f8fafc; padding: 0.75rem 1rem; text-align: left; font-size: 0.85rem;">${sanitize(f.horario) || '—'}</td>
-                <td style="color:#e2e8f0; font-size:0.82rem; padding: 0.75rem 1rem; text-align: left;">${fechaViaje}</td>
-                <td style="font-size:0.78rem; color:#64748b; padding: 0.75rem 1rem; text-align: left;">${registrado}</td>
-              </tr>
+              </tbody>
+            </table>
+          </div>
         `;
-      });
-      html += `
-            </tbody>
-          </table>
-        </div>
-      `;
-      listContainer.innerHTML = html;
+
+        if (totalModalPages > 1) {
+          html += `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; padding:0.5rem 1rem; background:rgba(255,255,255,0.02); border-radius:0.5rem; border:1px solid rgba(255,255,255,0.04); gap:1rem;">
+              <button id="modal-prev-page" class="btn-pill-outline" style="padding:0.4rem 0.8rem; font-size:0.75rem; display:flex; align-items:center; gap:0.25rem; cursor:pointer;" ${page === 0 ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''}>
+                <i data-lucide="chevron-left" style="width:14px; height:14px;"></i> Anterior
+              </button>
+              <span style="font-size:0.8rem; color:#94a3b8; font-weight:600;">Pág. ${page + 1} de ${totalModalPages} &nbsp;·&nbsp; ${historicalFaltas.length} faltas</span>
+              <button id="modal-next-page" class="btn-pill-outline" style="padding:0.4rem 0.8rem; font-size:0.75rem; display:flex; align-items:center; gap:0.25rem; cursor:pointer;" ${page >= totalModalPages - 1 ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''}>
+                Siguiente <i data-lucide="chevron-right" style="width:14px; height:14px;"></i>
+              </button>
+            </div>
+          `;
+        }
+
+        listContainer.innerHTML = html;
+        if (window.lucide) window.lucide.createIcons();
+
+        const prevBtn = listContainer.querySelector('#modal-prev-page');
+        const nextBtn = listContainer.querySelector('#modal-next-page');
+
+        if (prevBtn) {
+          prevBtn.onclick = () => {
+            if (modalCurrentPage > 0) {
+              modalCurrentPage--;
+              renderPage(modalCurrentPage);
+            }
+          };
+        }
+        if (nextBtn) {
+          nextBtn.onclick = () => {
+            if (modalCurrentPage < totalModalPages - 1) {
+              modalCurrentPage++;
+              renderPage(modalCurrentPage);
+            }
+          };
+        }
+      };
+
+      renderPage(modalCurrentPage);
     }
 
     const actionsContainer = ov.querySelector('#modal-actions-container');
