@@ -126,28 +126,29 @@
   styleEl.textContent = CSS;
   document.head.appendChild(styleEl);
 
-  // ─── Helper: create / reuse overlay ────────────────────────
+  // ─── Helper: create fresh overlay (remove old) ─────────────
   function makeOverlay(id) {
-    let ov = document.getElementById(id);
-    if (!ov) {
-      ov = document.createElement('div');
-      ov.id = id;
-      ov.className = 'aeudj-overlay';
-      document.body.appendChild(ov);
-    }
+    const old = document.getElementById(id);
+    if (old) old.remove();
+
+    const ov = document.createElement('div');
+    ov.id = id;
+    ov.className = 'aeudj-overlay';
+    ov.style.display = 'none';
+    document.body.appendChild(ov);
     return ov;
   }
 
   function show(ov) {
-    requestAnimationFrame(() => {
-      ov.style.display = 'flex';
-      requestAnimationFrame(() => ov.classList.add('visible'));
-    });
+    ov.style.display = 'flex';
+    // Force reflow so transition can trigger
+    ov.offsetHeight;
+    ov.classList.add('visible');
   }
 
   function hide(ov) {
     ov.classList.remove('visible');
-    setTimeout(() => { ov.style.display = 'none'; }, 280);
+    setTimeout(() => { ov.remove(); }, 280);
   }
 
   const ICONS = {
