@@ -42,6 +42,7 @@
   font-size: 1.9rem;
 }
 .aeudj-icon-wrap.info    { background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3); }
+.aeudj-icon-wrap.user    { background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3); }
 .aeudj-icon-wrap.warn    { background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); }
 .aeudj-icon-wrap.danger  { background: rgba(239,68,68,0.12);  border: 1px solid rgba(239,68,68,0.3); }
 .aeudj-icon-wrap.success { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); }

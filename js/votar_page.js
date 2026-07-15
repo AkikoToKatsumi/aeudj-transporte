@@ -216,27 +216,27 @@ async function openStudentPanel(user) {
     const penalizado = penActivas > 0 || pEntry?.penalizado;
 
     const htmlMsg = `
-      <div style="text-align: left;">
-        <div style="display: flex; align-items: center; gap: 0.85rem; margin-top: -0.25rem; margin-bottom: 0.6rem;">
-          <div style="width: 38px; height: 38px; border-radius: 50%; background: rgba(59,130,246,0.15); display: flex; align-items: center; justify-content: center; font-size: 1.15rem; border: 1px solid rgba(59,130,246,0.3); box-shadow: 0 0 15px rgba(59,130,246,0.15);">
+      <div style="text-align: center;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem; margin-top: -0.5rem; margin-bottom: 1.25rem;">
+          <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(59,130,246,0.15); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; border: 1px solid rgba(59,130,246,0.3); box-shadow: 0 0 15px rgba(59,130,246,0.15);">
             🎓
           </div>
           <div>
-            <h3 style="margin: 0; color: #f8fafc; font-size: 1.1rem; font-weight: 700; letter-spacing: 0.01em;">${user.nombre}</h3>
-            <p style="margin: 0.1rem 0 0 0; color: #94a3b8; font-size: 0.78rem; font-weight: 500;">Matrícula: ${user.matricula}</p>
+            <p style="margin: 0; color: #f8fafc; font-size: 1.05rem;"><strong style="font-weight: 800;">Nombre:</strong> <span style="font-weight: 500;">${user.nombre}</span></p>
+            <p style="margin: 0.2rem 0 0.1rem 0; color: #cbd5e1; font-size: 0.85rem;"><strong style="font-weight: 700;">Matrícula:</strong> ${user.matricula}</p>
+            <p style="margin: 0; color: #94a3b8; font-size: 0.8rem;"><strong style="font-weight: 700;">Email:</strong> ${user.email || 'No registrado'}</p>
           </div>
         </div>
-        <p style="margin: 0 0 1.2rem 0; color: #64748b; font-size: 0.8rem; padding-left: 2px;">✉️ ${user.email || 'No registrado'}</p>
 
         <div class="student-info-badge">
           <span class="student-info-label">Faltas Totales</span>
-          <span class="falta-count ${activeFaltas > 0 ? 'high' : 'low'}">${activeFaltas} ${activeFaltas === 1 ? 'Falta' : 'Faltas'}</span>
+          <span class="falta-count ${activeFaltas > 0 ? 'high' : 'low'}">${activeFaltas}</span>
         </div>
 
-        <div class="student-info-badge" style="margin-bottom: 1.2rem;">
+        <div class="student-info-badge" style="margin-bottom: 1.5rem;">
           <span class="student-info-label">Penalidades</span>
           <div class="active-faltas-container">
-            <span class="falta-count ${penActivas > 0 ? 'high' : 'low'}">${penActivas} ${penActivas === 1 ? 'Penalidad' : 'Penalidades'}</span>
+            <span class="falta-count ${penActivas > 0 ? 'high' : 'low'}">${penActivas}</span>
             <div class="active-faltas-dots">
               <span class="active-falta-dot ${warnings >= 1 ? 'active' : 'inactive'}"></span>
               <span class="active-falta-dot ${warnings >= 2 ? 'active' : 'inactive'}"></span>
@@ -245,16 +245,16 @@ async function openStudentPanel(user) {
           </div>
         </div>
 
-        <div style="margin-bottom: 1.5rem;">
+        <div style="margin-bottom: 1.25rem;">
           ${penalizado 
-            ? '<div style="background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; color: #fca5a5; padding: 1rem 1.25rem; border-radius: 0 0.75rem 0.75rem 0; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 0.75rem; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.1);"><span class="active-falta-dot pulse-red" style="width:10px;height:10px;"></span> <span>Estás penalizado.</span></div>'
-            : '<div style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; color: #6ee7b7; padding: 1rem 1.25rem; border-radius: 0 0.75rem 0.75rem 0; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 0.75rem; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.05);"><span class="status-dot-green"></span> <span>Estado Activo y sin restricciones.</span></div>'
+            ? '<div style="background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; color: #fca5a5; padding: 0.85rem 1rem; border-radius: 0 0.75rem 0.75rem 0; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.75rem; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.1);"><span class="active-falta-dot pulse-red" style="width:10px;height:10px;flex-shrink:0;"></span> <span style="text-align:left;">Estás penalizado.</span></div>'
+            : '<div style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; color: #6ee7b7; padding: 0.85rem 1rem; border-radius: 0 0.75rem 0.75rem 0; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.75rem; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.05);"><span class="status-dot-green" style="flex-shrink:0;"></span> <span style="text-align:left;">Estado Activo y sin restricciones.</span></div>'
           }
         </div>
       </div>
     `;
 
-    window.alert(htmlMsg, penalizado ? 'warn' : 'info', 'Panel de Estudiante');
+    window.alert(htmlMsg, penalizado ? 'warn' : 'user', 'Panel de Estudiante');
   } catch (err) {
     console.error('Error fetching student panel data:', err);
   }
