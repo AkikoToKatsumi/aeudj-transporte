@@ -1812,7 +1812,7 @@ async function levantarPenalidad(usuarioId) {
 
     if (pErr) throw pErr;
 
-    // 2. Si no existe registro en penalidades, obtener la cantidad de faltas históricas de votos
+    // 2. Obtener cantidad actual de faltas
     let currentFaltasCount = 0;
     if (pEntry && pEntry.total_faltas !== undefined && pEntry.total_faltas !== null) {
       currentFaltasCount = pEntry.total_faltas;
@@ -1826,7 +1826,7 @@ async function levantarPenalidad(usuarioId) {
       currentFaltasCount = histVotes ? histVotes.length : 0;
     }
 
-    // 3. Obtener filas activas de la tabla faltas (si existen)
+    // 3. Eliminar hasta 3 filas de la tabla faltas (contador activo)
     const { data: activeRows, error: fetchErr } = await supabase
       .from('faltas')
       .select('id')
@@ -1836,10 +1836,10 @@ async function levantarPenalidad(usuarioId) {
     if (fetchErr) throw fetchErr;
 
     const dbFaltasCount = activeRows ? activeRows.length : 0;
-    const toDeleteCount = Math.min(3, dbFaltasCount);
+    const toDeleteFromFaltas = Math.min(3, dbFaltasCount);
 
-    if (toDeleteCount > 0) {
-      const idsToDelete = activeRows.slice(0, toDeleteCount).map(r => r.id);
+    if (toDeleteFromFaltas > 0) {
+      const idsToDelete = activeRows.slice(0, toDeleteFromFaltas).map(r => r.id);
       const { error: deleteErr } = await supabase
         .from('faltas')
         .delete()
@@ -1848,11 +1848,33 @@ async function levantarPenalidad(usuarioId) {
       if (deleteErr) throw deleteErr;
     }
 
-    // 4. Calcular el nuevo total restando 3
+    // 4. Eliminar hasta 3 registros de votos con se_monto=0 (las faltas históricas, más antiguas primero)
+    const { data: histVotosRows, error: histFetchErr } = await supabase
+      .from('votos')
+      .select('id')
+      .eq('usuario_id', usuarioId)
+      .eq('se_monto', 0)
+      .order('fecha', { ascending: true })
+      .order('created_at', { ascending: true })
+      .limit(3);
+
+    if (histFetchErr) throw histFetchErr;
+
+    if (histVotosRows && histVotosRows.length > 0) {
+      const votosIdsToDelete = histVotosRows.map(r => r.id);
+      const { error: votosDeleteErr } = await supabase
+        .from('votos')
+        .delete()
+        .in('id', votosIdsToDelete);
+
+      if (votosDeleteErr) throw votosDeleteErr;
+    }
+
+    // 5. Calcular el nuevo total restando 3
     const newCount = Math.max(0, currentFaltasCount - 3);
     const stillPenalized = newCount >= 3;
 
-    // 5. Upsert el nuevo registro en penalidades
+    // 6. Upsert el nuevo registro en penalidades
     const { error: updateErr } = await supabase
       .from('penalidades')
       .upsert({
