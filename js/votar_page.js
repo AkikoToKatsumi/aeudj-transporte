@@ -161,15 +161,34 @@ function loadSession() {
   return null;
 }
 
-// ── STAFF MENU ──────────────────────────────────────────
+// ── MENU SUPERIOR (Estudiante, Voluntario, Admin) ───────────────
 function buildStaffMenu(user) {
-  if (!user || !user.rol || !staffMenu) return;
-  const rol = user.rol;
+  if (!user || !staffMenu) return;
+  const rol = user.rol || '';
   const isAdmin = rol.includes('admin') || rol.includes('desarrolladora');
   const isVol   = rol.includes('voluntario') || rol.includes('desarrolladora') || rol.includes('comité');
-  if (!isAdmin && !isVol) return;
+  
   staffMenu.classList.add('visible');
   staffMenu.innerHTML = '';
+  
+  // 1. Estudiante (Visible for everyone)
+  const aStudent = document.createElement('a');
+  aStudent.href = '#';
+  aStudent.className = 'btn-student';
+  aStudent.textContent = '🎓 Panel de Estudiante';
+  aStudent.onclick = (e) => { e.preventDefault(); openStudentPanel(user); };
+  staffMenu.appendChild(aStudent);
+
+  // 2. Voluntario
+  if (isVol) {
+    const a = document.createElement('a');
+    a.href = 'voluntario.html';
+    a.className = 'btn-volunteer';
+    a.textContent = '🟢 Panel de Voluntario';
+    staffMenu.appendChild(a);
+  }
+
+  // 3. Admin
   if (isAdmin) {
     const a = document.createElement('a');
     a.href = 'admin.html';
@@ -177,12 +196,51 @@ function buildStaffMenu(user) {
     a.textContent = '🛡️ Panel de Administración';
     staffMenu.appendChild(a);
   }
-  if (isVol) {
-    const a = document.createElement('a');
-    a.href = 'voluntario.html';
-    a.className = 'btn-volunteer';
-    a.textContent = '🟢 Panel de Voluntario';
-    staffMenu.appendChild(a);
+}
+
+async function openStudentPanel(user) {
+  try {
+    const btn = document.querySelector('.btn-student');
+    if(btn) { btn.style.opacity = '0.5'; btn.textContent = 'Cargando...'; }
+
+    const [{ data: pEntry }, { data: activeVotos }] = await Promise.all([
+      supabase.from('penalidades').select('*').eq('usuario_id', user.id).maybeSingle(),
+      supabase.from('votos').select('id').eq('usuario_id', user.id).eq('se_monto', 0)
+    ]);
+    
+    if(btn) { btn.style.opacity = '1'; btn.textContent = '🎓 Panel de Estudiante'; }
+
+    const activeFaltas = pEntry?.total_faltas ?? (activeVotos ? activeVotos.length : 0);
+    const penActivas = Math.floor(activeFaltas / 3);
+    const penalizado = penActivas > 0 || pEntry?.penalizado;
+
+    const htmlMsg = `
+      <div style="text-align: left; margin-bottom: 1.5rem; background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.05);">
+        <p style="margin: 0 0 0.5rem 0; color: #cbd5e1; font-size: 0.9rem;"><strong>👤 Nombre:</strong> <span style="color: #f8fafc;">${user.nombre}</span></p>
+        <p style="margin: 0 0 0.5rem 0; color: #cbd5e1; font-size: 0.9rem;"><strong>🔢 Matrícula:</strong> <span style="color: #f8fafc;">${user.matricula}</span></p>
+        <p style="margin: 0; color: #cbd5e1; font-size: 0.9rem;"><strong>✉️ Email:</strong> <span style="color: #f8fafc;">${user.email || 'N/A'}</span></p>
+      </div>
+      
+      <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
+        <div style="flex: 1; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 1rem; padding: 1rem;">
+          <div style="font-size: 2rem; font-weight: 800; color: ${activeFaltas > 0 ? '#f87171' : '#34d399'}; line-height: 1;">${activeFaltas}</div>
+          <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-top: 0.5rem;">Faltas Activas</div>
+        </div>
+        <div style="flex: 1; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 1rem; padding: 1rem;">
+          <div style="font-size: 2rem; font-weight: 800; color: ${penActivas > 0 ? '#f87171' : '#34d399'}; line-height: 1;">${penActivas}</div>
+          <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-top: 0.5rem;">Penalidades</div>
+        </div>
+      </div>
+
+      ${penalizado 
+        ? \`<div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; padding: 0.75rem; border-radius: 0.75rem; font-size: 0.9rem; font-weight: 600;">🚫 Actualmente tienes penalidades activas.</div>\`
+        : \`<div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #6ee7b7; padding: 0.75rem; border-radius: 0.75rem; font-size: 0.9rem; font-weight: 600;">✅ Estado Activo (Sin Penalidades)</div>\`
+      }
+    `;
+
+    window.alert(htmlMsg, penalizado ? 'warn' : 'info', 'Panel de Estudiante');
+  } catch (err) {
+    console.error('Error fetching student panel data:', err);
   }
 }
 
