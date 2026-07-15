@@ -217,23 +217,23 @@ async function openStudentPanel(user) {
 
     const htmlMsg = `
       <div style="text-align: left;">
-        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.8rem;">
-          <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(59,130,246,0.15); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; border: 1px solid rgba(59,130,246,0.3); box-shadow: 0 0 15px rgba(59,130,246,0.15);">
+        <div style="display: flex; align-items: center; gap: 0.85rem; margin-top: -0.25rem; margin-bottom: 0.6rem;">
+          <div style="width: 38px; height: 38px; border-radius: 50%; background: rgba(59,130,246,0.15); display: flex; align-items: center; justify-content: center; font-size: 1.15rem; border: 1px solid rgba(59,130,246,0.3); box-shadow: 0 0 15px rgba(59,130,246,0.15);">
             🎓
           </div>
           <div>
-            <h3 style="margin: 0; color: #f8fafc; font-size: 1.15rem; font-weight: 700; letter-spacing: 0.01em;">${user.nombre}</h3>
-            <p style="margin: 0.1rem 0 0 0; color: #94a3b8; font-size: 0.8rem; font-weight: 500;">Matrícula: ${user.matricula}</p>
+            <h3 style="margin: 0; color: #f8fafc; font-size: 1.1rem; font-weight: 700; letter-spacing: 0.01em;">${user.nombre}</h3>
+            <p style="margin: 0.1rem 0 0 0; color: #94a3b8; font-size: 0.78rem; font-weight: 500;">Matrícula: ${user.matricula}</p>
           </div>
         </div>
-        <p style="margin: 0 0 1.75rem 0; color: #64748b; font-size: 0.82rem; padding-left: 2px;">✉️ ${user.email || 'No registrado'}</p>
+        <p style="margin: 0 0 1.2rem 0; color: #64748b; font-size: 0.8rem; padding-left: 2px;">✉️ ${user.email || 'No registrado'}</p>
 
         <div class="student-info-badge">
           <span class="student-info-label">Faltas Totales</span>
           <span class="falta-count ${activeFaltas > 0 ? 'high' : 'low'}">${activeFaltas} ${activeFaltas === 1 ? 'Falta' : 'Faltas'}</span>
         </div>
 
-        <div class="student-info-badge" style="margin-bottom: 1.75rem;">
+        <div class="student-info-badge" style="margin-bottom: 1.2rem;">
           <span class="student-info-label">Penalidades</span>
           <div class="active-faltas-container">
             <span class="falta-count ${penActivas > 0 ? 'high' : 'low'}">${penActivas} ${penActivas === 1 ? 'Penalidad' : 'Penalidades'}</span>
@@ -245,10 +245,12 @@ async function openStudentPanel(user) {
           </div>
         </div>
 
-        ${penalizado 
-          ? '<div style="background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; color: #fca5a5; padding: 1rem 1.25rem; border-radius: 0 0.75rem 0.75rem 0; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 0.75rem; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.1);"><span>🚫</span> <span>Estás penalizado.</span></div>'
-          : '<div style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; color: #6ee7b7; padding: 1rem 1.25rem; border-radius: 0 0.75rem 0.75rem 0; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 0.75rem; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.05);"><span>✅</span> <span>Estado Activo y sin restricciones.</span></div>'
-        }
+        <div style="margin-bottom: 1.5rem;">
+          ${penalizado 
+            ? '<div style="background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; color: #fca5a5; padding: 1rem 1.25rem; border-radius: 0 0.75rem 0.75rem 0; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 0.75rem; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.1);"><span class="active-falta-dot pulse-red" style="width:10px;height:10px;"></span> <span>Estás penalizado.</span></div>'
+            : '<div style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; color: #6ee7b7; padding: 1rem 1.25rem; border-radius: 0 0.75rem 0.75rem 0; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 0.75rem; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.05);"><span class="status-dot-green"></span> <span>Estado Activo y sin restricciones.</span></div>'
+          }
+        </div>
       </div>
     `;
 
