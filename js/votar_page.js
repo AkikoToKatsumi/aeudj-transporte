@@ -233,8 +233,8 @@ async function openStudentPanel(user) {
       </div>
 
       ${penalizado 
-        ? \`<div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; padding: 0.75rem; border-radius: 0.75rem; font-size: 0.9rem; font-weight: 600;">🚫 Actualmente tienes penalidades activas.</div>\`
-        : \`<div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #6ee7b7; padding: 0.75rem; border-radius: 0.75rem; font-size: 0.9rem; font-weight: 600;">✅ Estado Activo (Sin Penalidades)</div>\`
+        ? '<div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; padding: 0.75rem; border-radius: 0.75rem; font-size: 0.9rem; font-weight: 600;">🚫 Actualmente tienes penalidades activas.</div>'
+        : '<div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #6ee7b7; padding: 0.75rem; border-radius: 0.75rem; font-size: 0.9rem; font-weight: 600;">✅ Estado Activo (Sin Penalidades)</div>'
       }
     `;
 
