@@ -1647,15 +1647,24 @@ function renderPenalizados(pens) {
       const nombre = btn.dataset.nombre;
       let confirmed = false;
       if (typeof window.aeudjConfirm === 'function') {
-        confirmed = await window.aeudjConfirm(`¿Confirmas que ${nombre} ya pagó la penalidad de sus faltas activas? Esto reiniciará su contador de faltas a 0.`);
+        confirmed = await window.aeudjConfirm(`¿Confirmas que ${nombre} ya pagó la penalidad correspondiente? Esto reducirá su contador de faltas activas en 3.`);
       } else {
-        confirmed = confirm(`¿Confirmas que ${nombre} ya pagó la penalidad de sus faltas activas?`);
+        confirmed = confirm(`¿Confirmas que ${nombre} ya pagó la penalidad correspondiente?`);
       }
       if (!confirmed) return;
       btn.disabled = true;
+      const originalHTML = btn.innerHTML;
       btn.textContent = 'Procesando...';
-      await levantarPenalidad(uid);
-      loadPenalidadesData();
+      try {
+        await levantarPenalidad(uid);
+        window.showAdminToast(`Penalidad levantada para ${nombre} (-3 faltas)`, 'success');
+        loadPenalidadesData();
+      } catch (err) {
+        console.error(err);
+        window.showAdminToast('Error al levantar la penalidad', 'error');
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+      }
     });
   });
 
@@ -1857,7 +1866,12 @@ async function levantarPenalidad(usuarioId) {
     if (updateErr) throw updateErr;
   } catch (err) {
     console.error('Error levantando penalidad:', err);
-    alert('Error al levantar la penalidad. Intenta de nuevo.');
+    if (typeof window.showAdminToast === 'function') {
+      window.showAdminToast('Error al levantar la penalidad. Intenta de nuevo.', 'error');
+    } else {
+      alert('Error al levantar la penalidad. Intenta de nuevo.');
+    }
+    throw err;
   }
 }
 
