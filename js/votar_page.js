@@ -212,29 +212,47 @@ async function openStudentPanel(user) {
 
     const activeFaltas = pEntry?.total_faltas ?? (activeVotos ? activeVotos.length : 0);
     const penActivas = Math.floor(activeFaltas / 3);
+    const warnings = activeFaltas % 3;
     const penalizado = penActivas > 0 || pEntry?.penalizado;
 
+    const dot1Color = (warnings >= 1 || penActivas > 0) ? '#34d399' : '#334155'; // Green if 1
+    const dot2Color = (warnings >= 2 || penActivas > 0) ? '#f87171' : '#334155'; // Red if 2
+    const dot3Color = (penActivas > 0) ? '#ef4444' : '#334155'; // Red if penalized
+
     const htmlMsg = `
-      <div style="text-align: left; margin-bottom: 1.5rem; background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.05);">
-        <p style="margin: 0 0 0.5rem 0; color: #cbd5e1; font-size: 0.9rem;"><strong>👤 Nombre:</strong> <span style="color: #f8fafc;">${user.nombre}</span></p>
-        <p style="margin: 0 0 0.5rem 0; color: #cbd5e1; font-size: 0.9rem;"><strong>🔢 Matrícula:</strong> <span style="color: #f8fafc;">${user.matricula}</span></p>
-        <p style="margin: 0; color: #cbd5e1; font-size: 0.9rem;"><strong>✉️ Email:</strong> <span style="color: #f8fafc;">${user.email || 'N/A'}</span></p>
-      </div>
-      
-      <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
-        <div style="flex: 1; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 1rem; padding: 1rem;">
-          <div style="font-size: 2rem; font-weight: 800; color: ${activeFaltas > 0 ? '#f87171' : '#34d399'}; line-height: 1;">${activeFaltas}</div>
-          <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-top: 0.5rem;">Faltas Activas</div>
+      <div style="text-align: left; margin-bottom: 1.5rem; background: linear-gradient(145deg, rgba(30,41,59,0.7), rgba(15,23,42,0.9)); padding: 1.2rem; border-radius: 1.2rem; border: 1px solid rgba(255,255,255,0.1); box-shadow: inset 0 1px 1px rgba(255,255,255,0.05);">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.8rem;">
+          <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(59,130,246,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; border: 1px solid rgba(59,130,246,0.4);">
+            🎓
+          </div>
+          <div>
+            <h3 style="margin: 0; color: #f8fafc; font-size: 1.1rem; font-weight: 700;">${user.nombre}</h3>
+            <p style="margin: 0.2rem 0 0 0; color: #94a3b8; font-size: 0.85rem;">Matrícula: ${user.matricula}</p>
+          </div>
         </div>
-        <div style="flex: 1; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 1rem; padding: 1rem;">
-          <div style="font-size: 2rem; font-weight: 800; color: ${penActivas > 0 ? '#f87171' : '#34d399'}; line-height: 1;">${penActivas}</div>
-          <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-top: 0.5rem;">Penalidades</div>
+        <p style="margin: 0; color: #cbd5e1; font-size: 0.85rem; padding-left: 4px;">✉️ ${user.email || 'No registrado'}</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+        <div class="student-stat-card">
+          <div style="font-size: 2.5rem; font-weight: 900; color: ${activeFaltas > 0 ? '#f87171' : '#34d399'}; text-shadow: 0 0 20px ${activeFaltas > 0 ? 'rgba(248,113,113,0.4)' : 'rgba(52,211,153,0.4)'}; margin-bottom: 0.5rem; line-height: 1;">${activeFaltas}</div>
+          <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700;">Faltas Activas</div>
+        </div>
+        
+        <div class="student-stat-card">
+          <div style="font-size: 2.5rem; font-weight: 900; color: ${penActivas > 0 ? '#ef4444' : '#cbd5e1'}; text-shadow: 0 0 20px ${penActivas > 0 ? 'rgba(239,68,68,0.5)' : 'transparent'}; margin-bottom: 0.5rem; line-height: 1;">${penActivas}</div>
+          <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700; margin-bottom: 0.75rem;">Penalidades</div>
+          <div style="display: flex; justify-content: center; gap: 0.5rem;">
+            <span class="student-dot" style="background: ${dot1Color}; box-shadow: 0 0 8px ${dot1Color};"></span>
+            <span class="student-dot" style="background: ${dot2Color}; box-shadow: 0 0 8px ${dot2Color};"></span>
+            <span class="student-dot" style="background: ${dot3Color}; ${dot3Color === '#ef4444' ? 'animation: pulseRedAlert 1.5s infinite;' : ''}"></span>
+          </div>
         </div>
       </div>
 
       ${penalizado 
-        ? '<div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; padding: 0.75rem; border-radius: 0.75rem; font-size: 0.9rem; font-weight: 600;">🚫 Actualmente tienes penalidades activas.</div>'
-        : '<div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #6ee7b7; padding: 0.75rem; border-radius: 0.75rem; font-size: 0.9rem; font-weight: 600;">✅ Estado Activo (Sin Penalidades)</div>'
+        ? '<div style="background: linear-gradient(90deg, rgba(239,68,68,0.15), rgba(220,38,38,0.05)); border-left: 4px solid #ef4444; color: #fca5a5; padding: 1rem; border-radius: 0.5rem; font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.75rem;"><span style="font-size:1.25rem">🚫</span> <span style="text-align:left">Estás penalizado. No puedes usar el servicio.</span></div>'
+        : '<div style="background: linear-gradient(90deg, rgba(16,185,129,0.15), rgba(5,150,105,0.05)); border-left: 4px solid #10b981; color: #6ee7b7; padding: 1rem; border-radius: 0.5rem; font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.75rem;"><span style="font-size:1.25rem">✅</span> <span style="text-align:left">Estado Activo y sin restricciones.</span></div>'
       }
     `;
 
