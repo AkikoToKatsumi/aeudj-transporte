@@ -3743,6 +3743,121 @@ input:checked+.slider:before {
   transform: scale(1) translateY(0);
 }
 
+/* ── Modal close X button (top-right corner) ── */
+.faltas-modal-close-x {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  color: #64748b;
+  font-size: 1rem;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  z-index: 10;
+  line-height: 1;
+  font-family: inherit;
+}
+.faltas-modal-close-x:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  transform: rotate(90deg);
+}
+
+/* ── Modal action buttons container ── */
+.faltas-modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  justify-content: flex-end;
+}
+
+/* ── Cerrar button (secondary) ── */
+.faltas-modal-btn-cerrar {
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgba(255, 255, 255, 0.04);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.55rem 1.3rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  border-radius: 0.6rem;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  letter-spacing: 0.01em;
+}
+.faltas-modal-btn-cerrar:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* ── Levantar button (primary green) ── */
+.faltas-modal-btn-levantar {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  border: none;
+  padding: 0.55rem 1.3rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  border-radius: 0.6rem;
+  cursor: pointer;
+  outline: none;
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.25), inset 0 1px 0 rgba(255,255,255,0.15);
+  transition: all 0.2s ease;
+  letter-spacing: 0.01em;
+}
+.faltas-modal-btn-levantar:hover {
+  background: linear-gradient(135deg, #34d399, #10b981);
+  box-shadow: 0 6px 24px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255,255,255,0.2);
+  transform: translateY(-1px);
+}
+.faltas-modal-btn-levantar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ── Disabled state button ── */
+.faltas-modal-btn-disabled {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(255, 255, 255, 0.02);
+  color: #475569;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 0.55rem 1.3rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  border-radius: 0.6rem;
+  cursor: not-allowed;
+  outline: none;
+  opacity: 0.7;
+}
+
 /* Botón levantar */
 .btn-levantar {
   display: inline-flex;
