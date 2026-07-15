@@ -217,7 +217,7 @@ async function openStudentPanel(user) {
 
     const htmlMsg = `
       <div style="text-align: center;">
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem; margin-top: -0.5rem; margin-bottom: 1.25rem;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem; margin-top: -1.25rem; margin-bottom: 1.75rem;">
           <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(59,130,246,0.15); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; border: 1px solid rgba(59,130,246,0.3); box-shadow: 0 0 15px rgba(59,130,246,0.15);">
             🎓
           </div>
