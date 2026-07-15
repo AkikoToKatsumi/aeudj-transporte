@@ -122,63 +122,75 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(15,23,42,0.4);
-  padding: 0.75rem 1rem;
-  border-radius: 0.85rem;
-  border: 1px solid rgba(255,255,255,0.05);
-  margin-bottom: 0.75rem;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 1.25rem 1.5rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 1.25rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+.student-info-badge:hover {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
 }
 .student-info-label {
-  color: #cbd5e1;
-  font-size: 0.9rem;
-  font-weight: 600;
+  color: #e2e8f0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 .falta-count {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.3rem 0.75rem;
+  padding: 0.4rem 1rem;
   border-radius: 2rem;
   font-weight: 800;
-  font-size: 0.8rem;
-  letter-spacing: 0.03em;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 10px currentColor;
 }
 .falta-count.low {
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(16, 185, 129, 0.15);
   color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
 }
 .falta-count.high {
-  background: rgba(239, 68, 68, 0.1);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.15);
 }
 .active-faltas-container {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.75rem;
 }
 .active-faltas-dots {
   display: flex;
-  gap: 4px;
+  gap: 5px;
 }
 .active-falta-dot {
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   transition: all 0.3s ease;
 }
 .active-falta-dot.inactive {
   background: #334155;
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.6);
 }
 .active-falta-dot.active {
   background: #ef4444;
-  box-shadow: 0 0 6px #ef4444;
+  box-shadow: 0 0 8px #ef4444;
 }
 @keyframes pulse-red-admin {
-  0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 8px #ef4444; }
-  50% { opacity: .4; transform: scale(0.85); box-shadow: 0 0 2px #ef4444; }
+  0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 12px #ef4444; }
+  50% { opacity: .5; transform: scale(0.85); box-shadow: 0 0 3px #ef4444; }
 }
 .active-falta-dot.pulse-red {
   background: #ef4444;
