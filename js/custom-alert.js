@@ -3,8 +3,12 @@
    All native browser dialogs replaced with themed modals
    ============================================================ */
 
-(function () {   // CSS is now in styles.css due to CSP blocking inline styles
-  
+(function () {
+  // Inject CSS stylesheet link
+  const linkEl = document.createElement('link');
+  linkEl.rel = 'stylesheet';
+  linkEl.href = 'css/custom-alert.css';
+  document.head.appendChild(linkEl);
   // ─── Helper: create fresh overlay (remove old) ─────────────
   function makeOverlay(id) {
     const old = document.getElementById(id);
