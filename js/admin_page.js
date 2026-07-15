@@ -2360,7 +2360,8 @@ window.showFaltasDetalleModal = async function (userId, nombre, matricula, email
   ov.className = 'faltas-detail-overlay';
   ov.innerHTML = `
     <div class="faltas-detail-dialog" style="text-align: left; position: relative;">
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; gap:1rem;">
+      <button id="modal-close-btn" style="position:absolute; top:1rem; right:1rem; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); color:#94a3b8; font-size:1.1rem; cursor:pointer; line-height:1; width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:50%; outline:none; transition:all 0.2s; z-index:10;" title="Cerrar">✕</button>
+      <div style="margin-bottom:1.25rem; padding-right:2rem;">
         <div>
           <h3 style="margin:0 0 0.3rem 0; font-size:1.15rem; font-weight:800; color: #fbbf24; font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing:-0.01em;">📅 Historial de Inasistencias</h3>
           <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
@@ -2369,7 +2370,6 @@ window.showFaltasDetalleModal = async function (userId, nombre, matricula, email
             <span style="font-family:monospace; font-size:0.78rem; color:#fbbf24; background:rgba(251,191,36,0.08); padding:0.1rem 0.5rem; border-radius:0.35rem; border:1px solid rgba(251,191,36,0.15);">${sanitize(matricula)}</span>
           </div>
         </div>
-        <button id="modal-close-btn" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); color:#94a3b8; font-size:1rem; cursor:pointer; line-height:1; padding:0.4rem 0.6rem; border-radius:0.5rem; outline:none; transition:all 0.2s; flex-shrink:0;" title="Cerrar">✕</button>
       </div>
       <div style="height:1px; background:linear-gradient(90deg, rgba(251,191,36,0.2), rgba(255,255,255,0.04), transparent); margin: 0 0 1.25rem 0;"></div>
 
@@ -2382,9 +2382,9 @@ window.showFaltasDetalleModal = async function (userId, nombre, matricula, email
         </div>
       </div>
 
-      <div style="display:flex; gap:0.75rem; margin-top:1.25rem; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.04);" id="modal-actions-container">
-        <button class="aeudj-btn secondary" id="modal-close-btn2" style="flex:1;">Cerrar</button>
-        <button class="aeudj-btn secondary" disabled style="flex:1.2; opacity:0.3; cursor:not-allowed; font-size:0.8rem;">
+      <div style="display:flex; gap:0.75rem; margin-top:1.25rem; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.04); justify-content:flex-end;" id="modal-actions-container">
+        <button id="modal-close-btn2" style="background:rgba(255,255,255,0.05); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); padding:0.6rem 1.2rem; font-size:0.85rem; font-weight:600; border-radius:0.6rem; cursor:pointer; transition:all 0.2s; outline:none;">Cerrar</button>
+        <button disabled style="background:rgba(255,255,255,0.02); color:#64748b; border:1px solid rgba(255,255,255,0.05); padding:0.6rem 1.2rem; font-size:0.85rem; font-weight:600; border-radius:0.6rem; cursor:not-allowed; opacity:0.7;">
           Cargando estado...
         </button>
       </div>
@@ -2539,15 +2539,15 @@ window.showFaltasDetalleModal = async function (userId, nombre, matricula, email
       if (activeCount > 0) {
         const liftText = activeCount >= 3 ? '-3 Faltas' : `-${activeCount} Faltas`;
         actionsContainer.innerHTML = `
-          <button class="aeudj-btn secondary" id="modal-close-btn2" style="flex:1;">Cerrar</button>
-          <button class="aeudj-btn primary" id="modal-levantar-btn" style="flex:1.5; background:linear-gradient(135deg, #10b981, #059669); box-shadow:0 4px 18px rgba(16,185,129,0.3);">
+          <button id="modal-close-btn2" style="background:rgba(255,255,255,0.05); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); padding:0.6rem 1.2rem; font-size:0.85rem; font-weight:600; border-radius:0.6rem; cursor:pointer; transition:all 0.2s; outline:none;">Cerrar</button>
+          <button id="modal-levantar-btn" style="background:linear-gradient(135deg, #10b981, #059669); color:#fff; box-shadow:0 4px 18px rgba(16,185,129,0.3); border:none; padding:0.6rem 1.2rem; font-size:0.85rem; font-weight:600; border-radius:0.6rem; cursor:pointer; transition:all 0.2s; outline:none; display:flex; align-items:center; gap:0.4rem;">
             🔓 Levantar (${liftText})
           </button>
         `;
       } else {
         actionsContainer.innerHTML = `
-          <button class="aeudj-btn secondary" id="modal-close-btn2" style="flex:1;">Cerrar</button>
-          <button class="aeudj-btn secondary" disabled style="flex:1.2; opacity:0.4; cursor:not-allowed;">
+          <button id="modal-close-btn2" style="background:rgba(255,255,255,0.05); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); padding:0.6rem 1.2rem; font-size:0.85rem; font-weight:600; border-radius:0.6rem; cursor:pointer; transition:all 0.2s; outline:none;">Cerrar</button>
+          <button disabled style="background:rgba(255,255,255,0.02); color:#64748b; border:1px solid rgba(255,255,255,0.05); padding:0.6rem 1.2rem; font-size:0.85rem; font-weight:600; border-radius:0.6rem; cursor:not-allowed; opacity:0.7; display:flex; align-items:center; gap:0.4rem;">
             ✅ Sin Faltas Activas
           </button>
         `;
