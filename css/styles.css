@@ -3858,6 +3858,59 @@ input:checked+.slider:before {
   opacity: 0.7;
 }
 
+/* ── Modal pagination bar ── */
+.faltas-modal-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  padding: 0.55rem 1rem;
+  background: rgba(255, 255, 255, 0.025);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.faltas-modal-pagination-info {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+/* ── Pagination nav button (Anterior / Siguiente) ── */
+.faltas-modal-page-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 1rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  background: rgba(59, 130, 246, 0.12);
+  color: #93c5fd;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  letter-spacing: 0.01em;
+}
+.faltas-modal-page-btn:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.22);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #bfdbfe;
+  transform: translateY(-1px);
+}
+.faltas-modal-page-btn:disabled {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.06);
+  color: #334155;
+  cursor: not-allowed;
+  transform: none;
+}
+
 /* Botón levantar */
 .btn-levantar {
   display: inline-flex;

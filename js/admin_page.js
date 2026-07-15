@@ -2483,22 +2483,20 @@ window.showFaltasDetalleModal = async function (userId, nombre, matricula, email
           const isFirst = page === 0;
           const isLast = page >= totalModalPages - 1;
           html += `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; padding:0.6rem 1rem; background:rgba(255,255,255,0.025); border-radius:0.75rem; border:1px solid rgba(255,255,255,0.06);">
-              <button id="modal-prev-page"
-                style="display:inline-flex; align-items:center; gap:0.4rem; padding:0.45rem 1rem; font-size:0.78rem; font-weight:600; border-radius:0.6rem; border:1px solid rgba(255,255,255,0.1); background:${isFirst ? 'rgba(255,255,255,0.03)' : 'rgba(59,130,246,0.15)'}; color:${isFirst ? '#334155' : '#93c5fd'}; cursor:${isFirst ? 'not-allowed' : 'pointer'}; transition:all 0.2s; outline:none;"
+            <div class="faltas-modal-pagination">
+              <button id="modal-prev-page" class="faltas-modal-page-btn"
                 ${isFirst ? 'disabled' : ''}>
                 <i data-lucide="chevron-left" style="width:13px;height:13px;"></i>
                 Anterior
               </button>
-              <span style="font-size:0.78rem; color:#64748b; font-weight:600; letter-spacing:0.03em;">
+              <span class="faltas-modal-pagination-info">
                 <span style="color:#94a3b8;">Pág. ${page + 1}</span>
                 <span style="color:#334155;"> / ${totalModalPages}</span>
                 &nbsp;·&nbsp;
                 <span style="color:#fbbf24; font-weight:700;">${historicalFaltas.length}</span>
                 <span style="color:#64748b;"> faltas</span>
               </span>
-              <button id="modal-next-page"
-                style="display:inline-flex; align-items:center; gap:0.4rem; padding:0.45rem 1rem; font-size:0.78rem; font-weight:600; border-radius:0.6rem; border:1px solid rgba(255,255,255,0.1); background:${isLast ? 'rgba(255,255,255,0.03)' : 'rgba(59,130,246,0.15)'}; color:${isLast ? '#334155' : '#93c5fd'}; cursor:${isLast ? 'not-allowed' : 'pointer'}; transition:all 0.2s; outline:none;"
+              <button id="modal-next-page" class="faltas-modal-page-btn"
                 ${isLast ? 'disabled' : ''}>
                 Siguiente
                 <i data-lucide="chevron-right" style="width:13px;height:13px;"></i>
