@@ -246,11 +246,26 @@ async function switchScreen(screenId) {
   if (window.lucide) window.lucide.createIcons();
 }
 
-window.refreshCurrentScreen = () => {
+window.refreshCurrentScreen = async () => {
   const activeNav = document.querySelector('.nav-item.active');
+  const btn = document.getElementById('btnRefreshScreen');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="loader-2" class="icon-inline spin"></i> Refrescando`;
+    if (window.lucide) window.lucide.createIcons();
+  }
+
   if (activeNav) {
     const screenId = activeNav.dataset.screen;
-    switchScreen(screenId);
+    await switchScreen(screenId);
+  }
+
+  if (btn) {
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.innerHTML = `<i data-lucide="refresh-cw" class="icon-inline"></i> Refrescar`;
+      if (window.lucide) window.lucide.createIcons();
+    }, 500);
   }
 };
 
@@ -1382,26 +1397,6 @@ async function loadPenalidadesData() {
     const faltaArr = faltas || [];
     const profilesArr = profiles || [];
 
-    const penalizados = penalArr.filter(p => p.penalizado).length;
-    const levantadas = penalArr.filter(p => !p.penalizado && p.total_faltas === 0 && p.fecha_penalidad).length;
-
-    const penStatPen = document.getElementById('penStatPen');
-    const penStatFaltas = document.getElementById('penStatFaltas');
-    const penStatLevantadas = document.getElementById('penStatLevantadas');
-    if (penStatPen) penStatPen.textContent = penalizados;
-    if (penStatFaltas) penStatFaltas.textContent = histVotesArr.length;
-    if (penStatLevantadas) penStatLevantadas.textContent = levantadas;
-
-    const badge = document.getElementById('penalBadge');
-    if (badge) {
-      if (penalizados > 0) {
-        badge.textContent = penalizados;
-        badge.style.display = 'inline-block';
-      } else {
-        badge.style.display = 'none';
-      }
-    }
-
     allPenalidades = pens || [];
     allFaltasHistorial = histVotesArr;
 
@@ -1441,6 +1436,27 @@ async function loadPenalidadesData() {
         fecha_penalidad: pEntry.fecha_penalidad || null
       };
     }).sort((a, b) => b.active_faltas - a.active_faltas || b.historical_faltas - a.historical_faltas);
+
+    // Calculate stats using the combined data for accuracy
+    const penalizados = allPenalidadesCombined.filter(p => p.penalizado).length;
+    const levantadas = allPenalidadesCombined.filter(p => !p.penalizado && p.active_faltas === 0 && p.fecha_penalidad).length;
+
+    const penStatPen = document.getElementById('penStatPen');
+    const penStatFaltas = document.getElementById('penStatFaltas');
+    const penStatLevantadas = document.getElementById('penStatLevantadas');
+    if (penStatPen) penStatPen.textContent = penalizados;
+    if (penStatFaltas) penStatFaltas.textContent = histVotesArr.length;
+    if (penStatLevantadas) penStatLevantadas.textContent = levantadas;
+
+    const badge = document.getElementById('penalBadge');
+    if (badge) {
+      if (penalizados > 0) {
+        badge.textContent = penalizados;
+        badge.style.display = 'inline-block';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
 
     penCurrentPage = 0;
     histCurrentPage = 0;
