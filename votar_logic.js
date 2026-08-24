@@ -378,10 +378,10 @@ function initIndexPage() {
  setSession(newUser);
  window.location.href = 'votar.html';
  
- } catch (error) {
- console.error('Error:', error);
- showError('Error al registrar: ' + (error.message || 'Error desconocido'));
- }
+  } catch (error) {
+  console.error('Error exacto de Supabase:', error);
+  showError('Error al registrar: ' + (error.message || 'Error desconocido'));
+  }
  btn.disabled = false;
  btn.textContent = 'Registrar';
  });

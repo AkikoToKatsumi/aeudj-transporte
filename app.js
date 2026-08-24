@@ -454,7 +454,7 @@ function initIndexPage() {
  }
  
  } catch (error) {
- console.error('Error:', error);
+ console.error('Error exacto de Supabase:', error);
  showError('Error al registrar: ' + (error.message || 'Error desconocido'));
  }
  btn.disabled = false;
