@@ -380,7 +380,11 @@ function initIndexPage() {
  
   } catch (error) {
   console.error('Error exacto de Supabase:', error);
-  showError('Error al registrar: ' + (error.message || 'Error desconocido'));
+  let errorMsg = error.message || 'Error desconocido';
+  if (errorMsg === 'User already registered') {
+    errorMsg = 'El registro interno (pseudo-email) aún existe en Supabase Auth. El administrador debe eliminarlo de Authentication > Users.';
+  }
+  showError('Error al registrar: ' + errorMsg);
   }
  btn.disabled = false;
  btn.textContent = 'Registrar';

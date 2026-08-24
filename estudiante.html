@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Panel Estudiante - AEUDJ</title>
+  <link rel="icon" href="img/comite.jpg" type="image/jpg">
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug" crossorigin="anonymous"></script>
+  <script src="supabase-config.js"></script>
+  <script src="https://unpkg.com/lucide@0.446.0/dist/umd/lucide.min.js" integrity="sha384-5fTWUMSLG5/4ucEwwZpaf9Ew58F5f5D8I3ZoRHaRkEgCYNwW+PQX5QZ0WUmpKpQh" crossorigin="anonymous"></script>
+  <script src="js/custom-alert.js"></script>
+  
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/estudiante.css">
+</head>
+<body data-page="estudiante">
+  <main class="estudiante-container">
+    <nav class="top-nav">
+      <a href="votar.html" class="nav-btn slate">
+        <i data-lucide="arrow-left"></i> Volver a Reservas
+      </a>
+      <button id="logoutBtn" class="nav-btn red">
+        <i data-lucide="log-out"></i> Salir
+      </button>
+    </nav>
+
+    <div class="estudiante-content">
+      <h1 class="portal-title">🎓 Portal del Estudiante</h1>
+      
+      <!-- Tarjeta de Perfil -->
+      <section class="estudiante-card profile-card glass-card">
+        <div class="profile-header">
+          <div class="profile-avatar">
+            <i data-lucide="user"></i>
+          </div>
+          <div class="profile-info-text">
+            <h2 id="stNombre" class="profile-name">Cargando...</h2>
+            <p id="stMatricula" class="profile-sub">Matrícula: --</p>
+            <p id="stEmail" class="profile-sub">Correo: --</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tarjeta de Estado / Faltas -->
+      <section class="estudiante-card status-card glass-card">
+        <h3 class="card-title"><i data-lucide="activity"></i> Estado de Auditoría</h3>
+        
+        <div class="status-grid">
+          <div class="status-box">
+            <span class="status-label">Faltas Totales</span>
+            <span id="stFaltas" class="status-value low">0</span>
+          </div>
+          
+          <div class="status-box">
+            <span class="status-label">Penalidades Activas</span>
+            <span id="stPenalidades" class="status-value low">0</span>
+          </div>
+        </div>
+
+        <div id="stBannerEstado" class="status-banner good">
+          <i data-lucide="check-circle" class="status-icon"></i>
+          <span>Estado Activo y sin restricciones.</span>
+        </div>
+      </section>
+
+      <!-- Tarjeta de Seguridad (Cambio de contraseña) -->
+      <section class="estudiante-card security-card glass-card">
+        <h3 class="card-title"><i data-lucide="lock"></i> Seguridad</h3>
+        <p class="security-desc">Cambia tu contraseña para mantener tu cuenta segura.</p>
+        
+        <form id="changePasswordForm" class="security-form">
+          <div class="input-wrapper">
+            <i data-lucide="key" class="input-icon"></i>
+            <input type="password" id="newPassword" class="premium-input" placeholder="Nueva contraseña" required minlength="6">
+            <button type="button" id="toggleNewPassword" class="toggle-password">
+              <i data-lucide="eye"></i>
+            </button>
+          </div>
+          
+          <button type="submit" id="btnChangePassword" class="btn-premium btn-block">
+            Actualizar Contraseña
+            <i data-lucide="save" class="btn-arrow"></i>
+          </button>
+        </form>
+      </section>
+
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script src="js/estudiante_page.js"></script>
+</body>
+</html>

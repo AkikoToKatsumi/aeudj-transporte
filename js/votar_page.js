@@ -173,10 +173,9 @@ function buildStaffMenu(user) {
   
   // 1. Estudiante (Visible for everyone)
   const aStudent = document.createElement('a');
-  aStudent.href = '#';
+  aStudent.href = 'estudiante.html';
   aStudent.className = 'btn-student';
-  aStudent.textContent = '🎓 Panel de Estudiante';
-  aStudent.onclick = (e) => { e.preventDefault(); openStudentPanel(user); };
+  aStudent.textContent = '🎓 Portal del Estudiante';
   staffMenu.appendChild(aStudent);
 
   // 2. Voluntario
@@ -198,62 +197,7 @@ function buildStaffMenu(user) {
   }
 }
 
-async function openStudentPanel(user) {
-  try {
-    const btn = document.querySelector('.btn-student');
-    if(btn) { btn.style.opacity = '0.5'; btn.textContent = 'Cargando...'; }
 
-    const [{ data: pEntry }, { data: activeVotos }] = await Promise.all([
-      supabase.from('penalidades').select('*').eq('usuario_id', user.id).maybeSingle(),
-      supabase.from('votos').select('id').eq('usuario_id', user.id).eq('se_monto', 0)
-    ]);
-    
-    if(btn) { btn.style.opacity = '1'; btn.textContent = '🎓 Panel de Estudiante'; }
-
-    const activeFaltas = pEntry?.total_faltas ?? (activeVotos ? activeVotos.length : 0);
-    const penActivas = Math.floor(activeFaltas / 3);
-    const warnings = activeFaltas % 3;
-    const penalizado = penActivas > 0 || pEntry?.penalizado;
-
-    const htmlMsg = `
-      <div style="text-align: center;">
-        <div style="display: flex; flex-direction: column; align-items: center; margin-top: -0.5rem; margin-bottom: 1.75rem;">
-          <p style="margin: 0; color: #f8fafc; font-size: 1.05rem;"><strong style="font-weight: 800;">Nombre:</strong> <span style="font-weight: 500;">${user.nombre}</span></p>
-          <p style="margin: 0.35rem 0; color: #cbd5e1; font-size: 0.85rem;"><strong style="font-weight: 700;">Matrícula:</strong> ${user.matricula}</p>
-          <p style="margin: 0; color: #94a3b8; font-size: 0.8rem;"><strong style="font-weight: 700;">Email:</strong> ${user.email || 'No registrado'}</p>
-        </div>
-
-        <div class="student-info-badge">
-          <span class="student-info-label">Faltas Totales</span>
-          <span class="falta-count ${activeFaltas > 0 ? 'high' : 'low'}">${activeFaltas}</span>
-        </div>
-
-        <div class="student-info-badge" style="margin-bottom: 1.5rem;">
-          <span class="student-info-label">Penalidades</span>
-          <div class="active-faltas-container">
-            <span class="falta-count ${penActivas > 0 ? 'high' : 'low'}">${penActivas}</span>
-            <div class="active-faltas-dots">
-              <span class="active-falta-dot ${warnings >= 1 ? 'active' : 'inactive'}"></span>
-              <span class="active-falta-dot ${warnings >= 2 ? 'active' : 'inactive'}"></span>
-              <span class="active-falta-dot ${penActivas > 0 ? 'pulse-red' : 'inactive'}"></span>
-            </div>
-          </div>
-        </div>
-
-        <div style="margin-bottom: 1.25rem;">
-          ${penalizado 
-            ? '<div style="background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; color: #fca5a5; padding: 0.85rem 1rem; border-radius: 0 0.75rem 0.75rem 0; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.75rem; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.1);"><span class="active-falta-dot pulse-red" style="width:10px;height:10px;flex-shrink:0;"></span> <span style="text-align:left;">Estás penalizado.</span></div>'
-            : '<div style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; color: #6ee7b7; padding: 0.85rem 1rem; border-radius: 0 0.75rem 0.75rem 0; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.75rem; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.05);"><span class="status-dot-green" style="flex-shrink:0;"></span> <span style="text-align:left;">Estado Activo y sin restricciones.</span></div>'
-          }
-        </div>
-      </div>
-    `;
-
-    window.alert(htmlMsg, penalizado ? 'warn' : 'user', 'Panel de Estudiante');
-  } catch (err) {
-    console.error('Error fetching student panel data:', err);
-  }
-}
 
 // ── RENDER HORARIOS ─────────────────────────────────────
 async function renderHorarios(group) {
