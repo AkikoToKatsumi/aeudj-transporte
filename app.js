@@ -480,9 +480,192 @@ function initIndexPage() {
                      window.location.hash.includes('access_token') || 
                      window.location.search.includes('type=recovery');
   if (isRecovery) {
+    // Dar tiempo a Supabase para procesar el token en el hash
     setTimeout(() => {
       showResetPasswordModal();
-    }, 1000);
+    }, 500);
+  }
+}
+
+// ============================================
+// MODAL: RECUPERAR CONTRASEÑA (solicitud)
+// ============================================
+function showForgotPasswordModal() {
+  const modal = document.getElementById('forgotPasswordModal');
+  if (!modal) return;
+
+  // Resetear estado
+  const errDiv = document.getElementById('forgotModalError');
+  const okDiv  = document.getElementById('forgotModalSuccess');
+  const input  = document.getElementById('forgotMatriculaInput');
+  const btn    = document.getElementById('forgotSubmitBtn');
+  if (errDiv) { errDiv.style.display = 'none'; errDiv.textContent = ''; }
+  if (okDiv)  { okDiv.style.display  = 'none'; okDiv.textContent  = ''; }
+  if (input)  input.value = '';
+
+  modal.style.display = 'flex';
+  if (window.lucide) window.lucide.createIcons();
+
+  // Botón cancelar
+  const cancelBtn = document.getElementById('forgotCancelBtn');
+  if (cancelBtn) {
+    cancelBtn.onclick = () => { modal.style.display = 'none'; };
+  }
+
+  // Cerrar al hacer click fuera de la tarjeta
+  modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+
+  // Botón enviar
+  if (btn) {
+    btn.onclick = async () => {
+      const rawInput = (input?.value || '').trim();
+      if (!rawInput) {
+        if (errDiv) { errDiv.textContent = 'Por favor ingresa tu matrícula.'; errDiv.style.display = 'block'; }
+        return;
+      }
+      if (errDiv) errDiv.style.display = 'none';
+      if (okDiv)  okDiv.style.display  = 'none';
+
+      btn.disabled = true;
+      btn.textContent = 'Buscando cuenta...';
+
+      try {
+        const cleanInput = rawInput.replace(/[\s-]+/g, '');
+
+        // 1. Buscar el email real del estudiante en profiles
+        let realEmail = null;
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('email, matricula')
+          .or(`matricula.eq.${rawInput},matricula.eq.${cleanInput}`)
+          .maybeSingle();
+
+        if (profile && profile.email && !profile.email.endsWith('@aeudj.com')) {
+          // Tiene correo real registrado → usarlo para el reset
+          realEmail = profile.email;
+        } else {
+          // Fallback: buscar en historial de votos
+          const { data: voto } = await supabase
+            .from('votos')
+            .select('email')
+            .or(`matricula.eq.${rawInput},matricula.eq.${cleanInput}`)
+            .not('email', 'is', null)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (voto && voto.email && !voto.email.endsWith('@aeudj.com')) {
+            realEmail = voto.email;
+          }
+        }
+
+        if (!realEmail) {
+          // Si solo existe el pseudo-email, igualmente lo usamos
+          // (el link llegará a @aeudj.com que no existe, pero al menos no exponemos datos)
+          realEmail = `${cleanInput}@aeudj.com`;
+        }
+
+        // 2. Enviar el email de reset a través de Supabase Auth
+        // Determinar URL base del proyecto para el redirectTo
+        const redirectTo = `${window.location.origin}${window.location.pathname.replace(/\/[^/]*$/, '/')  }index.html`;
+
+        const { error } = await supabase.auth.resetPasswordForEmail(realEmail, {
+          redirectTo
+        });
+
+        if (error) throw error;
+
+        btn.textContent = '¡Enviado!';
+        if (okDiv) {
+          okDiv.textContent = `✅ Si existe una cuenta para esa matrícula, recibirás un correo con el enlace de recuperación en unos minutos. Revisa también tu carpeta de spam.`;
+          okDiv.style.display = 'block';
+        }
+        if (cancelBtn) cancelBtn.textContent = 'Cerrar';
+
+      } catch (err) {
+        console.error('Error en recuperación:', err);
+        if (errDiv) {
+          errDiv.textContent = '❌ ' + (err.message || 'Ocurrió un error. Intenta de nuevo.');
+          errDiv.style.display = 'block';
+        }
+        btn.disabled = false;
+        btn.textContent = 'Enviar enlace de recuperación';
+      }
+    };
+  }
+}
+
+// ============================================
+// MODAL: NUEVA CONTRASEÑA (después del link)
+// ============================================
+function showResetPasswordModal() {
+  const modal = document.getElementById('resetPasswordModal');
+  if (!modal) return;
+
+  modal.style.display = 'flex';
+  if (window.lucide) window.lucide.createIcons();
+
+  // Toggles de visibilidad
+  ['toggleNewPassword', 'toggleConfirmPassword'].forEach(btnId => {
+    const tBtn = document.getElementById(btnId);
+    const inputId = btnId === 'toggleNewPassword' ? 'newPasswordInput' : 'confirmPasswordInput';
+    if (tBtn) {
+      tBtn.onclick = () => {
+        const inp = document.getElementById(inputId);
+        if (!inp) return;
+        const isPass = inp.type === 'password';
+        inp.type = isPass ? 'text' : 'password';
+        tBtn.innerHTML = `<i data-lucide="${isPass ? 'eye-off' : 'eye'}"></i>`;
+        if (window.lucide) window.lucide.createIcons();
+      };
+    }
+  });
+
+  const submitBtn = document.getElementById('resetSubmitBtn');
+  const errDiv    = document.getElementById('resetModalError');
+
+  if (submitBtn) {
+    submitBtn.onclick = async () => {
+      const newPass     = (document.getElementById('newPasswordInput')?.value     || '').trim();
+      const confirmPass = (document.getElementById('confirmPasswordInput')?.value || '').trim();
+
+      if (errDiv) errDiv.style.display = 'none';
+
+      if (newPass.length < 6) {
+        if (errDiv) { errDiv.textContent = 'La contraseña debe tener al menos 6 caracteres.'; errDiv.style.display = 'block'; }
+        return;
+      }
+      if (newPass !== confirmPass) {
+        if (errDiv) { errDiv.textContent = 'Las contraseñas no coinciden.'; errDiv.style.display = 'block'; }
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Cambiando contraseña...';
+
+      try {
+        const { error } = await supabase.auth.updateUser({ password: newPass });
+        if (error) throw error;
+
+        modal.style.display = 'none';
+        // Limpiar el hash de la URL para no re-activar el modal
+        history.replaceState(null, '', window.location.pathname);
+
+        // Mostrar mensaje de éxito y redirigir
+        alert('✅ ¡Contraseña cambiada exitosamente! Ahora puedes iniciar sesión con tu nueva contraseña.');
+        window.location.href = 'index.html';
+
+      } catch (err) {
+        console.error('Error al cambiar contraseña:', err);
+        if (errDiv) {
+          errDiv.textContent = '❌ ' + (err.message || 'Error al cambiar la contraseña. El enlace puede haber expirado.');
+          errDiv.style.display = 'block';
+        }
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Cambiar contraseña';
+      }
+    };
   }
 }
 

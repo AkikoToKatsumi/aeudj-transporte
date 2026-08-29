@@ -44,11 +44,9 @@
           </button>
         </div>
 
-        <!--
         <div style="text-align: right; margin-top: -0.5rem; margin-bottom: 0.8rem;">
           <a href="#" id="forgotPasswordBtn" style="font-size: 0.78rem; color: #60a5fa; font-weight: 600; text-decoration: none;" class="hover:underline">¿Olvidaste tu contraseña?</a>
         </div>
-        -->
 
         <button type="submit" id="submitLogin" class="btn-premium btn-block">
           Entrar
@@ -121,6 +119,59 @@
         Copyright © Derechos reservados a Akiko's systems developer</p>
     </footer>
   </main>
+
+  <!-- ===== MODAL: RECUPERAR CONTRASEÑA ===== -->
+  <div id="forgotPasswordModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(2,6,23,0.85); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; padding:1rem;">
+    <div style="background:linear-gradient(145deg,#1e293b,#0f172a); border:1px solid rgba(255,255,255,0.1); border-radius:1.5rem; padding:2rem; width:100%; max-width:420px; box-shadow:0 25px 60px rgba(0,0,0,0.6); animation: slideUpModal 0.3s ease;">
+      <div style="text-align:center; margin-bottom:1.5rem;">
+        <div style="width:56px; height:56px; border-radius:50%; background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto 1rem;">
+          <i data-lucide="key-round" style="width:24px;height:24px;color:#60a5fa;"></i>
+        </div>
+        <h2 style="font-size:1.25rem; font-weight:700; color:#f8fafc; margin-bottom:0.35rem;">Recuperar contraseña</h2>
+        <p style="font-size:0.82rem; color:#94a3b8;">Ingresa tu matrícula y te enviaremos un enlace a tu correo registrado.</p>
+      </div>
+      <div id="forgotModalError" style="display:none; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:0.75rem; padding:0.75rem 1rem; font-size:0.82rem; color:#fca5a5; margin-bottom:1rem;"></div>
+      <div id="forgotModalSuccess" style="display:none; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:0.75rem; padding:0.75rem 1rem; font-size:0.82rem; color:#6ee7b7; margin-bottom:1rem;"></div>
+      <div class="input-wrapper" style="margin-bottom:1.25rem;">
+        <i data-lucide="hash" class="input-icon"></i>
+        <input type="text" id="forgotMatriculaInput" class="premium-input" placeholder="Tu matrícula" autocomplete="username">
+      </div>
+      <button id="forgotSubmitBtn" class="btn-premium btn-block" style="margin-bottom:0.75rem;">Enviar enlace de recuperación</button>
+      <button id="forgotCancelBtn" style="width:100%; background:transparent; border:1px solid rgba(255,255,255,0.1); color:#94a3b8; border-radius:0.75rem; padding:0.75rem; font-size:0.875rem; cursor:pointer; transition:all 0.2s;">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: NUEVA CONTRASEÑA ===== -->
+  <div id="resetPasswordModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(2,6,23,0.85); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:1rem;">
+    <div style="background:linear-gradient(145deg,#1e293b,#0f172a); border:1px solid rgba(255,255,255,0.1); border-radius:1.5rem; padding:2rem; width:100%; max-width:420px; box-shadow:0 25px 60px rgba(0,0,0,0.6); animation: slideUpModal 0.3s ease;">
+      <div style="text-align:center; margin-bottom:1.5rem;">
+        <div style="width:56px; height:56px; border-radius:50%; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto 1rem;">
+          <i data-lucide="lock-keyhole" style="width:24px;height:24px;color:#34d399;"></i>
+        </div>
+        <h2 style="font-size:1.25rem; font-weight:700; color:#f8fafc; margin-bottom:0.35rem;">Nueva contraseña</h2>
+        <p style="font-size:0.82rem; color:#94a3b8;">Elige una contraseña segura para tu cuenta.</p>
+      </div>
+      <div id="resetModalError" style="display:none; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:0.75rem; padding:0.75rem 1rem; font-size:0.82rem; color:#fca5a5; margin-bottom:1rem;"></div>
+      <div class="input-wrapper" style="margin-bottom:1rem;">
+        <i data-lucide="lock" class="input-icon"></i>
+        <input type="password" id="newPasswordInput" class="premium-input" placeholder="Nueva contraseña (mín. 6 caracteres)" autocomplete="new-password">
+        <button type="button" id="toggleNewPassword" class="toggle-password"><i data-lucide="eye"></i></button>
+      </div>
+      <div class="input-wrapper" style="margin-bottom:1.25rem;">
+        <i data-lucide="lock-keyhole" class="input-icon"></i>
+        <input type="password" id="confirmPasswordInput" class="premium-input" placeholder="Confirmar contraseña" autocomplete="new-password">
+        <button type="button" id="toggleConfirmPassword" class="toggle-password"><i data-lucide="eye"></i></button>
+      </div>
+      <button id="resetSubmitBtn" class="btn-premium btn-success btn-block">Cambiar contraseña</button>
+    </div>
+  </div>
+
+  <style>
+    @keyframes slideUpModal {
+      from { opacity: 0; transform: translateY(20px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+  </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"
     integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug"
