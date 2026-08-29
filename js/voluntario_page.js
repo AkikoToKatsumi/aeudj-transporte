@@ -703,13 +703,17 @@ function openRankingModal() {
   const modal = document.getElementById('modalRanking');
   if (modal) {
     modal.classList.remove('hidden');
+    modal.style.display = 'flex';
     loadRankingData();
   }
 }
 
 function closeRankingModal() {
   const modal = document.getElementById('modalRanking');
-  if (modal) modal.classList.add('hidden');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
 }
 
 // Cargar y calcular puntos para el ranking

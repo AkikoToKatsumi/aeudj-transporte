@@ -9,7 +9,9 @@
   <script src="supabase-config.js"></script>
   <script src="https://unpkg.com/lucide@0.446.0/dist/umd/lucide.min.js" integrity="sha384-5fTWUMSLG5/4ucEwwZpaf9Ew58F5f5D8I3ZoRHaRkEgCYNwW+PQX5QZ0WUmpKpQh" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3.11.0/dist/email.min.js" integrity="sha384-2BNGrQ48jXhJZb0u9FfgOUGJQsbuoecOc1/bdu0oRviV7oc0g5gFTyYsSd7YICDP" crossorigin="anonymous"></script>
-  <script src="js/email-init.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/voluntario.css">
 </head>
 <body data-page="voluntario">
@@ -99,8 +101,8 @@
 
   </main>
 
-  <!-- ===== MODAL: TABLA DE POSICIONES ===== -->
-  <div id="modalRanking" class="rank-card-overlay hidden">
+  <!-- ===== MODAL: TABLA DE POSICIONES (OCULTO POR DEFECTO) ===== -->
+  <div id="modalRanking" class="rank-card-overlay hidden" style="display: none;">
     <div class="rank-card">
       <div class="rank-header">
         <div class="rank-header-title">
@@ -110,7 +112,7 @@
             <p>Voluntarios activos · Cuatrimestre actual</p>
           </div>
         </div>
-        <button id="closeModalRanking" class="rank-close-btn">✕</button>
+        <button id="closeModalRanking" class="rank-close-btn" type="button">✕</button>
       </div>
 
       <!-- Podio Top 3 -->
@@ -131,274 +133,6 @@
       </div>
     </div>
   </div>
-
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
-
-    .rank-card-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      background: rgba(4, 7, 13, 0.85);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      animation: fadeInRanking 0.25s ease;
-    }
-    .rank-card-overlay.hidden { display: none !important; }
-
-    @keyframes fadeInRanking {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    .rank-card {
-      width: 780px;
-      max-width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
-      background: #0b0f17;
-      background: radial-gradient(circle at 20% 0%, rgba(58,138,107,0.12), transparent 45%),
-                  radial-gradient(circle at 85% 90%, rgba(226,105,75,0.09), transparent 45%),
-                  #0b0f17;
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 24px;
-      box-shadow: 0 24px 60px -20px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.04);
-      position: relative;
-      animation: slideUpRank 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    @keyframes slideUpRank {
-      from { opacity: 0; transform: translateY(20px) scale(0.98); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    .rank-card::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 1px;
-      background: linear-gradient(90deg, transparent, #e8a838, transparent);
-      opacity: 0.5;
-      pointer-events: none;
-    }
-
-    .rank-header {
-      padding: 24px 26px 18px;
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      position: sticky;
-      top: 0;
-      background: rgba(11, 15, 23, 0.94);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      z-index: 10;
-      border-top-left-radius: 24px;
-      border-top-right-radius: 24px;
-    }
-
-    .rank-header-title {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .rank-trophy-badge {
-      width: 38px; height: 38px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #e8a838, #e2694b);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
-      box-shadow: 0 6px 16px -4px rgba(232,168,56,0.45);
-      flex-shrink: 0;
-    }
-
-    .rank-header h1 {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 19px;
-      font-weight: 700;
-      color: #eef1ee;
-      letter-spacing: -0.01em;
-      margin: 0;
-    }
-
-    .rank-header p {
-      font-size: 12.5px;
-      color: #8b93a1;
-      margin-top: 3px;
-    }
-
-    .rank-close-btn {
-      width: 32px; height: 32px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.03);
-      color: #8b93a1;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer;
-      font-size: 15px;
-      transition: all .15s ease;
-      flex-shrink: 0;
-    }
-    .rank-close-btn:hover { background: rgba(255,255,255,0.08); color: #eef1ee; }
-
-    .rank-podium {
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      gap: 12px;
-      padding: 30px 22px 10px;
-    }
-
-    .rank-podium-slot {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      width: 110px;
-    }
-
-    .p-avatar {
-      width: 52px; height: 52px;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Space Grotesk', sans-serif;
-      font-weight: 700;
-      font-size: 16px;
-      color: #0a0e14;
-      position: relative;
-      margin-bottom: 8px;
-      border: 2px solid rgba(255,255,255,0.15);
-      box-shadow: 0 8px 20px -6px rgba(0,0,0,0.5);
-    }
-
-    .rank-flag {
-      position: absolute;
-      top: -8px; right: -6px;
-      font-size: 15px;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-    }
-
-    .p-name { font-size: 13px; font-weight: 600; color: #eef1ee; line-height: 1.2; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .p-sub { font-size: 10.5px; color: #8b93a1; margin-top: 2px; }
-    .p-pts {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      font-weight: 600;
-      margin-top: 6px;
-      padding: 2px 10px;
-      border-radius: 20px;
-    }
-
-    .slot-1 { order: 2; padding-bottom: 0; }
-    .slot-1 .p-avatar { background: linear-gradient(140deg, #f6d374, #e8a838); width: 66px; height: 66px; font-size: 20px; border-color: rgba(246, 211, 116, 0.4); }
-    .slot-1 .p-pts { background: rgba(232,168,56,0.15); color: #e8a838; }
-    .slot-1 .p-name { font-size: 14px; }
-
-    .slot-2 { order: 1; padding-bottom: 16px; }
-    .slot-2 .p-avatar { background: linear-gradient(140deg, #cfd6de, #9aa4b2); }
-    .slot-2 .p-pts { background: rgba(154,164,178,0.15); color: #c3cad3; }
-
-    .slot-3 { order: 3; padding-bottom: 20px; }
-    .slot-3 .p-avatar { background: linear-gradient(140deg, #e2a074, #e2694b); }
-    .slot-3 .p-pts { background: rgba(226,105,75,0.15); color: #e2694b; }
-
-    .rank-list-grid {
-      padding: 8px 22px 14px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 3px 14px;
-    }
-
-    .rank-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 10px;
-      border-radius: 11px;
-      transition: background .15s ease;
-      min-width: 0;
-    }
-    .rank-row:hover { background: rgba(255,255,255,0.035); }
-
-    .rank-num {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11.5px;
-      color: #8b93a1;
-      width: 18px;
-      text-align: center;
-      flex-shrink: 0;
-    }
-
-    .rank-row-avatar {
-      width: 28px; height: 28px;
-      border-radius: 50%;
-      background: linear-gradient(140deg, rgba(58,138,107,0.9), rgba(47,107,82,0.9));
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Space Grotesk', sans-serif;
-      font-weight: 600;
-      font-size: 11px;
-      color: #eafff4;
-      flex-shrink: 0;
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-
-    .rank-row-info { flex: 1; min-width: 0; }
-    .rank-row-name { font-size: 12.5px; font-weight: 600; color: #eef1ee; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .rank-row-sub { font-size: 10px; color: #8b93a1; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-    .rank-row-pts {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11.5px;
-      font-weight: 600;
-      color: #eef1ee;
-      background: rgba(255,255,255,0.05);
-      padding: 3px 9px;
-      border-radius: 20px;
-      flex-shrink: 0;
-    }
-
-    @media (max-width: 580px) {
-      .rank-list-grid { grid-template-columns: 1fr; }
-      .rank-podium { gap: 8px; padding: 22px 10px 10px; }
-      .rank-podium-slot { width: 95px; }
-    }
-
-    .rank-empty-note {
-      text-align: center;
-      font-size: 11.5px;
-      color: #8b93a1;
-      padding: 4px 20px 16px;
-      font-style: italic;
-    }
-
-    .rank-footer {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 16px 22px;
-      border-top: 1px solid rgba(255,255,255,0.06);
-      background: rgba(255,255,255,0.015);
-      border-bottom-left-radius: 24px;
-      border-bottom-right-radius: 24px;
-    }
-
-    .rank-footer-icon {
-      width: 30px; height: 30px;
-      border-radius: 9px;
-      background: rgba(232,168,56,0.12);
-      display: flex; align-items: center; justify-content: center;
-      color: #e8a838;
-      font-size: 14px;
-      flex-shrink: 0;
-    }
-
-    .rank-footer-text { font-size: 11.5px; color: #8b93a1; line-height: 1.4; }
-    .rank-footer-text b { color: #eef1ee; font-family: 'JetBrains Mono', monospace; }
-  </style>
 
   <script type="module" src="js/voluntario_page.js"></script>
 </body>
