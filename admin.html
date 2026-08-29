@@ -65,6 +65,10 @@
           <span>Penalidades</span>
           <span id="penalBadge" class="badge-red-mini">0</span>
         </a>
+        <a href="#" class="nav-item" data-screen="ranking">
+          <i data-lucide="trophy"></i>
+          <span>Ranking Vol</span>
+        </a>
 
         <div style="margin: 1.5rem 1rem 0.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem;"></div>
         <a href="#" class="nav-item hover:bg-blue-500/10 transition-colors nav-item-special" data-screen="pasarlista">
@@ -570,7 +574,81 @@
           </div>
         </div>
       </section>
+
+      <!-- ===== RANKING SCREEN (NUEVO) ===== -->
+      <section id="screen-ranking" class="admin-screen hidden">
+        <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
+          <div>
+            <h3 class="text-white text-lg font-bold">Tabla de Posiciones de Voluntarios</h3>
+            <p class="text-xs text-gray-500">Administra los puntos acumulados por los voluntarios en este cuatrimestre.</p>
+          </div>
+          <button type="button" id="btnResetCuatrimestre" class="btn-pill-outline btn-small text-red-400 border-red-500/30 hover:bg-red-500/10" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">
+            ⚠️ Reiniciar Cuatrimestre
+          </button>
+        </div>
+
+        <div class="glass-card p-4">
+          <div class="flex justify-between items-center mb-4 gap-4 flex-wrap">
+            <div class="pen-filter-search" style="margin: 0; width: 100%; max-width: 320px;">
+              <i data-lucide="search" style="width:16px;height:16px;"></i>
+              <input type="text" id="rankingAdminSearch" placeholder="Buscar voluntario...">
+            </div>
+          </div>
+
+          <div class="custom-scroll overflow-x-auto">
+            <table class="staff-table-new w-full">
+              <thead>
+                <tr>
+                  <th style="width: 50px;">Pos</th>
+                  <th>Voluntario</th>
+                  <th>Matrícula</th>
+                  <th>Rol</th>
+                  <th>Puntos Totales</th>
+                  <th style="text-align: right; width: 150px;">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="rankingAdminTableBody">
+                <tr>
+                  <td colspan="6" class="text-center py-8 opacity-50">Cargando datos del ranking...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </main>
+  </div>
+
+  <!-- ===== MODAL: AGREGAR / QUITAR PUNTOS ===== -->
+  <div id="puntosAdminModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(2,6,23,0.85); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:1rem;">
+    <div style="background:linear-gradient(145deg,#1e293b,#0f172a); border:1px solid rgba(255,255,255,0.1); border-radius:1.5rem; padding:2rem; width:100%; max-width:420px; box-shadow:0 25px 60px rgba(0,0,0,0.6); animation: slideUpModal 0.3s ease;">
+      <div style="text-align:center; margin-bottom:1.5rem;">
+        <div style="width:56px; height:56px; border-radius:50%; background:rgba(234,179,8,0.15); border:1px solid rgba(234,179,8,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto 1rem;">
+          <i data-lucide="award" style="width:24px;height:24px;color:#fbbf24;"></i>
+        </div>
+        <h2 style="font-size:1.25rem; font-weight:700; color:#f8fafc; margin-bottom:0.35rem;" id="puntosModalTitle">Otorgar Puntos</h2>
+        <p style="font-size:0.82rem; color:#94a3b8;" id="puntosModalVolName">Voluntario: -</p>
+      </div>
+
+      <input type="hidden" id="puntosModalVolId">
+
+      <div id="puntosModalError" style="display:none; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:0.75rem; padding:0.75rem 1rem; font-size:0.82rem; color:#fca5a5; margin-bottom:1rem;"></div>
+
+      <div class="input-wrapper" style="margin-bottom:1rem;">
+        <i data-lucide="star" class="input-icon"></i>
+        <input type="number" id="puntosModalCantidad" class="premium-input" placeholder="Cantidad de puntos (ej: 5 o -5)" required>
+      </div>
+
+      <div class="input-wrapper" style="margin-bottom:1.5rem;">
+        <i data-lucide="file-text" class="input-icon"></i>
+        <input type="text" id="puntosModalMotivo" class="premium-input" placeholder="Motivo (ej: Actividad del comité)" required>
+      </div>
+
+      <div style="display:flex; gap:0.75rem;">
+        <button id="puntosModalCancelBtn" style="flex:1; background:transparent; border:1px solid rgba(255,255,255,0.1); color:#94a3b8; border-radius:0.75rem; padding:0.75rem; font-size:0.875rem; cursor:pointer; transition:all 0.2s;">Cancelar</button>
+        <button id="puntosModalSubmitBtn" class="btn-premium btn-success" style="flex:1; margin:0;">Aplicar</button>
+      </div>
+    </div>
   </div>
 
   <script type="module" src="js/admin_page.js"></script>

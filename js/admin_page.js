@@ -189,6 +189,8 @@ function initClickEvents() {
   const auditDatePick = document.getElementById('auditDatePick');
   if (auditDatePick) auditDatePick.addEventListener('change', () => window.loadAuditData());
 
+
+
   // Penalidades Search/Date
   const penSearch = document.getElementById('penSearch');
   if (penSearch) penSearch.addEventListener('input', () => window.filterPenalidades());
@@ -196,6 +198,28 @@ function initClickEvents() {
   if (penDate) penDate.addEventListener('change', () => window.filterPenalidades());
   const penShowOnlyPenalized = document.getElementById('penShowOnlyPenalized');
   if (penShowOnlyPenalized) penShowOnlyPenalized.addEventListener('change', () => window.filterPenalidades());
+
+  // Ranking Admin Search
+  const rankingAdminSearch = document.getElementById('rankingAdminSearch');
+  if (rankingAdminSearch) rankingAdminSearch.addEventListener('input', () => filterRankingAdmin());
+
+  // Reset Cuatrimestre Button
+  const btnResetCuatrimestre = document.getElementById('btnResetCuatrimestre');
+  if (btnResetCuatrimestre) btnResetCuatrimestre.addEventListener('click', () => resetCuatrimestre());
+
+  // Modal Cancel/Outside Click
+  const puntosModalCancelBtn = document.getElementById('puntosModalCancelBtn');
+  if (puntosModalCancelBtn) puntosModalCancelBtn.addEventListener('click', () => closePuntosModal());
+
+  const puntosModalSubmitBtn = document.getElementById('puntosModalSubmitBtn');
+  if (puntosModalSubmitBtn) puntosModalSubmitBtn.addEventListener('click', () => submitPuntos());
+
+  const puntosAdminModal = document.getElementById('puntosAdminModal');
+  if (puntosAdminModal) {
+    puntosAdminModal.addEventListener('click', (e) => {
+      if (e.target === puntosAdminModal) closePuntosModal();
+    });
+  }
 }
 
 function initNavigation() {
@@ -229,7 +253,8 @@ async function switchScreen(screenId) {
     'staff': 'Gestión de Personal',
     'logs': 'Registro de Auditoría',
     'penalidades': 'Gestión de Penalidades',
-    'pasarlista': 'Pase de Lista Activo'
+    'pasarlista': 'Pase de Lista Activo',
+    'ranking': 'Ranking de Voluntarios'
   };
   const screenTitle = document.getElementById('screenTitle');
   if (screenTitle) screenTitle.textContent = titles[screenId] || 'Panel Administrativo';
@@ -242,6 +267,7 @@ async function switchScreen(screenId) {
   if (screenId === 'penalidades') loadPenalidadesData();
   if (screenId === 'pasarlista') loadAdminLista();
   if (screenId === 'logs') window.loadAuditData();
+  if (screenId === 'ranking') loadRankingAdminData();
 
   if (window.lucide) window.lucide.createIcons();
 }
@@ -2641,3 +2667,238 @@ window.showFaltasDetalleModal = async function (userId, nombre, matricula, email
     listContainer.innerHTML = `<div style="padding:2rem; text-align:center; color:#ef4444; font-size:0.85rem;">Error al cargar faltas: ${e.message}</div>`;
   }
 };
+
+// ══════════════════════════════════════════════
+// LÓGICA DE RANKING Y PUNTOS DE VOLUNTARIOS (ADMIN)
+// ══════════════════════════════════════════════
+
+let rankingAdminList = []; // Cache local para filtrado
+
+async function loadRankingAdminData() {
+  const tbody = document.getElementById('rankingAdminTableBody');
+  if (!tbody) return;
+
+  tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 opacity-50"><div class="spinner-mini" style="margin:0 auto 0.5rem;"></div>Cargando datos del ranking...</td></tr>';
+
+  try {
+    // 1. Cargar todos los perfiles
+    const { data: profiles, error: profErr } = await supabase
+      .from('profiles')
+      .select('id, nombre, rol, email, matricula');
+
+    if (profErr) throw profErr;
+
+    // Filtrar voluntarios y admins
+    const volunteers = (profiles || []).filter(u => {
+      const r = u.rol || '';
+      return r.includes('voluntario') || r.includes('comité') || r.includes('admin') || r.includes('desarrolladora') || r.includes('administrador');
+    });
+
+    // 2. Cargar registros de puntos
+    const { data: logs, error: logsErr } = await supabase
+      .from('puntos_log')
+      .select('voluntario_id, puntos');
+
+    if (logsErr) throw logsErr;
+
+    // Calcular puntos por voluntario
+    const pointsMap = {};
+    (logs || []).forEach(log => {
+      pointsMap[log.voluntario_id] = (pointsMap[log.voluntario_id] || 0) + log.puntos;
+    });
+
+    // 3. Formatear y ordenar la lista
+    rankingAdminList = volunteers.map(vol => {
+      const rolDisplay = vol.rol || 'Voluntario';
+      return {
+        id: vol.id,
+        nombre: vol.nombre || 'Sin nombre',
+        matricula: vol.matricula || 'N/A',
+        rol: rolDisplay,
+        puntos: pointsMap[vol.id] || 0
+      };
+    }).sort((a, b) => b.puntos - a.puntos);
+
+    renderRankingAdminTable(rankingAdminList);
+
+  } catch (err) {
+    console.error('Error al cargar ranking administrativo:', err);
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-red-400">⚠️ Error: ${err.message}</td></tr>`;
+  }
+}
+
+function renderRankingAdminTable(list) {
+  const tbody = document.getElementById('rankingAdminTableBody');
+  if (!tbody) return;
+
+  tbody.innerHTML = '';
+
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 opacity-50">No se encontraron voluntarios.</td></tr>';
+    return;
+  }
+
+  list.forEach((vol, idx) => {
+    const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}`;
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td style="font-weight: 700;">${medal}</td>
+      <td style="font-weight: 600; color: #fff;">${sanitize(vol.nombre)}</td>
+      <td><code>${sanitize(vol.matricula)}</code></td>
+      <td><span class="badge" style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); color: #60a5fa; font-size: 0.72rem; padding: 0.15rem 0.4rem; border-radius: 4px;">${sanitize(vol.rol)}</span></td>
+      <td style="font-weight: 800; color: #fbbf24; font-size: 0.95rem;">${vol.puntos} pts</td>
+      <td style="text-align: right;">
+        <button type="button" class="btn btn-primary btn-small btn-puntos-action" data-id="${vol.id}" data-name="${vol.nombre}">
+          🏆 Modificar Puntos
+        </button>
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+
+  // Eventos de botones
+  tbody.querySelectorAll('.btn-puntos-action').forEach(btn => {
+    btn.addEventListener('click', () => {
+      openPuntosModal(btn.dataset.id, btn.dataset.name);
+    });
+  });
+}
+
+function filterRankingAdmin() {
+  const query = (document.getElementById('rankingAdminSearch')?.value || '').toLowerCase().trim();
+  if (!query) {
+    renderRankingAdminTable(rankingAdminList);
+    return;
+  }
+
+  const filtered = rankingAdminList.filter(vol => 
+    vol.nombre.toLowerCase().includes(query) || 
+    vol.matricula.toLowerCase().includes(query) ||
+    vol.rol.toLowerCase().includes(query)
+  );
+
+  renderRankingAdminTable(filtered);
+}
+
+function openPuntosModal(volId, volNombre) {
+  const modal = document.getElementById('puntosAdminModal');
+  if (!modal) return;
+
+  document.getElementById('puntosModalVolId').value = volId;
+  document.getElementById('puntosModalVolName').textContent = `Voluntario: ${volNombre}`;
+  document.getElementById('puntosModalCantidad').value = '';
+  document.getElementById('puntosModalMotivo').value = '';
+  
+  const errDiv = document.getElementById('puntosModalError');
+  if (errDiv) errDiv.style.display = 'none';
+
+  modal.style.display = 'flex';
+  if (window.lucide) window.lucide.createIcons();
+}
+
+function closePuntosModal() {
+  const modal = document.getElementById('puntosAdminModal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function submitPuntos() {
+  const volId = document.getElementById('puntosModalVolId').value;
+  const rawCant = document.getElementById('puntosModalCantidad').value;
+  const motivo = (document.getElementById('puntosModalMotivo').value || '').trim();
+  const errDiv = document.getElementById('puntosModalError');
+  const submitBtn = document.getElementById('puntosModalSubmitBtn');
+
+  if (errDiv) errDiv.style.display = 'none';
+
+  const puntos = parseInt(rawCant);
+  if (isNaN(puntos) || puntos === 0) {
+    if (errDiv) { errDiv.textContent = 'Ingresa una cantidad de puntos válida (diferente de cero).'; errDiv.style.display = 'block'; }
+    return;
+  }
+
+  if (!motivo) {
+    if (errDiv) { errDiv.textContent = 'Por favor escribe el motivo.'; errDiv.style.display = 'block'; }
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Aplicando...';
+
+  try {
+    // Insertar el log de puntos en Supabase
+    const { error } = await supabase
+      .from('puntos_log')
+      .insert({
+        voluntario_id: volId,
+        puntos: puntos,
+        motivo: motivo,
+        otorgado_por: currentUser ? currentUser.id : null
+      });
+
+    if (error) throw error;
+
+    window.showAdminToast(`Puntos modificados correctamente (${puntos > 0 ? '+' : ''}${puntos} pts)`, 'success');
+    closePuntosModal();
+    loadRankingAdminData(); // Recargar tabla
+
+  } catch (err) {
+    console.error('Error al aplicar puntos:', err);
+    if (errDiv) {
+      errDiv.textContent = `Error: ${err.message}`;
+      errDiv.style.display = 'block';
+    }
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Aplicar';
+  }
+}
+
+async function resetCuatrimestre() {
+  let firstConfirm = false;
+  let secondConfirm = false;
+
+  if (typeof window.aeudjConfirm === 'function') {
+    firstConfirm = await window.aeudjConfirm('¿Estás seguro de que deseas reiniciar todos los puntos? Esto eliminará todos los registros del cuatrimestre.');
+  } else {
+    firstConfirm = confirm('¿Estás seguro de que deseas reiniciar todos los puntos? Esto eliminará todos los registros del cuatrimestre.');
+  }
+
+  if (!firstConfirm) return;
+
+  if (typeof window.aeudjConfirm === 'function') {
+    secondConfirm = await window.aeudjConfirm('¡ADVERTENCIA CRÍTICA! Esta acción no se puede deshacer. Los voluntarios perderán todos los puntos acumulados y comenzarán de cero. ¿Estás seguro al 100%?');
+  } else {
+    secondConfirm = confirm('¡ADVERTENCIA CRÍTICA! Esta acción no se puede deshacer. Los voluntarios perderán todos los puntos acumulados y comenzarán de cero. ¿Estás seguro al 100%?');
+  }
+
+  if (!secondConfirm) return;
+
+  const resetBtn = document.getElementById('btnResetCuatrimestre');
+  if (resetBtn) {
+    resetBtn.disabled = true;
+    resetBtn.textContent = 'Reiniciando...';
+  }
+
+  try {
+    // Eliminar todo el historial de puntos logueados
+    const { error } = await supabase
+      .from('puntos_log')
+      .delete()
+      .neq('puntos', 9999999); // delete all query fallback
+
+    if (error) throw error;
+
+    window.showAdminToast('¡El ranking cuatrimestral se ha reiniciado a cero!', 'success');
+    loadRankingAdminData();
+
+  } catch (err) {
+    console.error('Error al reiniciar cuatrimestre:', err);
+    window.showAdminToast(`Error: ${err.message}`, 'error');
+  } finally {
+    if (resetBtn) {
+      resetBtn.disabled = false;
+      resetBtn.textContent = '⚠️ Reiniciar Cuatrimestre';
+    }
+  }
+}
+

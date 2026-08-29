@@ -361,6 +361,25 @@ if (reloadFab) reloadFab.onclick = loadData;
 if (window.lucide) window.lucide.createIcons();
 loadData();
 
+// Helper to award/remove points for attendance taking
+async function registrarPuntosPaseLista(votoId, subio) {
+  if (!currentUser || !currentUser.id) return;
+  try {
+    const motivo = `Pase de lista - Voto ${votoId}`;
+    // Always delete previous points to avoid duplication
+    await supabase.from('puntos_log').delete().eq('voluntario_id', currentUser.id).eq('motivo', motivo);
+    if (subio) {
+      await supabase.from('puntos_log').insert({
+        voluntario_id: currentUser.id,
+        puntos: 3,
+        motivo: motivo
+      });
+    }
+  } catch (err) {
+    console.error('Error al registrar puntos de voluntario:', err);
+  }
+}
+
 // ── MARCAR ASISTENCIA ──────────────────────────────────
 async function marcarAsistencia(p, action) {
   const subio = (action === 'subio');
@@ -388,9 +407,11 @@ async function marcarAsistencia(p, action) {
             fecha:      p.fecha,
           });
         }
+        await registrarPuntosPaseLista(p.id, false);
       } else {
         // Remove falta if they switched from no-subio to subio
         await supabase.from('faltas').delete().eq('voto_id', p.id);
+        await registrarPuntosPaseLista(p.id, true);
       }
 
       // 3. Count total faltas for this user
@@ -422,11 +443,11 @@ async function marcarAsistencia(p, action) {
             showToast(`Falta registrada. Total: ${count}/3`, count >= 2 ? 'warning' : 'error');
           }
         } else {
-          showToast('✅ Asistencia confirmada', 'success');
+          showToast('✅ Asistencia confirmada y +3 puntos', 'success');
         }
       } else {
         if (!subio) showToast(`Falta registrada.`, 'error');
-        else showToast('✅ Asistencia confirmada', 'success');
+        else showToast('✅ Asistencia confirmada y +3 puntos', 'success');
       }
   } catch(err) {
     console.error('Error marcando asistencia:', err);
@@ -434,7 +455,10 @@ async function marcarAsistencia(p, action) {
   }
 }
 
-// ── ENVIAR CORREO (EmailJS) ────────────────────────────
+
+
+
+
 async function enviarCorreoPenalidad(p, totalFaltas) {
   if (!window.emailjs || EMAILJS_PUBLIC === 'TU_PUBLIC_KEY') {
     console.warn('EmailJS no configurado. Configura EMAILJS_SERVICE, EMAILJS_TEMPLATE y EMAILJS_PUBLIC.');
@@ -661,5 +685,150 @@ async function updateVolunteerSlot(dateKey, timeStr, action) {
   if (error) {
     console.error('Error guardando turno:', error);
     showToast('Error al guardar', 'error');
+  }
+}
+
+// ══════════════════════════════════════════════
+// MODAL DE TABLA DE POSICIONES (RANKING)
+// ══════════════════════════════════════════════
+
+// Abrir / cerrar modal de ranking
+document.getElementById('btnRanking')?.addEventListener('click', () => openRankingModal());
+document.getElementById('closeModalRanking')?.addEventListener('click', () => closeRankingModal());
+document.getElementById('modalRanking')?.addEventListener('click', (e) => {
+  if (e.target === document.getElementById('modalRanking')) closeRankingModal();
+});
+
+function openRankingModal() {
+  const modal = document.getElementById('modalRanking');
+  if (modal) {
+    modal.classList.remove('hidden');
+    loadRankingData();
+  }
+}
+
+function closeRankingModal() {
+  const modal = document.getElementById('modalRanking');
+  if (modal) modal.classList.add('hidden');
+}
+
+// Cargar y calcular puntos para el ranking
+async function loadRankingData() {
+  const podioDiv = document.getElementById('rankingPodio');
+  const listaDiv = document.getElementById('rankingLista');
+  if (!podioDiv || !listaDiv) return;
+
+  podioDiv.innerHTML = '<div class="rank-spinner" style="margin:auto;"><div style="width:32px;height:32px;border:3px solid rgba(251,191,36,0.3);border-top-color:#fbbf24;border-radius:50%;animation:spin 0.8s linear infinite;"></div></div>';
+  listaDiv.innerHTML = '';
+
+  try {
+    // 1. Obtener todos los perfiles de voluntarios/admins
+    const { data: profiles, error: profErr } = await supabase
+      .from('profiles')
+      .select('id, nombre, rol, email, matricula');
+
+    if (profErr) throw profErr;
+
+    // Filtrar para mostrar solo roles relacionados a voluntario/comite/admin/desarrolladora
+    const volunteerProfiles = (profiles || []).filter(u => {
+      const r = u.rol || '';
+      return r.includes('voluntario') || r.includes('comité') || r.includes('admin') || r.includes('desarrolladora') || r.includes('administrador');
+    });
+
+    // 2. Obtener la suma de puntos agrupada de la tabla puntos_log
+    const { data: logs, error: logsErr } = await supabase
+      .from('puntos_log')
+      .select('voluntario_id, puntos');
+
+    if (logsErr) throw logsErr;
+
+    // Calcular puntos por voluntario
+    const pointsMap = {};
+    (logs || []).forEach(log => {
+      pointsMap[log.voluntario_id] = (pointsMap[log.voluntario_id] || 0) + log.puntos;
+    });
+
+    // 3. Crear lista de ranking y ordenar
+    const rankingList = volunteerProfiles.map(vol => {
+      return {
+        id: vol.id,
+        nombre: vol.nombre,
+        puntos: pointsMap[vol.id] || 0,
+        iniciales: vol.nombre ? vol.nombre.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : 'V'
+      };
+    }).sort((a, b) => b.puntos - a.puntos);
+
+    // 4. Renderizar Podio (Top 3)
+    podioDiv.innerHTML = '';
+    const top3 = rankingList.slice(0, 3);
+    const rest = rankingList.slice(3);
+
+    // Reordenar para el podio visual: 2do (izquierda), 1ro (centro), 3ro (derecha)
+    const visualPodio = [null, null, null];
+    if (top3[1]) visualPodio[0] = { ...top3[1], place: 2, className: 'silver', color: '#94a3b8', bg: 'rgba(148,163,184,0.1)' };
+    if (top3[0]) visualPodio[1] = { ...top3[0], place: 1, className: 'gold', color: '#fbbf24', bg: 'rgba(251,191,36,0.15)' };
+    if (top3[2]) visualPodio[2] = { ...top3[2], place: 3, className: 'bronze', color: '#b45309', bg: 'rgba(180,83,9,0.1)' };
+
+    visualPodio.forEach((item, idx) => {
+      if (!item) {
+        // Espacio vacío para balancear
+        const placeholder = document.createElement('div');
+        placeholder.style.flex = '1';
+        podioDiv.appendChild(placeholder);
+        return;
+      }
+      
+      const height = item.place === 1 ? '140px' : item.place === 2 ? '115px' : '95px';
+      
+      const card = document.createElement('div');
+      card.className = `ranking-podio-card ${item.className}`;
+      card.style.height = height;
+      card.innerHTML = `
+        <div class="ranking-podio-avatar" style="background:${item.bg}; color:${item.color}; border:2px solid ${item.color};">
+          ${item.place === 1 ? '🥇' : item.place === 2 ? '🥈' : '🥉'}
+        </div>
+        <div style="font-size:0.82rem; font-weight:700; color:#f8fafc; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; width:100%;">
+          ${item.nombre.split(' ')[0]}
+        </div>
+        <div style="font-size:0.75rem; font-weight:800; color:${item.color};">
+          ${item.puntos} pts
+        </div>
+      `;
+      podioDiv.appendChild(card);
+    });
+
+    // 5. Renderizar lista restante
+    if (rankingList.length === 0) {
+      listaDiv.innerHTML = '<div style="text-align:center; padding:2rem; opacity:0.5;">No hay voluntarios registrados aún.</div>';
+      return;
+    }
+
+    rankingList.forEach((item, index) => {
+      // Usar colores elegantes para los avatares
+      const isTop3 = index < 3;
+      const avatarBg = isTop3 
+        ? (index === 0 ? 'rgba(251,191,36,0.15)' : index === 1 ? 'rgba(148,163,184,0.15)' : 'rgba(180,83,9,0.15)')
+        : 'rgba(255,255,255,0.05)';
+      const avatarColor = isTop3
+        ? (index === 0 ? '#fbbf24' : index === 1 ? '#94a3b8' : '#fb923c')
+        : '#94a3b8';
+      const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}`;
+
+      const row = document.createElement('div');
+      row.className = 'ranking-list-row';
+      row.innerHTML = `
+        <div class="ranking-list-pos">${medal}</div>
+        <div class="ranking-list-avatar" style="background:${avatarBg}; color:${avatarColor}; border:1px solid ${isTop3 ? avatarColor : 'rgba(255,255,255,0.1)'};">
+          ${item.iniciales}
+        </div>
+        <div class="ranking-list-name">${item.nombre}</div>
+        <div class="ranking-pts-badge">${item.puntos} pts</div>
+      `;
+      listaDiv.appendChild(row);
+    });
+
+  } catch (err) {
+    console.error('Error cargando ranking:', err);
+    listaDiv.innerHTML = `<div style="color:#ef4444; text-align:center; padding:2rem; font-size:0.82rem;">⚠️ Error: ${err.message || 'No se pudo cargar el ranking'}</div>`;
   }
 }
