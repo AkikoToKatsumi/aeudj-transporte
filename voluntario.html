@@ -100,69 +100,304 @@
   </main>
 
   <!-- ===== MODAL: TABLA DE POSICIONES ===== -->
-  <div id="modalRanking" class="vol-modal-overlay hidden" style="z-index:200;">
-    <div class="vol-modal-panel" style="max-width:540px; max-height:90vh; overflow-y:auto;">
-      <div class="vol-modal-header" style="position:sticky;top:0;z-index:10;background:linear-gradient(135deg,#1e293b,#0f172a);padding-bottom:1rem;">
-        <div>
-          <h2 class="vol-modal-title">🏆 Tabla de Posiciones</h2>
-          <p class="vol-modal-subtitle">Voluntarios activos · Cuatrimestre actual</p>
+  <div id="modalRanking" class="rank-card-overlay hidden">
+    <div class="rank-card">
+      <div class="rank-header">
+        <div class="rank-header-title">
+          <div class="rank-trophy-badge">🏆</div>
+          <div>
+            <h1>Tabla de Posiciones</h1>
+            <p>Voluntarios activos · Cuatrimestre actual</p>
+          </div>
         </div>
-        <button id="closeModalRanking" class="vol-modal-close">
-          <i data-lucide="x"></i>
-        </button>
+        <button id="closeModalRanking" class="rank-close-btn">✕</button>
       </div>
 
       <!-- Podio Top 3 -->
-      <div id="rankingPodio" style="display:flex; align-items:flex-end; justify-content:center; gap:0.75rem; margin:1.5rem 0; min-height:130px;">
-        <div class="rank-spinner" style="margin:auto;"><div style="width:32px;height:32px;border:3px solid rgba(251,191,36,0.3);border-top-color:#fbbf24;border-radius:50%;animation:spin 0.8s linear infinite;"></div></div>
+      <div class="rank-podium" id="rankingPodio">
+        <div class="rank-spinner" style="margin:2rem auto;"><div style="width:32px;height:32px;border:3px solid rgba(232,168,56,0.3);border-top-color:#e8a838;border-radius:50%;animation:spin 0.8s linear infinite;"></div></div>
       </div>
 
-      <!-- Lista completa -->
-      <div id="rankingLista" style="display:flex; flex-direction:column; gap:0.5rem; padding:0 0.25rem 1rem;"></div>
+      <!-- Lista de voluntarios (4to en adelante) en grid 2 columnas -->
+      <div class="rank-list-grid" id="rankingLista"></div>
 
-      <div class="vol-modal-footer" style="padding-top:0.5rem;">
-        <p class="vol-modal-hint">
-          <i data-lucide="star" style="width:14px;height:14px;color:#fbbf24;"></i>
-          Cada pase de lista completado suma <strong style="color:#fbbf24;">3 puntos</strong>. El admin puede agregar puntos adicionales por actividades.
-        </p>
+      <div class="rank-empty-note" id="rankingEmptyNote" style="display:none;">Aún no hay puntos registrados esta temporada</div>
+
+      <div class="rank-footer">
+        <div class="rank-footer-icon">★</div>
+        <div class="rank-footer-text">
+          Cada pase de lista completado suma <b>3 puntos</b>. El admin puede agregar puntos adicionales por actividades.
+        </div>
       </div>
     </div>
   </div>
 
   <style>
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .ranking-podio-card {
-      display:flex; flex-direction:column; align-items:center; gap:0.4rem;
-      background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
-      border-radius:1rem; padding:0.75rem 0.6rem; flex:1; transition:transform 0.2s;
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
+
+    .rank-card-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(4, 7, 13, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      animation: fadeInRanking 0.25s ease;
     }
-    .ranking-podio-card:hover { transform:translateY(-2px); }
-    .ranking-podio-card.gold   { border-color:rgba(251,191,36,0.4); background:rgba(251,191,36,0.07); }
-    .ranking-podio-card.silver { border-color:rgba(148,163,184,0.4); background:rgba(148,163,184,0.06); }
-    .ranking-podio-card.bronze { border-color:rgba(180,83,9,0.4);   background:rgba(180,83,9,0.06);   }
-    .ranking-podio-avatar {
-      width:48px; height:48px; border-radius:50%; display:flex; align-items:center;
-      justify-content:center; font-size:1.2rem; font-weight:800;
+    .rank-card-overlay.hidden { display: none !important; }
+
+    @keyframes fadeInRanking {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
-    .ranking-list-row {
-      display:flex; align-items:center; gap:0.75rem;
-      background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06);
-      border-radius:0.75rem; padding:0.65rem 0.85rem; transition:background 0.15s;
+
+    .rank-card {
+      width: 780px;
+      max-width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: #0b0f17;
+      background: radial-gradient(circle at 20% 0%, rgba(58,138,107,0.12), transparent 45%),
+                  radial-gradient(circle at 85% 90%, rgba(226,105,75,0.09), transparent 45%),
+                  #0b0f17;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      box-shadow: 0 24px 60px -20px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.04);
+      position: relative;
+      animation: slideUpRank 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .ranking-list-row:hover { background:rgba(255,255,255,0.06); }
-    .ranking-list-pos {
-      width:28px; text-align:center; font-size:0.8rem; font-weight:700; color:#64748b;
+
+    @keyframes slideUpRank {
+      from { opacity: 0; transform: translateY(20px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
-    .ranking-list-avatar {
-      width:36px; height:36px; border-radius:50%; display:flex; align-items:center;
-      justify-content:center; font-size:0.9rem; font-weight:700; flex-shrink:0;
+
+    .rank-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, #e8a838, transparent);
+      opacity: 0.5;
+      pointer-events: none;
     }
-    .ranking-list-name { flex:1; font-size:0.9rem; font-weight:600; color:#e2e8f0; }
-    .ranking-pts-badge {
-      font-size:0.8rem; font-weight:700; color:#fbbf24;
-      background:rgba(251,191,36,0.1); border:1px solid rgba(251,191,36,0.25);
-      border-radius:9999px; padding:0.2rem 0.6rem;
+
+    .rank-header {
+      padding: 24px 26px 18px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      position: sticky;
+      top: 0;
+      background: rgba(11, 15, 23, 0.94);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      z-index: 10;
+      border-top-left-radius: 24px;
+      border-top-right-radius: 24px;
     }
+
+    .rank-header-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .rank-trophy-badge {
+      width: 38px; height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #e8a838, #e2694b);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 6px 16px -4px rgba(232,168,56,0.45);
+      flex-shrink: 0;
+    }
+
+    .rank-header h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 19px;
+      font-weight: 700;
+      color: #eef1ee;
+      letter-spacing: -0.01em;
+      margin: 0;
+    }
+
+    .rank-header p {
+      font-size: 12.5px;
+      color: #8b93a1;
+      margin-top: 3px;
+    }
+
+    .rank-close-btn {
+      width: 32px; height: 32px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      color: #8b93a1;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      font-size: 15px;
+      transition: all .15s ease;
+      flex-shrink: 0;
+    }
+    .rank-close-btn:hover { background: rgba(255,255,255,0.08); color: #eef1ee; }
+
+    .rank-podium {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 12px;
+      padding: 30px 22px 10px;
+    }
+
+    .rank-podium-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      width: 110px;
+    }
+
+    .p-avatar {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: #0a0e14;
+      position: relative;
+      margin-bottom: 8px;
+      border: 2px solid rgba(255,255,255,0.15);
+      box-shadow: 0 8px 20px -6px rgba(0,0,0,0.5);
+    }
+
+    .rank-flag {
+      position: absolute;
+      top: -8px; right: -6px;
+      font-size: 15px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    }
+
+    .p-name { font-size: 13px; font-weight: 600; color: #eef1ee; line-height: 1.2; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .p-sub { font-size: 10.5px; color: #8b93a1; margin-top: 2px; }
+    .p-pts {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 6px;
+      padding: 2px 10px;
+      border-radius: 20px;
+    }
+
+    .slot-1 { order: 2; padding-bottom: 0; }
+    .slot-1 .p-avatar { background: linear-gradient(140deg, #f6d374, #e8a838); width: 66px; height: 66px; font-size: 20px; border-color: rgba(246, 211, 116, 0.4); }
+    .slot-1 .p-pts { background: rgba(232,168,56,0.15); color: #e8a838; }
+    .slot-1 .p-name { font-size: 14px; }
+
+    .slot-2 { order: 1; padding-bottom: 16px; }
+    .slot-2 .p-avatar { background: linear-gradient(140deg, #cfd6de, #9aa4b2); }
+    .slot-2 .p-pts { background: rgba(154,164,178,0.15); color: #c3cad3; }
+
+    .slot-3 { order: 3; padding-bottom: 20px; }
+    .slot-3 .p-avatar { background: linear-gradient(140deg, #e2a074, #e2694b); }
+    .slot-3 .p-pts { background: rgba(226,105,75,0.15); color: #e2694b; }
+
+    .rank-list-grid {
+      padding: 8px 22px 14px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3px 14px;
+    }
+
+    .rank-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 11px;
+      transition: background .15s ease;
+      min-width: 0;
+    }
+    .rank-row:hover { background: rgba(255,255,255,0.035); }
+
+    .rank-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      color: #8b93a1;
+      width: 18px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .rank-row-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(140deg, rgba(58,138,107,0.9), rgba(47,107,82,0.9));
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: 11px;
+      color: #eafff4;
+      flex-shrink: 0;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .rank-row-info { flex: 1; min-width: 0; }
+    .rank-row-name { font-size: 12.5px; font-weight: 600; color: #eef1ee; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rank-row-sub { font-size: 10px; color: #8b93a1; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .rank-row-pts {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #eef1ee;
+      background: rgba(255,255,255,0.05);
+      padding: 3px 9px;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 580px) {
+      .rank-list-grid { grid-template-columns: 1fr; }
+      .rank-podium { gap: 8px; padding: 22px 10px 10px; }
+      .rank-podium-slot { width: 95px; }
+    }
+
+    .rank-empty-note {
+      text-align: center;
+      font-size: 11.5px;
+      color: #8b93a1;
+      padding: 4px 20px 16px;
+      font-style: italic;
+    }
+
+    .rank-footer {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 22px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.015);
+      border-bottom-left-radius: 24px;
+      border-bottom-right-radius: 24px;
+    }
+
+    .rank-footer-icon {
+      width: 30px; height: 30px;
+      border-radius: 9px;
+      background: rgba(232,168,56,0.12);
+      display: flex; align-items: center; justify-content: center;
+      color: #e8a838;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .rank-footer-text { font-size: 11.5px; color: #8b93a1; line-height: 1.4; }
+    .rank-footer-text b { color: #eef1ee; font-family: 'JetBrains Mono', monospace; }
   </style>
 
   <script type="module" src="js/voluntario_page.js"></script>

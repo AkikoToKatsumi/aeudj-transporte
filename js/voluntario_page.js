@@ -742,93 +742,128 @@ async function loadRankingData() {
 
     if (logsErr) throw logsErr;
 
-    // Calcular puntos por voluntario
+    // Calcular puntos y cantidad de listas completadas por voluntario
     const pointsMap = {};
+    const listCountMap = {};
+    let totalSeasonPoints = 0;
+
     (logs || []).forEach(log => {
       pointsMap[log.voluntario_id] = (pointsMap[log.voluntario_id] || 0) + log.puntos;
+      totalSeasonPoints += Math.max(0, log.puntos);
+      if (log.motivo && log.motivo.startsWith('Pase de lista')) {
+        listCountMap[log.voluntario_id] = (listCountMap[log.voluntario_id] || 0) + 1;
+      }
     });
 
     // 3. Crear lista de ranking y ordenar
     const rankingList = volunteerProfiles.map(vol => {
+      const parts = (vol.nombre || 'Voluntario').trim().split(/\s+/);
+      const iniciales = parts.length >= 2 
+        ? (parts[0][0] + parts[1][0]).toUpperCase()
+        : (parts[0].slice(0, 2)).toUpperCase();
+
       return {
         id: vol.id,
-        nombre: vol.nombre,
+        nombre: vol.nombre || 'Sin nombre',
         puntos: pointsMap[vol.id] || 0,
-        iniciales: vol.nombre ? vol.nombre.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : 'V'
+        listCount: listCountMap[vol.id] || 0,
+        iniciales: iniciales
       };
     }).sort((a, b) => b.puntos - a.puntos);
 
     // 4. Renderizar Podio (Top 3)
     podioDiv.innerHTML = '';
-    const top3 = rankingList.slice(0, 3);
+    const top1 = rankingList[0];
+    const top2 = rankingList[1];
+    const top3 = rankingList[2];
     const rest = rankingList.slice(3);
 
-    // Reordenar para el podio visual: 2do (izquierda), 1ro (centro), 3ro (derecha)
-    const visualPodio = [null, null, null];
-    if (top3[1]) visualPodio[0] = { ...top3[1], place: 2, className: 'silver', color: '#94a3b8', bg: 'rgba(148,163,184,0.1)' };
-    if (top3[0]) visualPodio[1] = { ...top3[0], place: 1, className: 'gold', color: '#fbbf24', bg: 'rgba(251,191,36,0.15)' };
-    if (top3[2]) visualPodio[2] = { ...top3[2], place: 3, className: 'bronze', color: '#b45309', bg: 'rgba(180,83,9,0.1)' };
-
-    visualPodio.forEach((item, idx) => {
-      if (!item) {
-        // Espacio vacío para balancear
-        const placeholder = document.createElement('div');
-        placeholder.style.flex = '1';
-        podioDiv.appendChild(placeholder);
-        return;
-      }
-      
-      const height = item.place === 1 ? '140px' : item.place === 2 ? '115px' : '95px';
-      
-      const card = document.createElement('div');
-      card.className = `ranking-podio-card ${item.className}`;
-      card.style.height = height;
-      card.innerHTML = `
-        <div class="ranking-podio-avatar" style="background:${item.bg}; color:${item.color}; border:2px solid ${item.color};">
-          ${item.place === 1 ? '🥇' : item.place === 2 ? '🥈' : '🥉'}
-        </div>
-        <div style="font-size:0.82rem; font-weight:700; color:#f8fafc; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; width:100%;">
-          ${item.nombre.split(' ')[0]}
-        </div>
-        <div style="font-size:0.75rem; font-weight:800; color:${item.color};">
-          ${item.puntos} pts
-        </div>
+    // Slot 2 (2do lugar - izquierda)
+    const slot2El = document.createElement('div');
+    slot2El.className = 'rank-podium-slot slot-2';
+    if (top2) {
+      slot2El.innerHTML = `
+        <div class="p-avatar">${top2.iniciales}<span class="rank-flag">🥈</span></div>
+        <div class="p-name">${top2.nombre}</div>
+        <div class="p-sub">2° lugar</div>
+        <div class="p-pts">${top2.puntos} pts</div>
       `;
-      podioDiv.appendChild(card);
-    });
-
-    // 5. Renderizar lista restante
-    if (rankingList.length === 0) {
-      listaDiv.innerHTML = '<div style="text-align:center; padding:2rem; opacity:0.5;">No hay voluntarios registrados aún.</div>';
-      return;
+    } else {
+      slot2El.innerHTML = `
+        <div class="p-avatar">—</div>
+        <div class="p-name" style="color:#8b93a1">Sin datos</div>
+        <div class="p-sub">2° lugar</div>
+        <div class="p-pts" style="background:rgba(255,255,255,0.04); color:#8b93a1">— pts</div>
+      `;
     }
+    podioDiv.appendChild(slot2El);
 
-    rankingList.forEach((item, index) => {
-      // Usar colores elegantes para los avatares
-      const isTop3 = index < 3;
-      const avatarBg = isTop3 
-        ? (index === 0 ? 'rgba(251,191,36,0.15)' : index === 1 ? 'rgba(148,163,184,0.15)' : 'rgba(180,83,9,0.15)')
-        : 'rgba(255,255,255,0.05)';
-      const avatarColor = isTop3
-        ? (index === 0 ? '#fbbf24' : index === 1 ? '#94a3b8' : '#fb923c')
-        : '#94a3b8';
-      const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}`;
+    // Slot 1 (1er lugar - centro)
+    const slot1El = document.createElement('div');
+    slot1El.className = 'rank-podium-slot slot-1';
+    if (top1) {
+      slot1El.innerHTML = `
+        <div class="p-avatar">${top1.iniciales}<span class="rank-flag">🥇</span></div>
+        <div class="p-name">${top1.nombre}</div>
+        <div class="p-sub">1° lugar</div>
+        <div class="p-pts">${top1.puntos} pts</div>
+      `;
+    } else {
+      slot1El.innerHTML = `
+        <div class="p-avatar">—</div>
+        <div class="p-name" style="color:#8b93a1">Sin datos</div>
+        <div class="p-sub">1° lugar</div>
+        <div class="p-pts" style="background:rgba(255,255,255,0.04); color:#8b93a1">— pts</div>
+      `;
+    }
+    podioDiv.appendChild(slot1El);
 
+    // Slot 3 (3er lugar - derecha)
+    const slot3El = document.createElement('div');
+    slot3El.className = 'rank-podium-slot slot-3';
+    if (top3) {
+      slot3El.innerHTML = `
+        <div class="p-avatar">${top3.iniciales}<span class="rank-flag">🥉</span></div>
+        <div class="p-name">${top3.nombre}</div>
+        <div class="p-sub">3° lugar</div>
+        <div class="p-pts">${top3.puntos} pts</div>
+      `;
+    } else {
+      slot3El.innerHTML = `
+        <div class="p-avatar">—</div>
+        <div class="p-name" style="color:#8b93a1">Sin datos</div>
+        <div class="p-sub">3° lugar</div>
+        <div class="p-pts" style="background:rgba(255,255,255,0.04); color:#8b93a1">— pts</div>
+      `;
+    }
+    podioDiv.appendChild(slot3El);
+
+    // 5. Renderizar lista restante (4to lugar en adelante)
+    listaDiv.innerHTML = '';
+    rest.forEach((item, idx) => {
+      const pos = idx + 4;
       const row = document.createElement('div');
-      row.className = 'ranking-list-row';
+      row.className = 'rank-row';
       row.innerHTML = `
-        <div class="ranking-list-pos">${medal}</div>
-        <div class="ranking-list-avatar" style="background:${avatarBg}; color:${avatarColor}; border:1px solid ${isTop3 ? avatarColor : 'rgba(255,255,255,0.1)'};">
-          ${item.iniciales}
+        <div class="rank-num">${pos}</div>
+        <div class="rank-row-avatar">${item.iniciales}</div>
+        <div class="rank-row-info">
+          <div class="rank-row-name">${item.nombre}</div>
+          <div class="rank-row-sub">${item.listCount} listas completadas</div>
         </div>
-        <div class="ranking-list-name">${item.nombre}</div>
-        <div class="ranking-pts-badge">${item.puntos} pts</div>
+        <div class="rank-row-pts">${item.puntos} pts</div>
       `;
       listaDiv.appendChild(row);
     });
 
+    // 6. Nota de temporada
+    const emptyNote = document.getElementById('rankingEmptyNote');
+    if (emptyNote) {
+      emptyNote.style.display = (totalSeasonPoints === 0) ? 'block' : 'none';
+    }
+
   } catch (err) {
     console.error('Error cargando ranking:', err);
-    listaDiv.innerHTML = `<div style="color:#ef4444; text-align:center; padding:2rem; font-size:0.82rem;">⚠️ Error: ${err.message || 'No se pudo cargar el ranking'}</div>`;
+    listaDiv.innerHTML = `<div style="color:#e2694b; text-align:center; padding:2rem; font-size:0.82rem; grid-column:1/-1;">⚠️ Error: ${err.message || 'No se pudo cargar el ranking'}</div>`;
   }
 }
