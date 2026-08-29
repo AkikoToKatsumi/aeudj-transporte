@@ -1991,6 +1991,8 @@ async function resetFaltasCuatrimestre() {
     await supabase.from('faltas').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     // 2. Borrar todas las filas de penalidades
     await supabase.from('penalidades').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    // 3. Resetear marcas antiguas en votos para que no cuenten como faltas históricas
+    await supabase.from('votos').update({ se_monto: null }).eq('se_monto', 0);
 
     window.showAdminToast('¡Todas las faltas y penalidades han sido reiniciadas a 0!', 'success');
     loadPenalidadesData();

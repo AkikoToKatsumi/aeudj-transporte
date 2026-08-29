@@ -97,14 +97,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function cargarEstadoAuditoria(user) {
   try {
-    const [{ data: pEntry }, { data: activeVotos }] = await Promise.all([
-      supabase.from('penalidades').select('*').eq('usuario_id', user.id).maybeSingle(),
-      supabase.from('votos').select('id').eq('usuario_id', user.id).eq('se_monto', 0)
+    const [{ count: faltasCount }, { data: pEntry }] = await Promise.all([
+      supabase.from('faltas').select('id', { count: 'exact', head: true }).eq('usuario_id', user.id),
+      supabase.from('penalidades').select('*').eq('usuario_id', user.id).maybeSingle()
     ]);
     
-    const activeFaltas = pEntry?.total_faltas ?? (activeVotos ? activeVotos.length : 0);
+    // Si no hay faltas en la tabla faltas ni en penalidades, el valor es estrictamente 0
+    let activeFaltas = 0;
+    if (faltasCount !== null && faltasCount !== undefined && faltasCount > 0) {
+      activeFaltas = faltasCount;
+    } else if (pEntry && pEntry.total_faltas > 0) {
+      activeFaltas = pEntry.total_faltas;
+    }
+
     const penActivas = Math.floor(activeFaltas / 3);
-    const penalizado = penActivas > 0 || pEntry?.penalizado;
+    const penalizado = penActivas > 0 || (pEntry?.penalizado === true && activeFaltas >= 3);
 
     const elFaltas = document.getElementById('stFaltas');
     const elPenalidades = document.getElementById('stPenalidades');
@@ -113,17 +120,22 @@ async function cargarEstadoAuditoria(user) {
     elFaltas.textContent = activeFaltas;
     elPenalidades.textContent = penActivas;
 
-    // Cambiar clases según estado
+    // Cambiar clases visuales según estado
     if (activeFaltas > 0) {
       elFaltas.className = 'status-value high';
+    } else {
+      elFaltas.className = 'status-value low';
     }
+
     if (penActivas > 0) {
       elPenalidades.className = 'status-value high';
+    } else {
+      elPenalidades.className = 'status-value low';
     }
 
     if (penalizado) {
       banner.className = 'status-banner bad';
-      banner.innerHTML = `<i data-lucide="alert-triangle" class="status-icon"></i><span>Estás penalizado. Tienes restricciones de reserva.</span>`;
+      banner.innerHTML = `<i data-lucide="alert-triangle" class="status-icon"></i><span>Estás penalizado (${activeFaltas} faltas). Tienes restricciones de reserva.</span>`;
     } else {
       banner.className = 'status-banner good';
       banner.innerHTML = `<i data-lucide="check-circle" class="status-icon"></i><span>Estado Activo y sin restricciones.</span>`;
