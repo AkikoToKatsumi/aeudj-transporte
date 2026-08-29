@@ -575,41 +575,120 @@
         </div>
       </section>
 
-      <!-- ===== RANKING SCREEN (NUEVO) ===== -->
-      <section id="screen-ranking" class="admin-screen hidden">
-        <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
-          <div>
-            <h3 class="text-white text-lg font-bold">Tabla de Posiciones de Voluntarios</h3>
-            <p class="text-xs text-gray-500">Administra los puntos acumulados por los voluntarios en este cuatrimestre.</p>
+      <!-- ===== RANKING SCREEN (NUEVO DISEÑO HORIZONTAL) ===== -->
+      <section id="screen-ranking" class="admin-screen hidden jakarta-font">
+        
+        <!-- STATS HORIZONTALES SUPERIORES -->
+        <div class="staff-stats-row mb-6">
+          <div class="staff-stat-card">
+            <div class="staff-stat-icon amber">🏆</div>
+            <div>
+              <div class="staff-stat-num" id="rank-stat-total-vol">0</div>
+              <div class="staff-stat-lbl">Voluntarios Activos</div>
+            </div>
           </div>
-          <button type="button" id="btnResetCuatrimestre" class="btn-pill-outline btn-small text-red-400 border-red-500/30 hover:bg-red-500/10" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">
-            ⚠️ Reiniciar Cuatrimestre
-          </button>
+          <div class="staff-stat-card">
+            <div class="staff-stat-icon green">⭐</div>
+            <div>
+              <div class="staff-stat-num" id="rank-stat-total-pts">0</div>
+              <div class="staff-stat-lbl">Puntos Acumulados</div>
+            </div>
+          </div>
+          <div class="staff-stat-card">
+            <div class="staff-stat-icon blue">🥇</div>
+            <div>
+              <div class="staff-stat-num" id="rank-stat-leader" style="font-size:1.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;">—</div>
+              <div class="staff-stat-lbl">Líder del Cuatrimestre</div>
+            </div>
+          </div>
         </div>
 
-        <div class="glass-card p-4">
-          <div class="flex justify-between items-center mb-4 gap-4 flex-wrap">
-            <div class="pen-filter-search" style="margin: 0; width: 100%; max-width: 320px;">
-              <i data-lucide="search" style="width:16px;height:16px;"></i>
-              <input type="text" id="rankingAdminSearch" placeholder="Buscar voluntario...">
+        <!-- CUADRO DE ACCIÓN HORIZONTAL SUPERIOR (Aparece al seleccionar voluntario) -->
+        <div id="rankingTopActionBox" class="ranking-top-action-card" style="display:none;">
+          <div class="flex items-center justify-between gap-4 mb-4 flex-wrap border-b pb-3" style="border-color:rgba(255,255,255,0.08);">
+            <div class="flex items-center gap-3">
+              <div style="width:40px;height:40px;border-radius:50%;background:rgba(234,179,8,0.15);border:1px solid rgba(234,179,8,0.3);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fbbf24;" id="topActionAvatar">
+                VG
+              </div>
+              <div>
+                <div class="text-white font-bold text-sm" id="topActionVolName">Modificar Puntos de: -</div>
+                <div class="text-xs text-gray-400" id="topActionVolMeta">Matrícula: - · Puntos actuales: 0 pts</div>
+              </div>
+            </div>
+            <button type="button" id="btnCancelTopAction" class="text-gray-400 hover:text-white text-xs px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 transition-all cursor-pointer">
+              ✕ Cerrar panel
+            </button>
+          </div>
+
+          <input type="hidden" id="topActionVolId">
+
+          <div id="topActionError" style="display:none; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:0.5rem; padding:0.5rem 0.75rem; font-size:0.8rem; color:#fca5a5; margin-bottom:0.75rem;"></div>
+
+          <!-- FORMULARIO HORIZONTAL -->
+          <div class="flex items-end gap-3 flex-wrap" style="width:100%;">
+            <!-- Input Cantidad -->
+            <div style="flex:0 0 170px;">
+              <label class="text-xs text-gray-400 font-semibold mb-1 block">Puntos (+ / -):</label>
+              <input type="number" id="topActionCantidad" class="premium-input" placeholder="ej: 3 o -3" style="padding:0.5rem 0.75rem;font-size:0.875rem;height:38px;width:100%;margin:0;" required>
+            </div>
+
+            <!-- Botones de atajo rápido -->
+            <div class="flex gap-1 mb-1 items-center">
+              <button type="button" class="btn-fast-pt btn-quick-pt" data-pts="3">+3</button>
+              <button type="button" class="btn-fast-pt btn-quick-pt" data-pts="5">+5</button>
+              <button type="button" class="btn-fast-pt btn-quick-pt" data-pts="10">+10</button>
+              <button type="button" class="btn-fast-pt danger btn-quick-pt" data-pts="-3">-3</button>
+            </div>
+
+            <!-- Input Motivo -->
+            <div style="flex:1;min-width:260px;">
+              <label class="text-xs text-gray-400 font-semibold mb-1 block">Motivo de la asignación:</label>
+              <input type="text" id="topActionMotivo" class="premium-input" placeholder="ej: Actividad del comité, apoyo especial..." style="padding:0.5rem 0.75rem;font-size:0.875rem;height:38px;width:100%;margin:0;" required>
+            </div>
+
+            <!-- Botón Aplicar -->
+            <div>
+              <button type="button" id="btnSubmitTopAction" style="height:38px;padding:0 1.25rem;display:flex;align-items:center;gap:0.5rem;background:linear-gradient(135deg,#eab308,#f59e0b);color:#000;font-weight:700;font-size:0.85rem;border:none;border-radius:0.6rem;cursor:pointer;transition:transform 0.15s;">
+                ⭐ Aplicar Puntos
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- MAIN FULL-WIDTH PANEL FOR TABLE -->
+        <div class="staff-panel" style="width:100%;">
+          <div class="staff-panel-header flex justify-between items-center flex-wrap gap-3">
+            <div>
+              <div class="staff-panel-title">📋 Directorio de Clasificación de Voluntarios</div>
+              <p class="text-xs text-gray-500 mt-1">Los puntos se acumulan por pases de lista completados y asignaciones manuales.</p>
+            </div>
+            <div class="flex items-center gap-3 flex-wrap">
+              <div class="staff-search-wrap" style="width:280px;min-width:200px;">
+                <span class="staff-search-icon">🔍</span>
+                <input class="staff-search-input" type="text" id="rankingAdminSearch" placeholder="Buscar por nombre, matrícula…">
+              </div>
+              <button type="button" id="btnResetCuatrimestre" class="btn-pill-outline btn-small text-red-400 border-red-500/30 hover:bg-red-500/10" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3); white-space:nowrap;">
+                ⚠️ Reiniciar Cuatrimestre
+              </button>
             </div>
           </div>
 
-          <div class="custom-scroll overflow-x-auto">
-            <table class="staff-table-new w-full">
+          <div class="staff-table-container custom-scroll">
+            <table class="staff-table-new" style="width:100%;">
               <thead>
                 <tr>
-                  <th style="width: 50px;">Pos</th>
+                  <th style="width:55px;text-align:center;">Pos</th>
                   <th>Voluntario</th>
                   <th>Matrícula</th>
                   <th>Rol</th>
-                  <th>Puntos Totales</th>
-                  <th style="text-align: right; width: 150px;">Acciones</th>
+                  <th style="text-align:center;">Listas Hechas</th>
+                  <th style="text-align:center;">Puntos Totales</th>
+                  <th style="text-align:right;width:170px;">Acción</th>
                 </tr>
               </thead>
               <tbody id="rankingAdminTableBody">
                 <tr>
-                  <td colspan="6" class="text-center py-8 opacity-50">Cargando datos del ranking...</td>
+                  <td colspan="7" class="text-center py-8 opacity-50">Cargando datos del ranking...</td>
                 </tr>
               </tbody>
             </table>
@@ -617,38 +696,6 @@
         </div>
       </section>
     </main>
-  </div>
-
-  <!-- ===== MODAL: AGREGAR / QUITAR PUNTOS ===== -->
-  <div id="puntosAdminModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(2,6,23,0.85); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:1rem;">
-    <div style="background:linear-gradient(145deg,#1e293b,#0f172a); border:1px solid rgba(255,255,255,0.1); border-radius:1.5rem; padding:2rem; width:100%; max-width:420px; box-shadow:0 25px 60px rgba(0,0,0,0.6); animation: slideUpModal 0.3s ease;">
-      <div style="text-align:center; margin-bottom:1.5rem;">
-        <div style="width:56px; height:56px; border-radius:50%; background:rgba(234,179,8,0.15); border:1px solid rgba(234,179,8,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto 1rem;">
-          <i data-lucide="award" style="width:24px;height:24px;color:#fbbf24;"></i>
-        </div>
-        <h2 style="font-size:1.25rem; font-weight:700; color:#f8fafc; margin-bottom:0.35rem;" id="puntosModalTitle">Otorgar Puntos</h2>
-        <p style="font-size:0.82rem; color:#94a3b8;" id="puntosModalVolName">Voluntario: -</p>
-      </div>
-
-      <input type="hidden" id="puntosModalVolId">
-
-      <div id="puntosModalError" style="display:none; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:0.75rem; padding:0.75rem 1rem; font-size:0.82rem; color:#fca5a5; margin-bottom:1rem;"></div>
-
-      <div class="input-wrapper" style="margin-bottom:1rem;">
-        <i data-lucide="star" class="input-icon"></i>
-        <input type="number" id="puntosModalCantidad" class="premium-input" placeholder="Cantidad de puntos (ej: 5 o -5)" required>
-      </div>
-
-      <div class="input-wrapper" style="margin-bottom:1.5rem;">
-        <i data-lucide="file-text" class="input-icon"></i>
-        <input type="text" id="puntosModalMotivo" class="premium-input" placeholder="Motivo (ej: Actividad del comité)" required>
-      </div>
-
-      <div style="display:flex; gap:0.75rem;">
-        <button id="puntosModalCancelBtn" style="flex:1; background:transparent; border:1px solid rgba(255,255,255,0.1); color:#94a3b8; border-radius:0.75rem; padding:0.75rem; font-size:0.875rem; cursor:pointer; transition:all 0.2s;">Cancelar</button>
-        <button id="puntosModalSubmitBtn" class="btn-premium btn-success" style="flex:1; margin:0;">Aplicar</button>
-      </div>
-    </div>
   </div>
 
   <script type="module" src="js/admin_page.js"></script>

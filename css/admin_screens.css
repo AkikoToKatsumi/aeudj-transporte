@@ -218,3 +218,43 @@
 .audit-spinner { width:28px; height:28px; border:3px solid rgba(59,130,246,.2); border-top-color:#3b82f6; border-radius:50%; animation:auditSpin .8s linear infinite; margin:0 auto .75rem; }
 @keyframes auditSpin { to { transform:rotate(360deg); } }
 @media(max-width:600px) { .audit-stats { grid-template-columns:1fr; } }
+
+/* ── Ranking Admin Styles (Horizontal Layout & Action Bar) ── */
+.btn-fast-pt {
+  height: 32px;
+  padding: 0 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 0.45rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-fast-pt:hover {
+  background: rgba(234, 179, 8, 0.15);
+  color: #fbbf24;
+  border-color: rgba(234, 179, 8, 0.3);
+}
+.btn-fast-pt.danger:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+@keyframes slideDownAction {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ranking-top-action-card {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  border-radius: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  animation: slideDownAction 0.25s ease-out;
+}
+

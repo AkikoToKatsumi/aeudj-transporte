@@ -207,19 +207,20 @@ function initClickEvents() {
   const btnResetCuatrimestre = document.getElementById('btnResetCuatrimestre');
   if (btnResetCuatrimestre) btnResetCuatrimestre.addEventListener('click', () => resetCuatrimestre());
 
-  // Modal Cancel/Outside Click
-  const puntosModalCancelBtn = document.getElementById('puntosModalCancelBtn');
-  if (puntosModalCancelBtn) puntosModalCancelBtn.addEventListener('click', () => closePuntosModal());
+  // Top Action Bar Submit & Cancel
+  const btnCancelTopAction = document.getElementById('btnCancelTopAction');
+  if (btnCancelTopAction) btnCancelTopAction.addEventListener('click', () => closeTopActionBox());
 
-  const puntosModalSubmitBtn = document.getElementById('puntosModalSubmitBtn');
-  if (puntosModalSubmitBtn) puntosModalSubmitBtn.addEventListener('click', () => submitPuntos());
+  const btnSubmitTopAction = document.getElementById('btnSubmitTopAction');
+  if (btnSubmitTopAction) btnSubmitTopAction.addEventListener('click', () => submitTopActionPuntos());
 
-  const puntosAdminModal = document.getElementById('puntosAdminModal');
-  if (puntosAdminModal) {
-    puntosAdminModal.addEventListener('click', (e) => {
-      if (e.target === puntosAdminModal) closePuntosModal();
+  // Quick point buttons (+3, +5, +10, -3)
+  document.querySelectorAll('.btn-quick-pt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById('topActionCantidad');
+      if (input) input.value = btn.dataset.pts;
     });
-  }
+  });
 }
 
 function initNavigation() {
@@ -2678,7 +2679,7 @@ async function loadRankingAdminData() {
   const tbody = document.getElementById('rankingAdminTableBody');
   if (!tbody) return;
 
-  tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 opacity-50"><div class="spinner-mini" style="margin:0 auto 0.5rem;"></div>Cargando datos del ranking...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 opacity-50"><div class="spinner-mini" style="margin:0 auto 0.5rem;"></div>Cargando datos del ranking...</td></tr>';
 
   try {
     // 1. Cargar todos los perfiles
@@ -2697,33 +2698,59 @@ async function loadRankingAdminData() {
     // 2. Cargar registros de puntos
     const { data: logs, error: logsErr } = await supabase
       .from('puntos_log')
-      .select('voluntario_id, puntos');
+      .select('voluntario_id, puntos, motivo');
 
     if (logsErr) throw logsErr;
 
-    // Calcular puntos por voluntario
+    // Calcular puntos y cantidad de listas completadas por voluntario
     const pointsMap = {};
+    const listCountMap = {};
+    let totalPointsAll = 0;
+
     (logs || []).forEach(log => {
       pointsMap[log.voluntario_id] = (pointsMap[log.voluntario_id] || 0) + log.puntos;
+      totalPointsAll += Math.max(0, log.puntos);
+      if (log.motivo && log.motivo.startsWith('Pase de lista')) {
+        listCountMap[log.voluntario_id] = (listCountMap[log.voluntario_id] || 0) + 1;
+      }
     });
 
     // 3. Formatear y ordenar la lista (puntos desc, luego alfabético)
     rankingAdminList = volunteers.map(vol => {
       const rolDisplay = vol.rol || 'Voluntario';
+      const parts = (vol.nombre || 'Voluntario').trim().split(/\s+/);
+      const iniciales = parts.length >= 2 
+        ? (parts[0][0] + parts[1][0]).toUpperCase() 
+        : (parts[0].slice(0, 2)).toUpperCase();
+
       return {
         id: vol.id,
         nombre: vol.nombre || 'Sin nombre',
         matricula: vol.matricula || 'N/A',
         rol: rolDisplay,
-        puntos: pointsMap[vol.id] || 0
+        puntos: pointsMap[vol.id] || 0,
+        listCount: listCountMap[vol.id] || 0,
+        iniciales: iniciales
       };
     }).sort((a, b) => (b.puntos - a.puntos) || a.nombre.localeCompare(b.nombre));
+
+    // Actualizar Estadísticas Superiores
+    const statVolEl = document.getElementById('rank-stat-total-vol');
+    const statPtsEl = document.getElementById('rank-stat-total-pts');
+    const statLeaderEl = document.getElementById('rank-stat-leader');
+
+    if (statVolEl) statVolEl.textContent = volunteers.length;
+    if (statPtsEl) statPtsEl.textContent = `${totalPointsAll} pts`;
+    if (statLeaderEl) {
+      const topLeader = rankingAdminList.find(v => v.puntos > 0);
+      statLeaderEl.textContent = topLeader ? `${topLeader.nombre.split(' ')[0]} (${topLeader.puntos}p)` : '—';
+    }
 
     renderRankingAdminTable(rankingAdminList);
 
   } catch (err) {
     console.error('Error al cargar ranking administrativo:', err);
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-red-400">⚠️ Error: ${err.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-red-400">⚠️ Error: ${err.message}</td></tr>`;
   }
 }
 
@@ -2734,7 +2761,7 @@ function renderRankingAdminTable(list) {
   tbody.innerHTML = '';
 
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 opacity-50">No se encontraron voluntarios.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 opacity-50">No se encontraron voluntarios.</td></tr>';
     return;
   }
 
@@ -2742,14 +2769,26 @@ function renderRankingAdminTable(list) {
     const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}`;
     const row = document.createElement('tr');
     row.innerHTML = `
-      <td style="font-weight: 700;">${medal}</td>
-      <td style="font-weight: 600; color: #fff;">${sanitize(vol.nombre)}</td>
-      <td><code>${sanitize(vol.matricula)}</code></td>
-      <td><span class="badge" style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); color: #60a5fa; font-size: 0.72rem; padding: 0.15rem 0.4rem; border-radius: 4px;">${sanitize(vol.rol)}</span></td>
-      <td style="font-weight: 800; color: #fbbf24; font-size: 0.95rem;">${vol.puntos} pts</td>
-      <td style="text-align: right;">
-        <button type="button" class="btn btn-primary btn-small btn-puntos-action" data-id="${vol.id}" data-name="${vol.nombre}">
-          🏆 Modificar Puntos
+      <td style="font-weight:700; text-align:center; font-size:1.05rem;">${medal}</td>
+      <td>
+        <div style="display:flex; align-items:center; gap:0.75rem;">
+          <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,rgba(58,138,107,0.8),rgba(47,107,82,0.8)); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.8rem; color:#eafff4; border:1px solid rgba(255,255,255,0.1); flex-shrink:0;">
+            ${vol.iniciales}
+          </div>
+          <div>
+            <div style="font-weight:600; color:#fff; font-size:0.9rem;">${sanitize(vol.nombre)}</div>
+          </div>
+        </div>
+      </td>
+      <td><code style="background:rgba(255,255,255,0.05); padding:0.2rem 0.5rem; border-radius:4px; font-size:0.8rem;">${sanitize(vol.matricula)}</code></td>
+      <td><span class="badge" style="background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.2); color:#60a5fa; font-size:0.72rem; padding:0.2rem 0.5rem; border-radius:6px;">${sanitize(vol.rol)}</span></td>
+      <td style="text-align:center; font-weight:600; color:#94a3b8; font-size:0.85rem;">${vol.listCount} listas</td>
+      <td style="text-align:center;">
+        <span style="font-weight:800; color:#fbbf24; font-size:0.95rem; background:rgba(234,179,8,0.1); border:1px solid rgba(234,179,8,0.25); padding:0.25rem 0.75rem; border-radius:999px;">${vol.puntos} pts</span>
+      </td>
+      <td style="text-align:right;">
+        <button type="button" class="btn-fast-pt btn-puntos-action" data-id="${vol.id}" data-name="${vol.nombre}" data-mat="${vol.matricula}" data-pts="${vol.puntos}" data-ini="${vol.iniciales}" style="height:34px; padding:0 0.85rem; background:linear-gradient(135deg,rgba(234,179,8,0.15),rgba(245,158,11,0.15)); border:1px solid rgba(234,179,8,0.3); color:#fbbf24; font-weight:700;">
+          ⭐ Modificar Puntos
         </button>
       </td>
     `;
@@ -2759,7 +2798,7 @@ function renderRankingAdminTable(list) {
   // Eventos de botones
   tbody.querySelectorAll('.btn-puntos-action').forEach(btn => {
     btn.addEventListener('click', () => {
-      openPuntosModal(btn.dataset.id, btn.dataset.name);
+      openTopActionBox(btn.dataset.id, btn.dataset.name, btn.dataset.mat, btn.dataset.pts, btn.dataset.ini);
     });
   });
 }
@@ -2780,33 +2819,36 @@ function filterRankingAdmin() {
   renderRankingAdminTable(filtered);
 }
 
-function openPuntosModal(volId, volNombre) {
-  const modal = document.getElementById('puntosAdminModal');
-  if (!modal) return;
+function openTopActionBox(volId, volNombre, volMatricula, volPuntos, volIniciales) {
+  const box = document.getElementById('rankingTopActionBox');
+  if (!box) return;
 
-  document.getElementById('puntosModalVolId').value = volId;
-  document.getElementById('puntosModalVolName').textContent = `Voluntario: ${volNombre}`;
-  document.getElementById('puntosModalCantidad').value = '';
-  document.getElementById('puntosModalMotivo').value = '';
+  document.getElementById('topActionVolId').value = volId;
+  document.getElementById('topActionAvatar').textContent = volIniciales || 'V';
+  document.getElementById('topActionVolName').textContent = `Modificar Puntos de: ${volNombre}`;
+  document.getElementById('topActionVolMeta').textContent = `Matrícula: ${volMatricula || 'N/A'} · Puntos actuales: ${volPuntos || 0} pts`;
+  document.getElementById('topActionCantidad').value = '';
+  document.getElementById('topActionMotivo').value = '';
   
-  const errDiv = document.getElementById('puntosModalError');
+  const errDiv = document.getElementById('topActionError');
   if (errDiv) errDiv.style.display = 'none';
 
-  modal.style.display = 'flex';
-  if (window.lucide) window.lucide.createIcons();
+  box.style.display = 'block';
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  document.getElementById('topActionCantidad')?.focus();
 }
 
-function closePuntosModal() {
-  const modal = document.getElementById('puntosAdminModal');
-  if (modal) modal.style.display = 'none';
+function closeTopActionBox() {
+  const box = document.getElementById('rankingTopActionBox');
+  if (box) box.style.display = 'none';
 }
 
-async function submitPuntos() {
-  const volId = document.getElementById('puntosModalVolId').value;
-  const rawCant = document.getElementById('puntosModalCantidad').value;
-  const motivo = (document.getElementById('puntosModalMotivo').value || '').trim();
-  const errDiv = document.getElementById('puntosModalError');
-  const submitBtn = document.getElementById('puntosModalSubmitBtn');
+async function submitTopActionPuntos() {
+  const volId = document.getElementById('topActionVolId').value;
+  const rawCant = document.getElementById('topActionCantidad').value;
+  const motivo = (document.getElementById('topActionMotivo').value || '').trim();
+  const errDiv = document.getElementById('topActionError');
+  const submitBtn = document.getElementById('btnSubmitTopAction');
 
   if (errDiv) errDiv.style.display = 'none';
 
@@ -2817,7 +2859,7 @@ async function submitPuntos() {
   }
 
   if (!motivo) {
-    if (errDiv) { errDiv.textContent = 'Por favor escribe el motivo.'; errDiv.style.display = 'block'; }
+    if (errDiv) { errDiv.textContent = 'Por favor escribe el motivo de la asignación.'; errDiv.style.display = 'block'; }
     return;
   }
 
@@ -2825,7 +2867,6 @@ async function submitPuntos() {
   submitBtn.textContent = 'Aplicando...';
 
   try {
-    // Insertar el log de puntos en Supabase
     const { error } = await supabase
       .from('puntos_log')
       .insert({
@@ -2838,7 +2879,7 @@ async function submitPuntos() {
     if (error) throw error;
 
     window.showAdminToast(`Puntos modificados correctamente (${puntos > 0 ? '+' : ''}${puntos} pts)`, 'success');
-    closePuntosModal();
+    closeTopActionBox();
     loadRankingAdminData(); // Recargar tabla
 
   } catch (err) {
@@ -2849,7 +2890,7 @@ async function submitPuntos() {
     }
   } finally {
     submitBtn.disabled = false;
-    submitBtn.textContent = 'Aplicar';
+    submitBtn.textContent = '⭐ Aplicar Puntos';
   }
 }
 
