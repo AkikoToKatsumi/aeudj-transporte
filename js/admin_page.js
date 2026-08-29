@@ -2688,10 +2688,10 @@ async function loadRankingAdminData() {
 
     if (profErr) throw profErr;
 
-    // Filtrar voluntarios y admins
+    // Filtrar voluntarios y admins (normalizado contra mayúsculas y acentos)
     const volunteers = (profiles || []).filter(u => {
-      const r = u.rol || '';
-      return r.includes('voluntario') || r.includes('comité') || r.includes('admin') || r.includes('desarrolladora') || r.includes('administrador');
+      const r = (u.rol || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      return r.includes('voluntario') || r.includes('comite') || r.includes('admin') || r.includes('desarrolladora') || r.includes('administrador');
     });
 
     // 2. Cargar registros de puntos
@@ -2707,7 +2707,7 @@ async function loadRankingAdminData() {
       pointsMap[log.voluntario_id] = (pointsMap[log.voluntario_id] || 0) + log.puntos;
     });
 
-    // 3. Formatear y ordenar la lista
+    // 3. Formatear y ordenar la lista (puntos desc, luego alfabético)
     rankingAdminList = volunteers.map(vol => {
       const rolDisplay = vol.rol || 'Voluntario';
       return {
@@ -2717,7 +2717,7 @@ async function loadRankingAdminData() {
         rol: rolDisplay,
         puntos: pointsMap[vol.id] || 0
       };
-    }).sort((a, b) => b.puntos - a.puntos);
+    }).sort((a, b) => (b.puntos - a.puntos) || a.nombre.localeCompare(b.nombre));
 
     renderRankingAdminTable(rankingAdminList);
 

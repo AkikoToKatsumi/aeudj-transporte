@@ -733,16 +733,16 @@ async function loadRankingData() {
 
     if (profErr) throw profErr;
 
-    // Filtrar para mostrar solo roles relacionados a voluntario/comite/admin/desarrolladora
+    // Filtrar para mostrar a TODOS los que tengan rol de voluntario, comité o admin
     const volunteerProfiles = (profiles || []).filter(u => {
-      const r = u.rol || '';
-      return r.includes('voluntario') || r.includes('comité') || r.includes('admin') || r.includes('desarrolladora') || r.includes('administrador');
+      const r = (u.rol || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      return r.includes('voluntario') || r.includes('comite') || r.includes('admin') || r.includes('desarrolladora') || r.includes('administrador');
     });
 
     // 2. Obtener la suma de puntos agrupada de la tabla puntos_log
     const { data: logs, error: logsErr } = await supabase
       .from('puntos_log')
-      .select('voluntario_id, puntos');
+      .select('voluntario_id, puntos, motivo');
 
     if (logsErr) throw logsErr;
 
@@ -759,7 +759,7 @@ async function loadRankingData() {
       }
     });
 
-    // 3. Crear lista de ranking y ordenar
+    // 3. Crear lista de ranking y ordenar: por puntos descendente, y en empate por nombre
     const rankingList = volunteerProfiles.map(vol => {
       const parts = (vol.nombre || 'Voluntario').trim().split(/\s+/);
       const iniciales = parts.length >= 2 
@@ -773,7 +773,7 @@ async function loadRankingData() {
         listCount: listCountMap[vol.id] || 0,
         iniciales: iniciales
       };
-    }).sort((a, b) => b.puntos - a.puntos);
+    }).sort((a, b) => (b.puntos - a.puntos) || a.nombre.localeCompare(b.nombre));
 
     // 4. Renderizar Podio (Top 3)
     podioDiv.innerHTML = '';
