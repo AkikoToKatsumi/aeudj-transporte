@@ -77,6 +77,10 @@ body[data-page="index"]::after {
   background-repeat: no-repeat;
 }
 
+body[data-page="estudiante"]::after {
+  display: none !important;
+}
+
 body::before {
   content: '';
   position: absolute;

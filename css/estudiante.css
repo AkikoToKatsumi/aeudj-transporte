@@ -2,39 +2,135 @@
    ESTILOS ESPECÍFICOS DEL PORTAL DE ESTUDIANTE
    ============================================ */
 
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
 body[data-page="estudiante"] {
-  background-color: #0f172a;
-  background-image: 
-    radial-gradient(circle at top right, rgba(59, 130, 246, 0.1), transparent 40%),
-    radial-gradient(circle at bottom left, rgba(139, 92, 246, 0.1), transparent 40%);
-  color: var(--text-main);
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  background-color: #020617 !important;
+  background-image: none !important;
+  color: #f8fafc;
   min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Luces de fondo estilo dark blue/indigo glow */
+body[data-page="estudiante"]::before {
+  content: '' !important;
+  position: fixed !important;
+  top: -10% !important;
+  left: -10% !important;
+  width: 50% !important;
+  height: 50% !important;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.16) 0%, transparent 70%) !important;
+  z-index: -1 !important;
+  filter: blur(80px) !important;
+  pointer-events: none !important;
+}
+
+body[data-page="estudiante"]::after {
+  content: '' !important;
+  position: fixed !important;
+  bottom: -10% !important;
+  right: -10% !important;
+  width: 50% !important;
+  height: 50% !important;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%) !important;
+  z-index: -1 !important;
+  filter: blur(80px) !important;
+  pointer-events: none !important;
 }
 
 .estudiante-container {
-  max-width: 600px;
+  max-width: 560px;
   margin: 0 auto;
   padding: 1.5rem;
-  padding-top: 5rem;
+  padding-top: 2rem;
   padding-bottom: 4rem;
 }
 
-.portal-title {
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: var(--text-main);
+/* ── BARRA SUPERIOR DE NAVEGACIÓN ── */
+.top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
   margin-bottom: 2rem;
+  gap: 1rem;
+}
+
+.nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.15rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+.nav-btn svg, .nav-btn i {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.2;
+}
+
+.nav-btn.slate {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  backdrop-filter: blur(10px);
+}
+
+.nav-btn.slate:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateX(-2px);
+}
+
+.nav-btn.red {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  backdrop-filter: blur(10px);
+}
+
+.nav-btn.red:hover {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  transform: translateY(-1px);
+}
+
+/* ── TÍTULO DEL PORTAL ── */
+.portal-title {
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 1.75rem;
   text-align: center;
-  text-shadow: 0 0 20px rgba(255,255,255,0.1);
+  letter-spacing: -0.02em;
 }
 
+/* ── TARJETAS GLASS ── */
 .estudiante-card {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
   padding: 1.5rem;
-  border-radius: 1.25rem;
+  border-radius: 1.25rem !important;
+  background: rgba(15, 23, 42, 0.75) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35) !important;
 }
 
-/* Tarjeta de Perfil */
+/* ── PERFIL ── */
 .profile-header {
   display: flex;
   align-items: center;
@@ -42,8 +138,8 @@ body[data-page="estudiante"] {
 }
 
 .profile-avatar {
-  width: 60px;
-  height: 60px;
+  width: 58px;
+  height: 58px;
   border-radius: 50%;
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
   border: 1px solid rgba(139, 92, 246, 0.4);
@@ -51,42 +147,55 @@ body[data-page="estudiante"] {
   align-items: center;
   justify-content: center;
   color: #c4b5fd;
-  box-shadow: 0 0 15px rgba(139, 92, 246, 0.15);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
   flex-shrink: 0;
 }
 
-.profile-avatar i {
-  width: 32px;
-  height: 32px;
+.profile-avatar svg, .profile-avatar i {
+  width: 26px;
+  height: 26px;
 }
 
 .profile-info-text {
   flex: 1;
+  min-width: 0;
 }
 
 .profile-name {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   font-weight: 700;
   margin: 0 0 0.25rem 0;
-  color: #f8fafc;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .profile-sub {
-  font-size: 0.85rem;
-  color: #cbd5e1;
+  font-size: 0.82rem;
+  color: #94a3b8;
   margin: 0.15rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Tarjeta de Estado */
+/* ── ESTADO Y AUDITORÍA ── */
 .card-title {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 700;
   margin-top: 0;
   margin-bottom: 1.25rem;
-  color: #e2e8f0;
+  color: #f1f5f9;
+}
+
+.card-title svg, .card-title i {
+  width: 18px;
+  height: 18px;
+  color: #60a5fa;
 }
 
 .status-grid {
@@ -97,19 +206,20 @@ body[data-page="estudiante"] {
 }
 
 .status-box {
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(2, 6, 23, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 1rem;
+  padding: 1.1rem 1rem;
   border-radius: 1rem;
   text-align: center;
 }
 
 .status-label {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  font-weight: 600;
   margin-bottom: 0.5rem;
 }
 
@@ -120,6 +230,7 @@ body[data-page="estudiante"] {
   font-variant-numeric: tabular-nums;
   padding: 0.2rem 1rem;
   border-radius: 99px;
+  min-width: 48px;
 }
 
 .status-value.low {
@@ -134,37 +245,37 @@ body[data-page="estudiante"] {
 }
 
 .status-banner {
-  padding: 1rem;
+  padding: 0.9rem 1.1rem;
   border-radius: 0.75rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
 .status-banner.good {
   background: rgba(16, 185, 129, 0.1);
-  border-left: 4px solid #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.25);
   color: #6ee7b7;
 }
 
 .status-banner.bad {
   background: rgba(239, 68, 68, 0.1);
-  border-left: 4px solid #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
   color: #fca5a5;
   animation: pulseWarning 2s infinite;
 }
 
 @keyframes pulseWarning {
   0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
   100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 
-/* Tarjeta Seguridad */
+/* ── SEGURIDAD (CAMBIO DE CONTRASEÑA) ── */
 .security-desc {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: #94a3b8;
   margin-bottom: 1.25rem;
   line-height: 1.4;
@@ -174,4 +285,88 @@ body[data-page="estudiante"] {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.security-form .input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.security-form .input-wrapper input {
+  width: 100%;
+  height: 48px;
+  background: rgba(2, 6, 23, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  padding: 0 2.75rem 0 2.75rem;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.security-form .input-wrapper input:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.security-form .input-wrapper .input-icon {
+  position: absolute;
+  left: 1rem;
+  color: #64748b;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+
+.security-form .toggle-password {
+  position: absolute;
+  right: 0.75rem;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.security-form .toggle-password:hover {
+  color: #cbd5e1;
+}
+
+.security-form .toggle-password svg, .security-form .toggle-password i {
+  width: 18px;
+  height: 18px;
+}
+
+.security-form .btn-premium {
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+}
+
+.security-form .btn-premium:hover {
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
+  transform: translateY(-1px);
+}
+
+.security-form .btn-premium:active {
+  transform: translateY(0);
 }
