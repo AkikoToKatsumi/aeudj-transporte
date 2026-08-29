@@ -361,22 +361,57 @@ if (reloadFab) reloadFab.onclick = loadData;
 if (window.lucide) window.lucide.createIcons();
 loadData();
 
-// Helper to award/remove points for attendance taking
-async function registrarPuntosPaseLista(votoId, subio) {
-  if (!currentUser || !currentUser.id) return;
+// ── VERIFICAR Y OTORGAR PUNTOS POR LISTA COMPLETA ─────────
+async function verificarYOtorgarPuntosHorarioCompleto(horario, fecha) {
+  let volId = currentUser?.id;
+  if (!volId) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) volId = user.id;
+    } catch(e) {}
+  }
+  if (!volId) return;
+
   try {
-    const motivo = `Pase de lista - Voto ${votoId}`;
-    // Always delete previous points to avoid duplication
-    await supabase.from('puntos_log').delete().eq('voluntario_id', currentUser.id).eq('motivo', motivo);
-    if (subio) {
-      await supabase.from('puntos_log').insert({
-        voluntario_id: currentUser.id,
-        puntos: 3,
-        motivo: motivo
-      });
+    // 1. Obtener todos los pasajeros registrados en este horario y fecha
+    const { data: votosHorario, error } = await supabase
+      .from('votos')
+      .select('id, se_monto')
+      .eq('horario', horario)
+      .eq('fecha', fecha);
+
+    if (error || !votosHorario || votosHorario.length === 0) return;
+
+    // 2. Verificar que TODOS hayan sido marcados (se_monto === 1 o se_monto === 0, no null)
+    const todosMarcados = votosHorario.every(v => v.se_monto === 1 || v.se_monto === 0);
+    const motivo = `Pase de lista completo - ${horario} (${fecha})`;
+
+    if (todosMarcados) {
+      // 3. Verificar si ya se otorgaron los puntos para este horario de hoy
+      const { data: existingPoint } = await supabase
+        .from('puntos_log')
+        .select('id')
+        .eq('motivo', motivo)
+        .maybeSingle();
+
+      if (!existingPoint) {
+        // Otorgar los 3 puntos por completar la lista
+        const { error: insErr } = await supabase.from('puntos_log').insert({
+          voluntario_id: volId,
+          puntos: 3,
+          motivo: motivo
+        });
+        if (!insErr) {
+          console.log(`✅ +3 puntos otorgados al voluntario por completar la lista de ${horario}`);
+          showToast(`🎉 ¡Lista completada al 100%! +3 puntos ganados`, 'success');
+        }
+      }
+    } else {
+      // Si falta alguien por marcar, no se tienen los puntos de esta lista
+      await supabase.from('puntos_log').delete().eq('motivo', motivo);
     }
   } catch (err) {
-    console.error('Error al registrar puntos de voluntario:', err);
+    console.error('Error al verificar lista completa:', err);
   }
 }
 
@@ -407,12 +442,13 @@ async function marcarAsistencia(p, action) {
             fecha:      p.fecha,
           });
         }
-        await registrarPuntosPaseLista(p.id, false);
       } else {
         // Remove falta if they switched from no-subio to subio
         await supabase.from('faltas').delete().eq('voto_id', p.id);
-        await registrarPuntosPaseLista(p.id, true);
       }
+
+      // Verificar si la lista de este horario se ha completado al 100% para otorgar los 3 puntos
+      await verificarYOtorgarPuntosHorarioCompleto(p.horario, p.fecha);
 
       // 3. Count total faltas for this user
       if (p.usuario_id) {
@@ -775,12 +811,14 @@ async function loadRankingData() {
       };
     }).sort((a, b) => (b.puntos - a.puntos) || a.nombre.localeCompare(b.nombre));
 
-    // 4. Renderizar Podio (Top 3)
+    // 4. Filtrar solo los voluntarios que ya tienen puntos ganados (> 0)
+    const activeRanked = rankingList.filter(v => v.puntos > 0);
+
     podioDiv.innerHTML = '';
-    const top1 = rankingList[0];
-    const top2 = rankingList[1];
-    const top3 = rankingList[2];
-    const rest = rankingList.slice(3);
+    const top1 = activeRanked[0] || null;
+    const top2 = activeRanked[1] || null;
+    const top3 = activeRanked[2] || null;
+    const rest = activeRanked.slice(3);
 
     // Slot 2 (2do lugar - izquierda)
     const slot2El = document.createElement('div');
