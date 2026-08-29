@@ -203,9 +203,13 @@ function initClickEvents() {
   const rankingAdminSearch = document.getElementById('rankingAdminSearch');
   if (rankingAdminSearch) rankingAdminSearch.addEventListener('input', () => filterRankingAdmin());
 
-  // Reset Cuatrimestre Button
+  // Reset Cuatrimestre Button (Ranking)
   const btnResetCuatrimestre = document.getElementById('btnResetCuatrimestre');
   if (btnResetCuatrimestre) btnResetCuatrimestre.addEventListener('click', () => resetCuatrimestre());
+
+  // Reset Faltas Cuatrimestre Button (Penalidades)
+  const btnResetFaltasCuatrimestre = document.getElementById('btnResetFaltasCuatrimestre');
+  if (btnResetFaltasCuatrimestre) btnResetFaltasCuatrimestre.addEventListener('click', () => resetFaltasCuatrimestre());
 
   // Top Action Bar Submit & Cancel
   const btnCancelTopAction = document.getElementById('btnCancelTopAction');
@@ -1955,6 +1959,50 @@ async function enviarCorreoPenalidad(p, totalFaltas) {
   } catch (e) {
     console.error('Error enviando email:', e);
     throw e;
+  }
+}
+
+async function resetFaltasCuatrimestre() {
+  let firstConfirm = false;
+  let secondConfirm = false;
+
+  if (typeof window.aeudjConfirm === 'function') {
+    firstConfirm = await window.aeudjConfirm('¿Deseas reiniciar todas las faltas y penalidades del cuatrimestre a 0?');
+  } else {
+    firstConfirm = confirm('¿Deseas reiniciar todas las faltas y penalidades del cuatrimestre a 0?');
+  }
+  if (!firstConfirm) return;
+
+  if (typeof window.aeudjConfirm === 'function') {
+    secondConfirm = await window.aeudjConfirm('¡ADVERTENCIA! Se borrarán todas las faltas acumuladas y los bloqueos por penalización. Todos los estudiantes empezarán limpios en 0 faltas. ¿Confirmar reseteo total de faltas?');
+  } else {
+    secondConfirm = confirm('¡ADVERTENCIA! Se borrarán todas las faltas acumuladas y los bloqueos por penalización. Todos los estudiantes empezarán limpios en 0 faltas. ¿Confirmar reseteo total de faltas?');
+  }
+  if (!secondConfirm) return;
+
+  const btn = document.getElementById('btnResetFaltasCuatrimestre');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Reiniciando...';
+  }
+
+  try {
+    // 1. Borrar todas las filas de faltas
+    await supabase.from('faltas').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    // 2. Borrar todas las filas de penalidades
+    await supabase.from('penalidades').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+
+    window.showAdminToast('¡Todas las faltas y penalidades han sido reiniciadas a 0!', 'success');
+    loadPenalidadesData();
+    loadDashboardData();
+  } catch (err) {
+    console.error('Error al reiniciar faltas:', err);
+    window.showAdminToast(`Error: ${err.message}`, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '⚠️ Reiniciar Faltas del Cuatrimestre';
+    }
   }
 }
 
