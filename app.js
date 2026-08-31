@@ -47,6 +47,16 @@ async function initApp() {
   }
 
   supabase.auth.onAuthStateChange(async (event, session) => {
+    const isRecoveryMode = window.location.hash.includes('type=recovery') || 
+                           window.location.hash.includes('access_token') || 
+                           window.location.search.includes('type=recovery') ||
+                           window.location.search.includes('code=') ||
+                           event === 'PASSWORD_RECOVERY';
+
+    if (event === 'PASSWORD_RECOVERY' || (isRecoveryMode && page === 'index')) {
+      showResetPasswordModal();
+    }
+
     if (session) {
       const user = session.user;
       if (!currentUser || currentUser.id !== user.id) {
@@ -59,7 +69,7 @@ async function initApp() {
         } catch(e) { console.error('Error fetching profile:', e); }
       }
 
-      if (page === 'index' && currentUser) {
+      if (page === 'index' && currentUser && !isRecoveryMode) {
         if (currentUser.rol === 'chofer' || currentUser.rol === 'admin_chofer') {
           window.location.href = 'choferes.html';
         } else {
@@ -159,7 +169,12 @@ function initGraciasPage() {
 // ============================================
 function initIndexPage() {
  refreshIcons();
- if (currentUser) {
+ const isRecoveryMode = window.location.hash.includes('type=recovery') || 
+                        window.location.hash.includes('access_token') || 
+                        window.location.search.includes('type=recovery') ||
+                        window.location.search.includes('code=');
+
+ if (currentUser && !isRecoveryMode) {
     if (currentUser.rol === 'chofer' || currentUser.rol === 'admin_chofer') {
       window.location.href = 'choferes.html';
     } else {
@@ -478,12 +493,13 @@ function initIndexPage() {
   // Detectar callback de recuperación de contraseña al cargar la página
   const isRecovery = window.location.hash.includes('type=recovery') || 
                      window.location.hash.includes('access_token') || 
-                     window.location.search.includes('type=recovery');
+                     window.location.search.includes('type=recovery') ||
+                     window.location.search.includes('code=');
   if (isRecovery) {
     // Dar tiempo a Supabase para procesar el token en el hash
     setTimeout(() => {
       showResetPasswordModal();
-    }, 500);
+    }, 300);
   }
 }
 
