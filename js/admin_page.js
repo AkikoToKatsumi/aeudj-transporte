@@ -155,7 +155,7 @@ function initClickEvents() {
   if (staffSearch) staffSearch.addEventListener('input', () => window.filterStaffNew());
 
   // Staff filters
-  const staffFilters = ['todos', 'administrador', 'voluntario', 'estudiante', 'chofer'];
+  const staffFilters = ['todos', 'administrador', 'voluntario', 'ayudante', 'estudiante', 'chofer'];
   staffFilters.forEach(f => {
     const btn = document.getElementById(`tab-${f}`);
     if (btn) btn.addEventListener('click', () => window.setStaffFilterNew(f));
@@ -748,12 +748,14 @@ function updateStaffCounts() {
 
   const admins = staffData.filter(u => (u.rol || '').toLowerCase().includes('administrador')).length;
   const vols = staffData.filter(u => (u.rol || '').toLowerCase().includes('voluntario')).length;
+  const ayus = staffData.filter(u => (u.rol || '').toLowerCase().includes('ayudante')).length;
   const ests = staffData.filter(u => (u.rol || '').toLowerCase().includes('estudiante')).length;
   const choferes = staffData.filter(u => (u.rol || '').toLowerCase().includes('chofer')).length;
 
   setTotal('staff-count-todos', 'tab-count-todos', staffData.length);
   setTotal('staff-count-admin', 'tab-count-admin', admins);
   setTotal('staff-count-voluntario', 'tab-count-voluntario', vols);
+  setTotal('staff-count-ayudante', 'tab-count-ayudante', ayus);
   setTotal('staff-count-estudiante', 'tab-count-estudiante', ests);
   setTotal('staff-count-chofer', 'tab-count-chofer', choferes);
 }
@@ -818,6 +820,7 @@ async function renderStaffTableNew() {
     const rolText = (u.rol || '').toLowerCase();
     if (rolText.includes('administrador')) { badgeClass = 'staff-badge-amber'; badgeLabel = 'Admin'; icon = '🛡️'; }
     else if (rolText.includes('voluntario')) { badgeClass = 'staff-badge-blue'; badgeLabel = 'Voluntario'; icon = '🙋'; }
+    else if (rolText.includes('ayudante')) { badgeClass = 'staff-badge-cyan'; badgeLabel = 'Ayudante'; icon = '🤝'; }
     else if (rolText.includes('chofer')) { badgeClass = 'staff-badge-indigo'; badgeLabel = 'Chofer'; icon = '🚌'; }
 
     const esComite = rolText.includes('comité') || rolText.includes('comite') || rolText.includes('miembro');
@@ -854,6 +857,7 @@ async function renderStaffTableNew() {
                <option value="estudiante, comité" ${rolText.includes('comit') && rolText.includes('estudiante') ? 'selected' : ''}>Estudiante (Comité)</option>
                <option value="voluntario" ${!rolText.includes('comit') && rolText.includes('voluntario') ? 'selected' : ''}>Voluntario</option>
                <option value="voluntario, comité" ${rolText.includes('comit') && rolText.includes('voluntario') ? 'selected' : ''}>Voluntario (Comité)</option>
+               <option value="ayudante" ${rolText.includes('ayudante') ? 'selected' : ''}>Ayudante</option>
                <option value="administrador" ${!rolText.includes('comit') && rolText.includes('administrador') ? 'selected' : ''}>Administrador</option>
                <option value="administrador, comité" ${rolText.includes('comit') && rolText.includes('administrador') ? 'selected' : ''}>Administrador (Comité)</option>
                <option value="chofer" ${rolText.includes('chofer') ? 'selected' : ''}>Chofer</option>
@@ -2739,10 +2743,12 @@ async function loadRankingAdminData() {
 
     if (profErr) throw profErr;
 
-    // Filtrar voluntarios y admins (normalizado contra mayúsculas y acentos)
+    // Filtrar voluntarios y admins (normalizado contra mayúsculas y acentos). Excluimos a ayudantes.
     const volunteers = (profiles || []).filter(u => {
       const r = (u.rol || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      return r.includes('voluntario') || r.includes('comite') || r.includes('admin') || r.includes('desarrolladora') || r.includes('administrador');
+      const isVolOrAdmin = r.includes('voluntario') || r.includes('comite') || r.includes('admin') || r.includes('desarrolladora') || r.includes('administrador');
+      const isOnlyHelper = r.includes('ayudante') && !r.includes('voluntario') && !r.includes('admin');
+      return isVolOrAdmin && !isOnlyHelper;
     });
 
     // 2. Cargar registros de puntos

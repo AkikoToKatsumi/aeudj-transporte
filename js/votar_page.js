@@ -167,6 +167,7 @@ function buildStaffMenu(user) {
   const rol = user.rol || '';
   const isAdmin = rol.includes('admin') || rol.includes('desarrolladora');
   const isVol   = rol.includes('voluntario') || rol.includes('desarrolladora') || rol.includes('comité');
+  const isAyu   = rol.includes('ayudante') || rol.includes('desarrolladora');
   
   staffMenu.classList.add('visible');
   staffMenu.innerHTML = '';
@@ -178,7 +179,17 @@ function buildStaffMenu(user) {
   aStudent.textContent = '🎓 Portal del Estudiante';
   staffMenu.appendChild(aStudent);
 
-  // 2. Voluntario
+  // 2. Ayudante
+  if (isAyu) {
+    const a = document.createElement('a');
+    a.href = 'ayudante.html';
+    a.className = 'btn-helper';
+    a.style.cssText = 'background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.4); color: #67e8f9;';
+    a.textContent = '🤝 Panel de Ayudante';
+    staffMenu.appendChild(a);
+  }
+
+  // 3. Voluntario
   if (isVol) {
     const a = document.createElement('a');
     a.href = 'voluntario.html';
@@ -187,7 +198,7 @@ function buildStaffMenu(user) {
     staffMenu.appendChild(a);
   }
 
-  // 3. Admin
+  // 4. Admin
   if (isAdmin) {
     const a = document.createElement('a');
     a.href = 'admin.html';

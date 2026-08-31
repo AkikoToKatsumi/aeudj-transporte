@@ -83,7 +83,7 @@ async function initApp() {
       }
     } else {
       clearSession();
-      if (['votar', 'cambios', 'admin', 'voluntario', 'choferes'].includes(page)) {
+      if (['votar', 'cambios', 'admin', 'voluntario', 'choferes', 'ayudante'].includes(page)) {
         window.location.href = 'index.html';
       }
     }
@@ -702,9 +702,13 @@ function initVotarPage() {
  staffMenu.classList.remove('hidden');
  }
    if (currentUser.rol.includes('voluntario') || currentUser.rol.includes('desarrolladora')) {
- staffMenu.innerHTML += `<a href="voluntario.html" class="btn p-3" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7; text-shadow: 0 0 10px rgba(110,231,183,0.5); box-shadow: 0 0 15px rgba(16, 185, 129, 0.15); display: inline-block; width: 100%; border-radius: 12px; font-weight: bold;"> Entrar al Panel de Voluntario</a>`;
+ staffMenu.innerHTML += `<a href="voluntario.html" class="btn p-3 mb-2" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7; text-shadow: 0 0 10px rgba(110,231,183,0.5); box-shadow: 0 0 15px rgba(16, 185, 129, 0.15); display: inline-block; width: 100%; border-radius: 12px; font-weight: bold; margin-bottom: 0.75rem;"> Entrar al Panel de Voluntario</a>`;
  staffMenu.classList.remove('hidden');
  }
+    if (currentUser.rol.includes('ayudante') || currentUser.rol.includes('desarrolladora')) {
+      staffMenu.innerHTML += `<a href="ayudante.html" class="btn p-3" style="background: rgba(6, 182, 212, 0.2); border: 1px solid rgba(6, 182, 212, 0.4); color: #67e8f9; text-shadow: 0 0 10px rgba(103,232,249,0.5); box-shadow: 0 0 15px rgba(6, 182, 212, 0.15); display: inline-block; width: 100%; border-radius: 12px; font-weight: bold;"> Entrar al Panel de Ayudante</a>`;
+      staffMenu.classList.remove('hidden');
+    }
  }
  
   const cycleDate = getCycleDate();

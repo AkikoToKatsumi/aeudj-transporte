@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Ayudante - AEUDJ</title>
+  <link rel="icon" href="img/comite.jpg" type="image/jpg">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug" crossorigin="anonymous"></script>
+  <script src="supabase-config.js"></script>
+  <script src="https://unpkg.com/lucide@0.446.0/dist/umd/lucide.min.js" integrity="sha384-5fTWUMSLG5/4ucEwwZpaf9Ew58F5f5D8I3ZoRHaRkEgCYNwW+PQX5QZ0WUmpKpQh" crossorigin="anonymous"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/ayudante.css">
+</head>
+<body data-page="ayudante">
+  <div id="loading">
+    <div class="spinner"></div>
+  </div>
+
+  <main>
+    <nav class="top-nav">
+      <a href="votar.html" class="nav-btn slate">
+        <i data-lucide="arrow-left"></i> Volver
+      </a>
+      <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+        <button id="btnRefresh" class="nav-btn cyan">
+          <i data-lucide="refresh-cw"></i> Refrescar
+        </button>
+        <button id="logoutBtn" class="nav-btn red">
+          <i data-lucide="log-out"></i> Salir
+        </button>
+      </div>
+    </nav>
+
+    <header>
+      <h1>Panel Ayudante</h1>
+      <p class="subtitle">Control de asistencia y pase de lista de pasajeros</p>
+      <div class="date-badge" id="currentDate">Cargando fecha...</div>
+    </header>
+
+    <div class="stats-bar">
+      <div class="stat-card glass-card stat-cyan">
+        <div class="stat-num" id="statTotal">0</div>
+        <div class="stat-label">Reservas</div>
+      </div>
+      <div class="stat-card glass-card stat-green">
+        <div class="stat-num" id="statPresentes">0</div>
+        <div class="stat-label">Presentes</div>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <span class="filter-label">Filtrar:</span>
+      <button type="button" class="filter-btn active" data-filter="todos">Todos</button>
+      <button type="button" class="filter-btn" data-filter="ida">↗ Ida</button>
+      <button type="button" class="filter-btn" data-filter="vuelta">↙ Vuelta</button>
+    </div>
+
+    <div id="horariosContainer">
+      <!-- Inyectado por JS -->
+    </div>
+
+  </main>
+
+  <script type="module" src="js/ayudante_page.js"></script>
+</body>
+</html>
