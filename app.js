@@ -503,17 +503,17 @@ function showForgotPasswordModal() {
   if (okDiv)  { okDiv.style.display  = 'none'; okDiv.textContent  = ''; }
   if (input)  input.value = '';
 
-  modal.style.display = 'flex';
+  modal.classList.remove('hidden');
   if (window.lucide) window.lucide.createIcons();
 
   // Botón cancelar
   const cancelBtn = document.getElementById('forgotCancelBtn');
   if (cancelBtn) {
-    cancelBtn.onclick = () => { modal.style.display = 'none'; };
+    cancelBtn.onclick = () => { modal.classList.add('hidden'); };
   }
 
   // Cerrar al hacer click fuera de la tarjeta
-  modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+  modal.onclick = (e) => { if (e.target === modal) modal.classList.add('hidden'); };
 
   // Botón enviar
   if (btn) {
@@ -603,7 +603,7 @@ function showResetPasswordModal() {
   const modal = document.getElementById('resetPasswordModal');
   if (!modal) return;
 
-  modal.style.display = 'flex';
+  modal.classList.remove('hidden');
   if (window.lucide) window.lucide.createIcons();
 
   // Toggles de visibilidad
@@ -648,7 +648,7 @@ function showResetPasswordModal() {
         const { error } = await supabase.auth.updateUser({ password: newPass });
         if (error) throw error;
 
-        modal.style.display = 'none';
+        modal.classList.add('hidden');
         // Limpiar el hash de la URL para no re-activar el modal
         history.replaceState(null, '', window.location.pathname);
 

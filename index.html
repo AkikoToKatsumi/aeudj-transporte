@@ -121,8 +121,8 @@
   </main>
 
   <!-- ===== MODAL: RECUPERAR CONTRASEÑA ===== -->
-  <div id="forgotPasswordModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(2,6,23,0.85); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; padding:1rem;">
-    <div style="background:linear-gradient(145deg,#1e293b,#0f172a); border:1px solid rgba(255,255,255,0.1); border-radius:1.5rem; padding:2rem; width:100%; max-width:420px; box-shadow:0 25px 60px rgba(0,0,0,0.6); animation: slideUpModal 0.3s ease;">
+  <div id="forgotPasswordModal" class="modal-overlay hidden">
+    <div class="modal-card" style="animation: slideUpModal 0.3s ease; max-width: 420px;">
       <div style="text-align:center; margin-bottom:1.5rem;">
         <div style="width:56px; height:56px; border-radius:50%; background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto 1rem;">
           <i data-lucide="key-round" style="width:24px;height:24px;color:#60a5fa;"></i>
@@ -142,8 +142,8 @@
   </div>
 
   <!-- ===== MODAL: NUEVA CONTRASEÑA ===== -->
-  <div id="resetPasswordModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(2,6,23,0.85); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:1rem;">
-    <div style="background:linear-gradient(145deg,#1e293b,#0f172a); border:1px solid rgba(255,255,255,0.1); border-radius:1.5rem; padding:2rem; width:100%; max-width:420px; box-shadow:0 25px 60px rgba(0,0,0,0.6); animation: slideUpModal 0.3s ease;">
+  <div id="resetPasswordModal" class="modal-overlay hidden">
+    <div class="modal-card" style="animation: slideUpModal 0.3s ease; max-width: 420px;">
       <div style="text-align:center; margin-bottom:1.5rem;">
         <div style="width:56px; height:56px; border-radius:50%; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto 1rem;">
           <i data-lucide="lock-keyhole" style="width:24px;height:24px;color:#34d399;"></i>
