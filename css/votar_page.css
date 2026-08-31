@@ -16,9 +16,27 @@ body {
 body::before {
   content: '';
   position: fixed;
-  inset: 0;
-  background: rgba(10, 15, 30, 0.78);
+  top: -15%;
+  left: -15%;
+  width: 55%;
+  height: 55%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%);
   z-index: 0;
+  filter: blur(90px);
+  pointer-events: none;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  bottom: -15%;
+  right: -15%;
+  width: 55%;
+  height: 55%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.18) 0%, transparent 70%);
+  z-index: 0;
+  filter: blur(90px);
+  pointer-events: none;
 }
 
 main {
@@ -30,9 +48,21 @@ main {
 }
 
 header { text-align: center; margin-bottom: 2rem; }
-h1 { font-size: 2.2rem; font-weight: 800; }
-.subtitle { color: #94a3b8; margin-top: 0.4rem; }
-.subtitle strong { color: #60a5fa; }
+
+h1 {
+  font-size: 2.4rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #93c5fd 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.4rem;
+  filter: drop-shadow(0 0 25px rgba(59, 130, 246, 0.45));
+}
+
+.subtitle { color: #94a3b8; margin-top: 0.4rem; font-weight: 500; }
+.subtitle strong { color: #60a5fa; text-shadow: 0 0 10px rgba(96, 165, 250, 0.3); }
 
 /* Staff menu */
 #staffMenu {
@@ -50,21 +80,28 @@ h1 { font-size: 2.2rem; font-weight: 800; }
   font-weight: 700;
   text-decoration: none;
   transition: all 0.2s;
+  backdrop-filter: blur(10px);
 }
 .btn-admin {
   background: rgba(139, 92, 246, 0.18);
   border: 1px solid rgba(139, 92, 246, 0.4);
   color: #c4b5fd;
+  text-shadow: 0 0 10px rgba(196, 181, 253, 0.4);
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.15);
 }
 .btn-volunteer {
   background: rgba(16, 185, 129, 0.15);
   border: 1px solid rgba(16, 185, 129, 0.4);
   color: #6ee7b7;
+  text-shadow: 0 0 10px rgba(110, 231, 183, 0.4);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
 }
 .btn-student {
   background: rgba(59, 130, 246, 0.15);
   border: 1px solid rgba(59, 130, 246, 0.4);
   color: #93c5fd;
+  text-shadow: 0 0 10px rgba(147, 197, 253, 0.4);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
 }
 
 /* Card */
@@ -204,6 +241,17 @@ h1 { font-size: 2.2rem; font-weight: 800; }
 #confirmedView.visible { display: block; }
 
 .confirmed-header { text-align: center; margin-bottom: 1.5rem; }
+.confirmed-header h2 {
+  font-size: 1.85rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #6ee7b7 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.45));
+  margin-bottom: 0.25rem;
+}
 .check-badge {
   width: 64px; height: 64px;
   background: rgba(16,185,129,0.15);
@@ -211,6 +259,7 @@ h1 { font-size: 2.2rem; font-weight: 800; }
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   margin: 0 auto 1rem;
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.35);
 }
 .check-badge svg { width: 32px; height: 32px; color: #34d399; }
 
@@ -220,9 +269,10 @@ h1 { font-size: 2.2rem; font-weight: 800; }
   align-items: center;
   gap: 1rem;
   background: rgba(30,41,59,0.5);
-  border: 1px solid rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: 0.85rem;
   padding: 1rem 1.25rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 .trip-icon {
   width: 44px; height: 44px;
@@ -230,11 +280,11 @@ h1 { font-size: 2.2rem; font-weight: 800; }
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
-.trip-icon.ida { background: rgba(59,130,246,0.15); color: #60a5fa; }
-.trip-icon.vuelta { background: rgba(139,92,246,0.15); color: #c4b5fd; }
+.trip-icon.ida { background: rgba(59,130,246,0.15); color: #60a5fa; box-shadow: 0 0 12px rgba(59,130,246,0.25); }
+.trip-icon.vuelta { background: rgba(139,92,246,0.15); color: #c4b5fd; box-shadow: 0 0 12px rgba(139,92,246,0.25); }
 .trip-icon svg { width: 20px; height: 20px; }
 .trip-info { flex: 1; }
-.trip-label { font-size: 0.7rem; text-transform: uppercase; color: #475569; font-weight: 700; }
+.trip-label { font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 700; }
 .trip-time { font-size: 1.2rem; font-weight: 700; color: #f8fafc; }
 .trip-route { font-size: 0.7rem; color: #64748b; font-family: monospace; }
 .trip-badge {
@@ -243,8 +293,8 @@ h1 { font-size: 2.2rem; font-weight: 800; }
   padding: 0.25rem 0.6rem;
   border-radius: 999px;
 }
-.badge-confirmed { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
-.badge-espera { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+.badge-confirmed { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); box-shadow: 0 0 10px rgba(16,185,129,0.2); }
+.badge-espera { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); box-shadow: 0 0 10px rgba(245,158,11,0.2); }
 
 /* Action buttons */
 .action-grid {
