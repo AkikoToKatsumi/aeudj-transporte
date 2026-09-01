@@ -49,22 +49,24 @@ function showToast(msg, type = 'success') {
 
 // Auth check
 const logoutBtn = document.getElementById('logoutBtn');
+window.logout = async () => {
+  try {
+    if (supabase) await supabase.auth.signOut();
+  } catch(e) {}
+  localStorage.clear();
+  window.location.href = 'index.html';
+};
 if (logoutBtn) {
-  logoutBtn.addEventListener('click', async () => {
-    try {
-      if (supabase) await supabase.auth.signOut();
-    } catch(e) {}
-    localStorage.clear();
-    window.location.href = 'index.html';
-  });
+  logoutBtn.addEventListener('click', window.logout);
 }
 
 const btnRefresh = document.getElementById('btnRefresh');
+window.refreshData = () => {
+  loadData();
+  showToast('Datos actualizados', 'success');
+};
 if (btnRefresh) {
-  btnRefresh.addEventListener('click', () => {
-    loadData();
-    showToast('Datos actualizados', 'success');
-  });
+  btnRefresh.addEventListener('click', window.refreshData);
 }
 
 let currentUser = null;
@@ -556,6 +558,7 @@ document.getElementById('modalHorarios')?.addEventListener('click', (e) => {
   if (e.target === document.getElementById('modalHorarios')) closeHorariosModal();
 });
 
+window.openHorariosModal = openHorariosModal;
 function openHorariosModal() {
   const modal = document.getElementById('modalHorarios');
   if (!modal) return;
@@ -575,6 +578,7 @@ function openHorariosModal() {
   if (window.lucide) window.lucide.createIcons();
 }
 
+window.closeHorariosModal = closeHorariosModal;
 function closeHorariosModal() {
   document.getElementById('modalHorarios')?.classList.add('hidden');
 }
@@ -735,6 +739,7 @@ document.getElementById('modalRanking')?.addEventListener('click', (e) => {
   if (e.target === document.getElementById('modalRanking')) closeRankingModal();
 });
 
+window.openRankingModal = openRankingModal;
 function openRankingModal() {
   const modal = document.getElementById('modalRanking');
   if (modal) {
@@ -744,6 +749,7 @@ function openRankingModal() {
   }
 }
 
+window.closeRankingModal = closeRankingModal;
 function closeRankingModal() {
   const modal = document.getElementById('modalRanking');
   if (modal) {

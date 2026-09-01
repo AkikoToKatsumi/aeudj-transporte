@@ -51,22 +51,24 @@ function showToast(msg, type = 'success') {
 
 // Auth check
 const logoutBtn = document.getElementById('logoutBtn');
+window.logout = async () => {
+  try {
+    if (supabase) await supabase.auth.signOut();
+  } catch(e) {}
+  localStorage.clear();
+  window.location.href = 'index.html';
+};
 if (logoutBtn) {
-  logoutBtn.addEventListener('click', async () => {
-    try {
-      if (supabase) await supabase.auth.signOut();
-    } catch(e) {}
-    localStorage.clear();
-    window.location.href = 'index.html';
-  });
+  logoutBtn.addEventListener('click', window.logout);
 }
 
 const btnRefresh = document.getElementById('btnRefresh');
+window.refreshData = () => {
+  loadData();
+  showToast('Datos actualizados', 'success');
+};
 if (btnRefresh) {
-  btnRefresh.addEventListener('click', () => {
-    loadData();
-    showToast('Datos actualizados', 'success');
-  });
+  btnRefresh.addEventListener('click', window.refreshData);
 }
 
 let currentUser = null;

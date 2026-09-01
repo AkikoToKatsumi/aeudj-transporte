@@ -25,16 +25,16 @@
         <i data-lucide="arrow-left"></i> Volver
       </a>
       <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-        <button id="btnRanking" class="nav-btn" style="background:linear-gradient(135deg,rgba(234,179,8,0.2),rgba(251,146,60,0.2)); border-color:rgba(234,179,8,0.4); color:#fbbf24;">
+        <button id="btnRanking" class="nav-btn" style="background:linear-gradient(135deg,rgba(234,179,8,0.2),rgba(251,146,60,0.2)); border-color:rgba(234,179,8,0.4); color:#fbbf24;" onclick="if(window.openRankingModal) window.openRankingModal();">
           <i data-lucide="trophy"></i> Ranking
         </button>
-        <button id="btnHorarios" class="nav-btn purple">
+        <button id="btnHorarios" class="nav-btn purple" onclick="if(window.openHorariosModal) window.openHorariosModal();">
           <i data-lucide="calendar-clock"></i> Horarios
         </button>
-        <button id="btnRefresh" class="nav-btn blue">
+        <button id="btnRefresh" class="nav-btn blue" onclick="if(window.refreshData) window.refreshData();">
           <i data-lucide="refresh-cw"></i> Refrescar
         </button>
-        <button id="logoutBtn" class="nav-btn red">
+        <button id="logoutBtn" class="nav-btn red" onclick="if(window.logout) window.logout();">
           <i data-lucide="log-out"></i> Salir
         </button>
       </div>

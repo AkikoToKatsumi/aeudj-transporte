@@ -24,10 +24,10 @@
         <i data-lucide="arrow-left"></i> Volver
       </a>
       <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-        <button id="btnRefresh" class="nav-btn cyan">
+        <button id="btnRefresh" class="nav-btn cyan" onclick="if(window.refreshData) window.refreshData();">
           <i data-lucide="refresh-cw"></i> Refrescar
         </button>
-        <button id="logoutBtn" class="nav-btn red">
+        <button id="logoutBtn" class="nav-btn red" onclick="if(window.logout) window.logout();">
           <i data-lucide="log-out"></i> Salir
         </button>
       </div>
