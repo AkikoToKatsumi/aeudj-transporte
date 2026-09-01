@@ -522,13 +522,17 @@ window.sendWhatsAppNotification = (horario) => {
 };
 
 // Realtime
-supabase
-  .channel('votos-voluntario')
-  .on('postgres_changes',
-    { event: '*', schema: 'public', table: 'votos' },
-    () => { loadData(); }
-  )
-  .subscribe();
+try {
+  supabase
+    .channel('votos-voluntario')
+    .on('postgres_changes',
+      { event: '*', schema: 'public', table: 'votos' },
+      () => { loadData(); }
+    )
+    .subscribe();
+} catch (err) {
+  console.warn('Realtime no disponible:', err);
+}
 
 // ══════════════════════════════════════════════
 // MODAL DE DISPONIBILIDAD DE HORARIOS
