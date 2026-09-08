@@ -471,18 +471,42 @@ function initVotarPage() {
  }
  }
  
- function renderHorarios() {
- scheduleGrid.innerHTML = '';
- 
- // Nueva lgica de visibilidad por grupos
- const ahora = new Date();
- const hora = ahora.getHours();
- 
- // Grupo Maana: 10 PM a 9:59 AM
- // Grupo Tarde: 10 AM a 9:59 PM
- const currentGroup = (hora >= 22 || hora < 10) ? 'maana' : 'tarde';
- 
- const visibleSchedules = transportSchedules.filter(s => s.group === currentGroup);
+  function renderHorarios() {
+  scheduleGrid.innerHTML = '';
+  
+  const ahora = new Date();
+  const horaActual = ahora.getHours();
+  const minActual = ahora.getMinutes();
+  
+  // Grupo Mañana: 10 PM a 9:59 AM
+  // Grupo Tarde: 10 AM a 9:59 PM
+  const currentGroup = (horaActual >= 22 || horaActual < 10) ? 'manana' : 'tarde';
+  
+  const visibleSchedules = transportSchedules.filter(s => {
+    // Normalizar el grupo (manejar typos como maana o mañana)
+    const normalizedGroup = (s.group && s.group.includes('ma')) ? 'manana' : 'tarde';
+    if (normalizedGroup !== currentGroup) return false;
+    
+    // Si estamos agendando para el día siguiente (después de las 10 PM), mostrar todo
+    if (horaActual >= 22) return true;
+    
+    // Verificar si la hora del viaje ya pasó hoy
+    const timeMatch = s.time.match(/(\d+):(\d+)\s+(AM|PM)/i);
+    if (!timeMatch) return true;
+    
+    let sHora = parseInt(timeMatch[1], 10);
+    const sMin = parseInt(timeMatch[2], 10);
+    const ampm = timeMatch[3].toUpperCase();
+    
+    if (ampm === 'PM' && sHora !== 12) sHora += 12;
+    if (ampm === 'AM' && sHora === 12) sHora = 0;
+    
+    // Si ya pasó la hora del viaje, lo ocultamos
+    if (horaActual > sHora) return false;
+    if (horaActual === sHora && minActual >= sMin) return false;
+    
+    return true;
+  });
  
  visibleSchedules.forEach(schedule => {
  const direction = schedule.route.includes('Jarabacoa La Vega') ? 'ida' : 'vuelta';
