@@ -223,6 +223,14 @@ async function renderHorarios(group) {
     visible = visible.filter(s => s.time === '7:00 AM' || s.time === '12:10 PM');
   }
 
+  // ── PROTECCIÓN: Purgar selecciones que no pertenecen al grupo activo ──
+  const validFullTexts = new Set(visible.map(s => s.fullText));
+  const before = selectedHorarios.length;
+  selectedHorarios = selectedHorarios.filter(h => validFullTexts.has(h));
+  if (selectedHorarios.length !== before) {
+    console.warn(`⚠️ Se purgaron ${before - selectedHorarios.length} horario(s) inválidos para el grupo "${group}"`);
+  }
+
   scheduleGrid.innerHTML = '';
 
   if (visible.length === 0) {
@@ -392,7 +400,23 @@ async function confirmarConEspera(puntoEspera) {
   const modal = document.getElementById('esperaModal');
   if (modal) modal.classList.add('hidden');
   if (!pendingSubmitData) return;
-  const { cycleDate } = pendingSubmitData;
+
+  // ── PROTECCIÓN FINAL: Re-validar grupo activo antes de insertar ──
+  const { group: currentGroup } = await getActiveGroup();
+  const currentCycleDate = await getCycleDate(currentGroup);
+  const allowedFT = new Set(SCHEDULES.filter(s => s.group === currentGroup).map(s => s.fullText));
+  const invalid = selectedHorarios.filter(h => !allowedFT.has(h));
+  if (invalid.length > 0) {
+    console.error('❌ Bloqueo final: horarios inválidos para grupo activo:', invalid);
+    setStatus('⚠️ La sesión cambió. Selecciona horarios válidos.', '#f87171');
+    selectedHorarios = [];
+    pendingSubmitData = null;
+    if (submitBtn) submitBtn.disabled = false;
+    setTimeout(() => showForm(), 1500);
+    return;
+  }
+
+  const cycleDate = currentCycleDate;
 
   try {
     await supabase.from('votos').delete()
@@ -432,8 +456,27 @@ if (submitBtn) {
         return;
       }
       submitBtn.disabled = true;
-      setStatus('Guardando tu selección...');
+      setStatus('Verificando sesión...');
+
+      // ── PROTECCIÓN: Re-verificar grupo activo al momento del submit ──
       const { group } = await getActiveGroup();
+      const allowedSchedules = SCHEDULES.filter(s => s.group === group);
+      const allowedFullTexts = new Set(allowedSchedules.map(s => s.fullText));
+
+      const invalidSelections = selectedHorarios.filter(h => !allowedFullTexts.has(h));
+      if (invalidSelections.length > 0) {
+        console.error('❌ Horarios inválidos para el grupo activo:', invalidSelections);
+        setStatus('⚠️ Tu sesión cambió. Los horarios seleccionados ya no son válidos. La página se recargará.', '#f87171');
+        submitBtn.disabled = false;
+        // Re-renderizar con el grupo correcto después de un breve retraso
+        setTimeout(async () => {
+          selectedHorarios = [];
+          await showForm();
+        }, 2000);
+        return;
+      }
+
+      setStatus('Guardando tu selección...');
       const cycleDate = await getCycleDate(group);
 
       pendingSubmitData = { group, cycleDate };
