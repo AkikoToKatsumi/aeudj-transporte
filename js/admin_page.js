@@ -1712,7 +1712,7 @@ function renderPenalizados(pens) {
         loadPenalidadesData();
       } catch (err) {
         console.error(err);
-        window.showAdminToast('Error al levantar la penalidad', 'error');
+        window.showAdminToast(err.message || 'Error al levantar la penalidad', 'error');
         btn.disabled = false;
         btn.innerHTML = originalHTML;
       }
@@ -1854,6 +1854,13 @@ function renderHistorial(faltas, activeDate, activeIndex, totalDays, sortedDates
 
 async function levantarPenalidad(usuarioId) {
   try {
+    // 0. Obtener perfil para asegurar que nombre/matrícula/email están completos en el upsert
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, nombre, matricula, email')
+      .eq('id', usuarioId)
+      .maybeSingle();
+
     // 1. Obtener registro actual en la tabla penalidades
     const { data: pEntry, error: pErr } = await supabase
       .from('penalidades')
@@ -1861,30 +1868,27 @@ async function levantarPenalidad(usuarioId) {
       .eq('usuario_id', usuarioId)
       .maybeSingle();
 
-    if (pErr) throw pErr;
+    if (pErr) console.warn('Aviso leyendo penalidad existente:', pErr);
 
     // 2. Obtener cantidad actual de faltas
     let currentFaltasCount = 0;
     if (pEntry && pEntry.total_faltas !== undefined && pEntry.total_faltas !== null) {
       currentFaltasCount = pEntry.total_faltas;
     } else {
-      const { data: histVotes, error: histErr } = await supabase
+      const { data: histVotes } = await supabase
         .from('votos')
         .select('id')
         .eq('usuario_id', usuarioId)
         .eq('se_monto', 0);
-      if (histErr) throw histErr;
       currentFaltasCount = histVotes ? histVotes.length : 0;
     }
 
     // 3. Eliminar hasta 3 filas de la tabla faltas (contador activo)
-    const { data: activeRows, error: fetchErr } = await supabase
+    const { data: activeRows } = await supabase
       .from('faltas')
       .select('id')
       .eq('usuario_id', usuarioId)
       .order('created_at', { ascending: true });
-
-    if (fetchErr) throw fetchErr;
 
     const dbFaltasCount = activeRows ? activeRows.length : 0;
     const toDeleteFromFaltas = Math.min(3, dbFaltasCount);
@@ -1896,11 +1900,11 @@ async function levantarPenalidad(usuarioId) {
         .delete()
         .in('id', idsToDelete);
 
-      if (deleteErr) throw deleteErr;
+      if (deleteErr) console.warn('Error borrando en faltas:', deleteErr);
     }
 
-    // 4. Eliminar hasta 3 registros de votos con se_monto=0 (las faltas históricas, más antiguas primero)
-    const { data: histVotosRows, error: histFetchErr } = await supabase
+    // 4. Resetear hasta 3 registros de votos con se_monto=0 (desmarcar faltas históricas)
+    const { data: histVotosRows } = await supabase
       .from('votos')
       .select('id')
       .eq('usuario_id', usuarioId)
@@ -1909,16 +1913,14 @@ async function levantarPenalidad(usuarioId) {
       .order('created_at', { ascending: true })
       .limit(3);
 
-    if (histFetchErr) throw histFetchErr;
-
     if (histVotosRows && histVotosRows.length > 0) {
-      const votosIdsToDelete = histVotosRows.map(r => r.id);
-      const { error: votosDeleteErr } = await supabase
+      const votosIdsToReset = histVotosRows.map(r => r.id);
+      const { error: votosUpErr } = await supabase
         .from('votos')
-        .delete()
-        .in('id', votosIdsToDelete);
+        .update({ se_monto: null })
+        .in('id', votosIdsToReset);
 
-      if (votosDeleteErr) throw votosDeleteErr;
+      if (votosUpErr) console.warn('Error actualizando votos:', votosUpErr);
     }
 
     // 5. Calcular el nuevo total restando 3
@@ -1926,24 +1928,30 @@ async function levantarPenalidad(usuarioId) {
     const stillPenalized = newCount >= 3;
 
     // 6. Upsert el nuevo registro en penalidades
+    const upsertData = {
+      usuario_id: usuarioId,
+      nombre: profile?.nombre || pEntry?.nombre || '',
+      matricula: profile?.matricula || pEntry?.matricula || '',
+      email: profile?.email || pEntry?.email || '',
+      total_faltas: newCount,
+      penalizado: stillPenalized,
+      fecha_penalidad: stillPenalized ? (pEntry?.fecha_penalidad || new Date().toISOString()) : null,
+      updated_at: new Date().toISOString()
+    };
+
     const { error: updateErr } = await supabase
       .from('penalidades')
-      .upsert({
-        usuario_id: usuarioId,
-        total_faltas: newCount,
-        penalizado: stillPenalized,
-        fecha_penalidad: stillPenalized ? new Date().toISOString() : (pEntry?.fecha_penalidad || null),
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'usuario_id' });
+      .upsert(upsertData, { onConflict: 'usuario_id' });
 
-    if (updateErr) throw updateErr;
+    if (updateErr) {
+      console.error('Error upserting penalidad:', updateErr);
+      if (updateErr.code === '42501' || updateErr.message?.includes('row-level security')) {
+        throw new Error('Error de Política (RLS) en Supabase: Se requiere habilitar la política RLS para modificar "penalidades".');
+      }
+      throw updateErr;
+    }
   } catch (err) {
     console.error('Error levantando penalidad:', err);
-    if (typeof window.showAdminToast === 'function') {
-      window.showAdminToast('Error al levantar la penalidad. Intenta de nuevo.', 'error');
-    } else {
-      alert('Error al levantar la penalidad. Intenta de nuevo.');
-    }
     throw err;
   }
 }
@@ -2710,7 +2718,7 @@ window.showFaltasDetalleModal = async function (userId, nombre, matricula, email
             }
           } catch (err) {
             console.error(err);
-            window.showAdminToast('Error al levantar la penalidad', 'error');
+            window.showAdminToast(err.message || 'Error al levantar la penalidad', 'error');
             btnLevantar.disabled = false;
             btnLevantar.textContent = `🔓 Levantar`;
           }
