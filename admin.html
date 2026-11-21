@@ -38,6 +38,9 @@
           <h2 class="text-white font-bold">AEUDJ</h2>
           <span class="text-xs text-blue-400">Panel Admin</span>
         </div>
+        <button type="button" id="btnToggleSidebar" class="sidebar-toggle-btn" title="Ocultar / Mostrar menú">
+          <i data-lucide="panel-left-close" style="width:17px;height:17px;"></i>
+        </button>
       </div>
 
       <nav class="sidebar-nav">
@@ -93,14 +96,9 @@
     <!-- Main Content Area -->
     <main class="content-wrapper">
       <header class="content-header flex justify-between items-center mb-6">
-        <div class="flex items-center gap-3">
-          <button type="button" id="btnToggleSidebar" class="sidebar-toggle-btn" title="Ocultar / Mostrar menú">
-            <i data-lucide="panel-left" style="width:18px;height:18px;"></i>
-          </button>
-          <div>
-            <h1 id="screenTitle" class="text-2xl font-bold text-white">Dashboard Informativo</h1>
-            <p class="text-sm text-gray-500">Transporte activo para el <span id="fechaAdmin"></span></p>
-          </div>
+        <div>
+          <h1 id="screenTitle" class="text-2xl font-bold text-white">Dashboard Informativo</h1>
+          <p class="text-sm text-gray-500">Transporte activo para el <span id="fechaAdmin"></span></p>
         </div>
         <div class="flex gap-3">
           <button type="button" class="btn-pill-outline btn-small" id="btnRefreshScreen">
