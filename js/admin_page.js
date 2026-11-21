@@ -2358,7 +2358,7 @@ window.marcarAsistenciaAdmin = async (p, action) => {
 let auditActiveTab = 'votos';
 let auditAllRows = [];
 let auditCurrentPage = 0;
-const AUDIT_PAGE_SIZE = 8;
+const AUDIT_PAGE_SIZE = 10;
 
 document.querySelectorAll('[data-audit-tab]').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -2843,7 +2843,7 @@ window.showFaltasDetalleModal = async function (userId, nombre, matricula, email
 
 let rankingAdminList = []; // Cache local para filtrado
 let rankingCurrentPage = 0;
-const RANKING_PAGE_SIZE = 8;
+const RANKING_PAGE_SIZE = 10;
 
 async function loadRankingAdminData() {
   const tbody = document.getElementById('rankingAdminTableBody');
@@ -3155,6 +3155,8 @@ async function resetCuatrimestre() {
 // ══════════════════════════════════════════════
 let allPasesListaRows = [];
 let pasesActiveDateIndex = 0;
+let pasesInnerPage = 0;
+const PASES_INNER_PAGE_SIZE = 10;
 
 function parsePaseListaMotivo(motivo, fallbackIso) {
   const m = (motivo || '').match(/^Pase de lista(?:\s+completo)?\s*-\s*(.+?)\s*\((\d{4}-\d{2}-\d{2})\)\s*$/i);
@@ -3276,6 +3278,7 @@ window.filterPasesListaTable = function (resetDay = true) {
 
   if (resetDay) {
     pasesActiveDateIndex = 0;
+    pasesInnerPage = 0;
   } else if (pasesActiveDateIndex >= sortedDates.length) {
     pasesActiveDateIndex = Math.max(0, sortedDates.length - 1);
   }
@@ -3289,6 +3292,12 @@ window.filterPasesListaTable = function (resetDay = true) {
 function renderPasesListaTable(rows, activeDate, activeIndex, totalDays) {
   const container = document.getElementById('pasesTableContainer');
   if (!container) return;
+
+  const totalInnerPages = Math.max(1, Math.ceil((rows || []).length / PASES_INNER_PAGE_SIZE));
+  if (pasesInnerPage >= totalInnerPages) pasesInnerPage = totalInnerPages - 1;
+  if (pasesInnerPage < 0) pasesInnerPage = 0;
+  const innerStart = pasesInnerPage * PASES_INNER_PAGE_SIZE;
+  const pageRows = (rows || []).slice(innerStart, innerStart + PASES_INNER_PAGE_SIZE);
 
   let formattedDate = 'Sin registros';
   if (activeDate && activeDate !== 'Sin registros' && activeDate !== 'Sin fecha') {
@@ -3358,9 +3367,9 @@ function renderPasesListaTable(rows, activeDate, activeIndex, totalDays) {
             </tr>
           </thead>
           <tbody>
-            ${rows.map((r, i) => `
+            ${pageRows.map((r, i) => `
               <tr>
-                <td style="font-weight:700;color:#60a5fa;">${i + 1}</td>
+                <td style="font-weight:700;color:#60a5fa;">${innerStart + i + 1}</td>
                 <td>
                   <div class="audit-name">${sanitize(r.nombre)}</div>
                   <div class="audit-mat">${sanitize(r.matricula)} · ${sanitize(r.rol)}</div>
@@ -3374,6 +3383,17 @@ function renderPasesListaTable(rows, activeDate, activeIndex, totalDays) {
           </tbody>
         </table>
       </div>
+      ${totalInnerPages > 1 ? `
+        <div class="pen-pagination" style="padding: 0.75rem 1rem; border-top: 1px solid rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:space-between; gap:0.75rem;">
+          <button type="button" class="logbook-nav-btn" id="pasesInnerPrevBtn" ${pasesInnerPage === 0 ? 'disabled' : ''}>
+            <i data-lucide="chevron-left" style="width:16px;height:16px;"></i>
+          </button>
+          <span class="pen-page-info">Pág. ${pasesInnerPage + 1} / ${totalInnerPages} · ${rows.length} pases este día</span>
+          <button type="button" class="logbook-nav-btn" id="pasesInnerNextBtn" ${pasesInnerPage >= totalInnerPages - 1 ? 'disabled' : ''}>
+            <i data-lucide="chevron-right" style="width:16px;height:16px;"></i>
+          </button>
+        </div>
+      ` : ''}
     `;
   }
 
@@ -3403,8 +3423,12 @@ function renderPasesListaTable(rows, activeDate, activeIndex, totalDays) {
 
   const prevBtn = container.querySelector('#pasesPrevBtn');
   const nextBtn = container.querySelector('#pasesNextBtn');
-  if (prevBtn) prevBtn.addEventListener('click', () => { pasesActiveDateIndex++; window.filterPasesListaTable(false); });
-  if (nextBtn) nextBtn.addEventListener('click', () => { pasesActiveDateIndex--; window.filterPasesListaTable(false); });
+  const innerPrevBtn = container.querySelector('#pasesInnerPrevBtn');
+  const innerNextBtn = container.querySelector('#pasesInnerNextBtn');
+  if (prevBtn) prevBtn.addEventListener('click', () => { pasesActiveDateIndex++; pasesInnerPage = 0; window.filterPasesListaTable(false); });
+  if (nextBtn) nextBtn.addEventListener('click', () => { pasesActiveDateIndex--; pasesInnerPage = 0; window.filterPasesListaTable(false); });
+  if (innerPrevBtn) innerPrevBtn.addEventListener('click', () => { pasesInnerPage--; window.filterPasesListaTable(false); });
+  if (innerNextBtn) innerNextBtn.addEventListener('click', () => { pasesInnerPage++; window.filterPasesListaTable(false); });
 
   if (window.lucide) window.lucide.createIcons();
 }
