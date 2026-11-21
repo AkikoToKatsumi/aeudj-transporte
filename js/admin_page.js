@@ -106,7 +106,7 @@ async function initAdminDashboard() {
   if (typeof window.autoMarkExpiredUnpassedVotes === 'function') {
     await window.autoMarkExpiredUnpassedVotes();
   }
-  loadDashboardData();
+  switchScreen('dashboard');
   initSessionControl();
 
 
@@ -276,20 +276,30 @@ async function switchScreen(screenId) {
   const target = document.getElementById(`screen-${screenId}`);
   if (target) target.classList.remove('hidden');
 
-  // Update Header Title
-  const titles = {
-    'dashboard': 'Dashboard Informativo',
-    'votos': 'Listado de Pasajeros',
-    'horarios': 'Gestión de Turnos',
-    'staff': 'Gestión de Personal',
-    'logs': 'Registro de Auditoría',
-    'paseslista': 'Registro de Pases de Lista',
-    'penalidades': 'Gestión de Penalidades',
-    'pasarlista': 'Pase de Lista Activo',
-    'ranking': 'Ranking de Voluntarios'
+  // Update Header Title with distinct per-module icon & gradient styling
+  const moduleThemes = {
+    'dashboard':   { title: 'Resumen General',           icon: 'layout-dashboard', bg: 'rgba(59,130,246,0.16)',  border: 'rgba(59,130,246,0.35)',  color: '#60a5fa', grad: 'linear-gradient(90deg, #f8fafc, #93c5fd)' },
+    'votos':       { title: 'Listado de Pasajeros',      icon: 'users',            bg: 'rgba(99,102,241,0.16)',  border: 'rgba(99,102,241,0.35)',  color: '#818cf8', grad: 'linear-gradient(90deg, #f8fafc, #a5b4fc)' },
+    'horarios':    { title: 'Gestión de Turnos',         icon: 'calendar',         bg: 'rgba(14,165,233,0.16)',  border: 'rgba(14,165,233,0.35)',  color: '#38bdf8', grad: 'linear-gradient(90deg, #f8fafc, #7dd3fc)' },
+    'staff':       { title: 'Directorio de Personal',    icon: 'shield-check',     bg: 'rgba(16,185,129,0.16)',  border: 'rgba(16,185,129,0.35)',  color: '#34d399', grad: 'linear-gradient(90deg, #f8fafc, #6ee7b7)' },
+    'logs':        { title: 'Registro de Auditoría',     icon: 'activity',         bg: 'rgba(168,85,247,0.16)',  border: 'rgba(168,85,247,0.35)',  color: '#c084fc', grad: 'linear-gradient(90deg, #f8fafc, #d8b4fe)' },
+    'paseslista':  { title: 'Libro de Pases de Lista',   icon: 'history',          bg: 'rgba(56,189,248,0.16)',  border: 'rgba(56,189,248,0.35)',  color: '#38bdf8', grad: 'linear-gradient(90deg, #f8fafc, #7dd3fc)' },
+    'penalidades': { title: 'Gestión de Penalidades',    icon: 'alert-triangle',   bg: 'rgba(244,63,94,0.16)',   border: 'rgba(244,63,94,0.35)',   color: '#fb7185', grad: 'linear-gradient(90deg, #f8fafc, #fda4af)' },
+    'pasarlista':  { title: 'Pase de Lista Activo',      icon: 'clipboard-check',  bg: 'rgba(20,184,166,0.16)',  border: 'rgba(20,184,166,0.35)',  color: '#2dd4bf', grad: 'linear-gradient(90deg, #f8fafc, #5eead4)' },
+    'ranking':     { title: 'Ranking de Voluntarios',    icon: 'trophy',           bg: 'rgba(245,158,11,0.16)',  border: 'rgba(245,158,11,0.35)',  color: '#fbbf24', grad: 'linear-gradient(90deg, #f8fafc, #fcd34d)' }
   };
   const screenTitle = document.getElementById('screenTitle');
-  if (screenTitle) screenTitle.textContent = titles[screenId] || 'Panel Administrativo';
+  if (screenTitle) {
+    const theme = moduleThemes[screenId] || { title: 'Panel Administrativo', icon: 'layout-dashboard', bg: 'rgba(59,130,246,0.16)', border: 'rgba(59,130,246,0.35)', color: '#60a5fa', grad: 'linear-gradient(90deg, #f8fafc, #cbd5e1)' };
+    screenTitle.innerHTML = `
+      <span class="module-title-wrap">
+        <span class="module-title-icon" style="background:${theme.bg};border:1px solid ${theme.border};color:${theme.color};">
+          <i data-lucide="${theme.icon}" style="width:18px;height:18px;"></i>
+        </span>
+        <span class="module-title-text" style="background:${theme.grad};-webkit-background-clip:text;-webkit-text-fill-color:transparent;">${theme.title}</span>
+      </span>
+    `;
+  }
 
   // Load specific screen data
   if (screenId === 'dashboard') loadDashboardData();
@@ -2347,10 +2357,13 @@ window.marcarAsistenciaAdmin = async (p, action) => {
 // ── AUDITORÍA ──────────────────────────────────────────
 let auditActiveTab = 'votos';
 let auditAllRows = [];
+let auditCurrentPage = 0;
+const AUDIT_PAGE_SIZE = 8;
 
 document.querySelectorAll('[data-audit-tab]').forEach(btn => {
   btn.addEventListener('click', () => {
     auditActiveTab = btn.dataset.auditTab;
+    auditCurrentPage = 0;
     document.querySelectorAll('[data-audit-tab]').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     window.loadAuditData();
@@ -2461,7 +2474,8 @@ window.loadAuditData = async function () {
   }
 };
 
-window.filterAuditTable = function () {
+window.filterAuditTable = function (resetPage = true) {
+  if (resetPage) auditCurrentPage = 0;
   const searchEl = document.getElementById('auditSearch');
   const q = (searchEl ? searchEl.value : '').toLowerCase();
   const filtered = auditAllRows.filter(r =>
@@ -2480,6 +2494,12 @@ function renderAuditTable(rows) {
     container.innerHTML = '<div class="audit-empty"><p>No hay registros para este filtro.</p></div>';
     return;
   }
+
+  const totalPages = Math.max(1, Math.ceil(rows.length / AUDIT_PAGE_SIZE));
+  if (auditCurrentPage >= totalPages) auditCurrentPage = totalPages - 1;
+  if (auditCurrentPage < 0) auditCurrentPage = 0;
+  const startIdx = auditCurrentPage * AUDIT_PAGE_SIZE;
+  const pageRows = rows.slice(startIdx, startIdx + AUDIT_PAGE_SIZE);
 
   const fmtDateTime = (iso) => {
     if (!iso) return '—';
@@ -2500,7 +2520,8 @@ function renderAuditTable(rows) {
 
   html += '</tr></thead><tbody>';
 
-  rows.forEach((r, i) => {
+  pageRows.forEach((r, i) => {
+    const rowNum = startIdx + i + 1;
     if (auditActiveTab === 'penalidades') {
       html += `<tr class="audit-row-clickable" data-user-id="${r.usuario_id || ''}" data-nombre="${sanitize(r.nombre) || ''}" data-matricula="${sanitize(r.matricula) || ''}" data-email="${sanitize(r.email) || ''}" style="cursor:pointer;">`;
     } else {
@@ -2511,7 +2532,7 @@ function renderAuditTable(rows) {
         : r.se_monto === 0 ? '<span class="audit-badge falta">✗ No subió</span>'
           : '<span class="audit-badge voto">Pendiente</span>';
       html += `
-        <td class="audit-time">${i + 1}</td>
+        <td class="audit-time">${rowNum}</td>
         <td><div class="audit-name">${sanitize(r.nombre) || '—'}</div><div class="audit-mat">${sanitize(r.matricula) || ''}</div></td>
         <td class="audit-horario">${sanitize(r.horario) || '—'}</td>
         <td>${estado}</td>
@@ -2519,7 +2540,7 @@ function renderAuditTable(rows) {
       `;
     } else if (auditActiveTab === 'faltas') {
       html += `
-        <td class="audit-time">${i + 1}</td>
+        <td class="audit-time">${rowNum}</td>
         <td><div class="audit-name">${sanitize(r.nombre) || '—'}</div><div class="audit-mat">${sanitize(r.matricula) || ''}</div></td>
         <td class="audit-horario">${sanitize(r.horario) || '—'}</td>
         <td class="audit-time">${sanitize(r.fecha) || '—'}</td>
@@ -2536,7 +2557,7 @@ function renderAuditTable(rows) {
           ? '<span class="audit-badge falta">⚠️ En riesgo</span>'
           : '<span class="audit-badge activo">✅ Activo</span>';
       html += `
-        <td class="audit-time">${i + 1}</td>
+        <td class="audit-time">${rowNum}</td>
         <td><div class="audit-name">${sanitize(r.nombre) || '—'}</div><div class="audit-mat">${sanitize(r.matricula) || ''}</div></td>
         <td><span style="display:inline-flex;align-items:center;justify-content:center;padding:0.25rem 0.75rem;border-radius:2rem;font-weight:800;font-size:0.82rem;background:${bgColor};border:1px solid ${borderColor};color:${color};">${faltasNum} / 3</span></td>
         <td>${penBadge}</td>
@@ -2547,7 +2568,25 @@ function renderAuditTable(rows) {
   });
 
   html += '</tbody></table>';
+  if (totalPages > 1) {
+    html += `
+      <div class="pen-pagination" style="padding: 0.85rem 1rem; border-top: 1px solid rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:space-between; gap:0.75rem;">
+        <button type="button" class="logbook-nav-btn" id="auditPrevBtn" ${auditCurrentPage === 0 ? 'disabled' : ''} title="Página anterior">
+          <i data-lucide="chevron-left" style="width:18px;height:18px;"></i>
+        </button>
+        <span class="pen-page-info">Pág. ${auditCurrentPage + 1} / ${totalPages} &nbsp;·&nbsp; ${rows.length} registros</span>
+        <button type="button" class="logbook-nav-btn" id="auditNextBtn" ${auditCurrentPage >= totalPages - 1 ? 'disabled' : ''} title="Página siguiente">
+          <i data-lucide="chevron-right" style="width:18px;height:18px;"></i>
+        </button>
+      </div>
+    `;
+  }
   container.innerHTML = html;
+
+  const auditPrev = container.querySelector('#auditPrevBtn');
+  const auditNext = container.querySelector('#auditNextBtn');
+  if (auditPrev) auditPrev.addEventListener('click', () => { auditCurrentPage--; window.filterAuditTable(false); });
+  if (auditNext) auditNext.addEventListener('click', () => { auditCurrentPage++; window.filterAuditTable(false); });
 
   container.querySelectorAll('.audit-row-clickable').forEach(row => {
     row.addEventListener('click', () => {
@@ -2803,6 +2842,8 @@ window.showFaltasDetalleModal = async function (userId, nombre, matricula, email
 // ══════════════════════════════════════════════
 
 let rankingAdminList = []; // Cache local para filtrado
+let rankingCurrentPage = 0;
+const RANKING_PAGE_SIZE = 8;
 
 async function loadRankingAdminData() {
   const tbody = document.getElementById('rankingAdminTableBody');
@@ -2877,6 +2918,7 @@ async function loadRankingAdminData() {
       statLeaderEl.textContent = topLeader ? `${topLeader.nombre.split(' ')[0]} (${topLeader.puntos}p)` : '—';
     }
 
+    rankingCurrentPage = 0;
     renderRankingAdminTable(rankingAdminList);
 
   } catch (err) {
@@ -2887,17 +2929,27 @@ async function loadRankingAdminData() {
 
 function renderRankingAdminTable(list) {
   const tbody = document.getElementById('rankingAdminTableBody');
+  const pagContainer = document.getElementById('rankingPaginationContainer');
   if (!tbody) return;
 
   tbody.innerHTML = '';
 
   if (list.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 opacity-50">No se encontraron voluntarios.</td></tr>';
+    if (pagContainer) pagContainer.innerHTML = '';
     return;
   }
 
-  list.forEach((vol, idx) => {
-    const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}`;
+  const totalPages = Math.max(1, Math.ceil(list.length / RANKING_PAGE_SIZE));
+  if (rankingCurrentPage >= totalPages) rankingCurrentPage = totalPages - 1;
+  if (rankingCurrentPage < 0) rankingCurrentPage = 0;
+
+  const startIdx = rankingCurrentPage * RANKING_PAGE_SIZE;
+  const pageItems = list.slice(startIdx, startIdx + RANKING_PAGE_SIZE);
+
+  pageItems.forEach((vol, idx) => {
+    const globalIdx = startIdx + idx;
+    const medal = globalIdx === 0 ? '🥇' : globalIdx === 1 ? '🥈' : globalIdx === 2 ? '🥉' : `${globalIdx + 1}`;
     const row = document.createElement('tr');
     row.innerHTML = `
       <td style="font-weight:700; text-align:center; font-size:1.05rem;">${medal}</td>
@@ -2932,11 +2984,35 @@ function renderRankingAdminTable(list) {
       openTopActionBox(btn.dataset.id, btn.dataset.name, btn.dataset.mat, btn.dataset.pts, btn.dataset.ini);
     });
   });
+
+  if (pagContainer) {
+    if (totalPages > 1) {
+      pagContainer.innerHTML = `
+        <div class="pen-pagination" style="padding: 0.85rem 1rem; border-top: 1px solid rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:space-between; gap:0.75rem;">
+          <button type="button" class="logbook-nav-btn" id="rankingPrevBtn" ${rankingCurrentPage === 0 ? 'disabled' : ''} title="Página anterior">
+            <i data-lucide="chevron-left" style="width:18px;height:18px;"></i>
+          </button>
+          <span class="pen-page-info">Pág. ${rankingCurrentPage + 1} / ${totalPages} &nbsp;·&nbsp; ${list.length} voluntarios</span>
+          <button type="button" class="logbook-nav-btn" id="rankingNextBtn" ${rankingCurrentPage >= totalPages - 1 ? 'disabled' : ''} title="Página siguiente">
+            <i data-lucide="chevron-right" style="width:18px;height:18px;"></i>
+          </button>
+        </div>
+      `;
+      const prevBtn = pagContainer.querySelector('#rankingPrevBtn');
+      const nextBtn = pagContainer.querySelector('#rankingNextBtn');
+      if (prevBtn) prevBtn.addEventListener('click', () => { rankingCurrentPage--; renderRankingAdminTable(list); });
+      if (nextBtn) nextBtn.addEventListener('click', () => { rankingCurrentPage++; renderRankingAdminTable(list); });
+      if (window.lucide) window.lucide.createIcons();
+    } else {
+      pagContainer.innerHTML = '';
+    }
+  }
 }
 
 function filterRankingAdmin() {
   const query = (document.getElementById('rankingAdminSearch')?.value || '').toLowerCase().trim();
   if (!query) {
+    rankingCurrentPage = 0;
     renderRankingAdminTable(rankingAdminList);
     return;
   }
