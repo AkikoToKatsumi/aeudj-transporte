@@ -3473,7 +3473,7 @@ async function depurarFaltasSinPaseLista() {
       fetchAllPaginated('puntos_log', 'motivo', q => q.ilike('motivo', 'Pase de lista%')),
       fetchAllPaginated('faltas', 'id, usuario_id, voto_id, nombre, matricula, email, horario, fecha'),
       fetchAllPaginated('votos', 'id, usuario_id, horario, fecha', q => q.eq('se_monto', 0)),
-      fetchAllPaginated('penalidades', 'usuario_id, nombre, matricula, email, fecha_penalidad')
+      fetchAllPaginated('penalidades', 'usuario_id, nombre, matricula, email, total_faltas, fecha_penalidad')
     ]);
 
     const validPaseKeys = new Set();
@@ -3526,8 +3526,17 @@ async function depurarFaltasSinPaseLista() {
 
     const affectedUsers = new Set();
     unfairFaltas.forEach(f => { if (f.usuario_id) affectedUsers.add(f.usuario_id); });
+    unfairVotos.forEach(v => { if (v.usuario_id) affectedUsers.add(v.usuario_id); });
     const penMap = {};
-    penRows.forEach(p => { if (p.usuario_id) penMap[p.usuario_id] = p; });
+    penRows.forEach(p => {
+      if (p.usuario_id) {
+        penMap[p.usuario_id] = p;
+        const realRemaining = remainingCountByUser[p.usuario_id] || 0;
+        if ((p.total_faltas || 0) > realRemaining) {
+          affectedUsers.add(p.usuario_id);
+        }
+      }
+    });
 
     const userMeta = {};
     unfairFaltas.forEach(f => {
