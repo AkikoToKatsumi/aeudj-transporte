@@ -7,7 +7,9 @@ body {
   background: #0f172a;
   color: #f8fafc;
   min-height: 100vh;
-  background-image: url('../img/jarabacoa.webp');
+  background-image:
+    linear-gradient(160deg, rgba(2, 6, 23, 0.68) 0%, rgba(15, 23, 42, 0.82) 60%, rgba(2, 6, 23, 0.9) 100%),
+    url('../img/login-bg-modern.jpg');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
