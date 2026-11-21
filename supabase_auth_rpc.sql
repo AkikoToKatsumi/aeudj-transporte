@@ -6,11 +6,12 @@
 -- ============================================================
 
 -- 1) Resolver email de login/recuperación sin exponer la tabla profiles públicamente
+--    Consulta auth.users unido con profiles para garantizar el email real de Auth
 CREATE OR REPLACE FUNCTION public.get_login_email(p_identifier text)
 RETURNS text
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, auth
 AS $$
 DECLARE
   v_clean text;
@@ -21,10 +22,12 @@ BEGIN
     RETURN NULL;
   END IF;
 
-  SELECT p.email
+  SELECT COALESCE(NULLIF(trim(u.email), ''), p.email)
     INTO v_email
     FROM public.profiles p
+    LEFT JOIN auth.users u ON u.id = p.id
    WHERE lower(trim(coalesce(p.email, ''))) = lower(trim(p_identifier))
+      OR lower(trim(coalesce(u.email, ''))) = lower(trim(p_identifier))
       OR regexp_replace(trim(coalesce(p.matricula, '')), '[\s-]+', '', 'g') = v_clean
       OR regexp_replace(trim(coalesce(p.telefono, '')), '[\s-]+', '', 'g') = v_clean
    LIMIT 1;

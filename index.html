@@ -38,12 +38,12 @@
 
         <div class="input-wrapper">
           <i data-lucide="smartphone" class="input-icon"></i>
-          <input type="text" id="userInput" class="premium-input" placeholder="Teléfono o matrícula" required>
+          <input type="text" id="userInput" class="premium-input" placeholder="Teléfono, matrícula o correo" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" required>
         </div>
 
         <div class="input-wrapper">
           <i data-lucide="lock" class="input-icon"></i>
-          <input type="password" id="passwordLogin" class="premium-input" placeholder="Contraseña" required>
+          <input type="password" id="passwordLogin" class="premium-input" placeholder="Contraseña" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="current-password" required>
           <button type="button" id="togglePasswordLogin" class="toggle-password">
             <i data-lucide="eye"></i>
           </button>
@@ -139,7 +139,7 @@
       <div id="forgotModalSuccess" style="display:none; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:0.75rem; padding:0.75rem 1rem; font-size:0.82rem; color:#6ee7b7; margin-bottom:1rem;"></div>
       <div class="input-wrapper" style="margin-bottom:1.25rem;">
         <i data-lucide="user-check" class="input-icon"></i>
-        <input type="text" id="forgotMatriculaInput" class="premium-input" placeholder="Matrícula, correo o teléfono" autocomplete="username">
+        <input type="text" id="forgotMatriculaInput" class="premium-input" placeholder="Matrícula, correo o teléfono" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username">
       </div>
       <button id="forgotSubmitBtn" class="btn-premium btn-block" style="margin-bottom:0.75rem;">Enviar enlace de recuperación</button>
       <button id="forgotCancelBtn" style="width:100%; background:transparent; border:1px solid rgba(255,255,255,0.1); color:#94a3b8; border-radius:0.75rem; padding:0.75rem; font-size:0.875rem; cursor:pointer; transition:all 0.2s;">Cancelar</button>
@@ -181,8 +181,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"
     integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug"
     crossorigin="anonymous"></script>
-  <script src="supabase-config.js?v=407"></script>
-  <script src="app.js?v=407"></script>
+  <script src="supabase-config.js?v=408"></script>
+  <script src="app.js?v=408"></script>
 </body>
 
 </html>
