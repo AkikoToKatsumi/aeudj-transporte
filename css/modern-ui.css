@@ -1,0 +1,246 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
+/* ============================================================
+   AEUDJ TRANSPORTE — MODERN UI DESIGN SYSTEM (2026)
+   Capa visual moderna compartida sin alterar lógica ni DOM.
+   ============================================================ */
+
+:root {
+  --ui-font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  --ui-surface-1: rgba(15, 23, 42, 0.72);
+  --ui-surface-2: rgba(30, 41, 59, 0.62);
+  --ui-surface-3: rgba(51, 65, 85, 0.5);
+  --ui-border: rgba(148, 163, 184, 0.14);
+  --ui-border-strong: rgba(148, 163, 184, 0.26);
+  --ui-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  --ui-shadow-sm: 0 4px 16px -2px rgba(2, 6, 23, 0.45);
+  --ui-shadow-md: 0 12px 32px -4px rgba(2, 6, 23, 0.6);
+  --ui-shadow-lg: 0 24px 48px -12px rgba(2, 6, 23, 0.75);
+  --ui-accent: #3b82f6;
+  --ui-accent-2: #6366f1;
+  --ui-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Tipografía y suavizado global */
+body {
+  font-family: var(--ui-font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, .horario-title, .section-title, .card-title, .staff-panel-title {
+  font-family: var(--ui-font-sans);
+  letter-spacing: -0.02em;
+}
+
+/* Scrollbars modernos y discretos */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.4);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.45);
+}
+
+/* Animación sutil de entrada */
+@keyframes uiFadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.admin-screen:not(.hidden),
+.card,
+.horario-section,
+.logbook-card {
+  animation: uiFadeSlideUp 0.28s var(--ui-ease) both;
+}
+
+/* Glassmorphism refinado con borde luminoso superior */
+.glass-card,
+body[data-page="index"] .card,
+.card,
+.horario-section,
+.stat-card,
+.staff-panel,
+.audit-table-wrap,
+.logbook-card,
+.sidebar-wrapper {
+  background: linear-gradient(165deg, rgba(30, 41, 59, 0.72) 0%, rgba(15, 23, 42, 0.82) 100%) !important;
+  backdrop-filter: blur(20px) saturate(155%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(155%) !important;
+  border: 1px solid var(--ui-border) !important;
+  box-shadow: var(--ui-shadow-md), var(--ui-highlight) !important;
+  transition: border-color 0.22s var(--ui-ease), transform 0.22s var(--ui-ease), box-shadow 0.22s var(--ui-ease);
+}
+
+.stat-card:hover,
+.audit-stat:hover,
+.staff-stat-card:hover {
+  border-color: var(--ui-border-strong) !important;
+  transform: translateY(-2px);
+  box-shadow: var(--ui-shadow-lg), var(--ui-highlight) !important;
+}
+
+/* Inputs y selects modernos */
+.premium-input,
+.premium-select,
+.audit-search,
+.audit-date,
+.pen-filter-search input,
+.pen-filter-date input,
+.staff-search-input {
+  background: rgba(15, 23, 42, 0.65) !important;
+  border: 1px solid var(--ui-border) !important;
+  border-radius: 0.75rem !important;
+  color: #f8fafc !important;
+  transition: border-color 0.2s var(--ui-ease), box-shadow 0.2s var(--ui-ease), background-color 0.2s var(--ui-ease) !important;
+}
+
+.premium-input:focus,
+.premium-select:focus,
+.audit-search:focus,
+.audit-date:focus,
+.pen-filter-search:focus-within,
+.staff-search-input:focus {
+  outline: none !important;
+  border-color: rgba(59, 130, 246, 0.7) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18) !important;
+  background: rgba(15, 23, 42, 0.85) !important;
+}
+
+/* Botones principales con micro-interacción y brillo sutil */
+.btn-premium,
+.btn-submit {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 55%, #4f46e5 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 8px 24px -4px rgba(37, 99, 235, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+  transition: transform 0.18s var(--ui-ease), box-shadow 0.18s var(--ui-ease), filter 0.18s var(--ui-ease) !important;
+}
+
+.btn-premium:hover:not(:disabled),
+.btn-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 12px 28px -4px rgba(37, 99, 235, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
+}
+
+.btn-premium:active:not(:disabled),
+.btn-submit:active:not(:disabled),
+.btn-action:active,
+.att-btn:active,
+.pl-att-btn:active {
+  transform: scale(0.98);
+}
+
+.btn-pill-outline,
+.nav-btn,
+.filter-btn {
+  background: rgba(30, 41, 59, 0.55);
+  border: 1px solid var(--ui-border);
+  backdrop-filter: blur(10px);
+  transition: all 0.2s var(--ui-ease);
+}
+
+.btn-pill-outline:hover,
+.nav-btn:hover,
+.filter-btn:hover {
+  border-color: rgba(96, 165, 250, 0.45);
+  background: rgba(59, 130, 246, 0.12);
+  transform: translateY(-1px);
+}
+
+/* Tarjetas de horarios (votar.html) */
+.time-slot {
+  background: linear-gradient(160deg, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.85)) !important;
+  border: 1.5px solid var(--ui-border) !important;
+  border-radius: 1rem !important;
+  box-shadow: var(--ui-shadow-sm), var(--ui-highlight);
+  transition: all 0.2s var(--ui-ease) !important;
+}
+
+.time-slot:hover:not(.expired) {
+  border-color: rgba(96, 165, 250, 0.55) !important;
+  background: linear-gradient(160deg, rgba(59, 130, 246, 0.18), rgba(30, 41, 59, 0.88)) !important;
+  transform: translateY(-3px);
+  box-shadow: 0 14px 28px -8px rgba(37, 99, 235, 0.35), var(--ui-highlight);
+}
+
+.time-slot.selected {
+  background: linear-gradient(160deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.22)) !important;
+  border-color: #60a5fa !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.22), 0 12px 24px -6px rgba(37, 99, 235, 0.4) !important;
+}
+
+/* Filas de pasajeros y tablas */
+.passenger-row,
+.pl-row,
+.trip-card {
+  border-radius: 0.85rem;
+  transition: background-color 0.18s var(--ui-ease), border-color 0.18s var(--ui-ease), transform 0.18s var(--ui-ease);
+}
+
+.passenger-row:hover,
+.pl-row:hover {
+  background: rgba(51, 65, 85, 0.35);
+}
+
+.audit-table tbody tr,
+.logbook-table tbody tr,
+.staff-table-new tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.audit-table tbody tr:hover,
+.logbook-table tbody tr:hover,
+.staff-table-new tbody tr:hover {
+  background: rgba(59, 130, 246, 0.07) !important;
+}
+
+/* Sidebar del Admin más pulido */
+.sidebar-nav .nav-item {
+  border-radius: 0.75rem;
+  transition: all 0.2s var(--ui-ease);
+}
+
+.sidebar-nav .nav-item.active {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.22), rgba(99, 102, 241, 0.08)) !important;
+  border-left: 3px solid #60a5fa;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Modales modernos */
+.modal-overlay,
+.vol-modal-overlay,
+.faltas-modal-overlay {
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+.modal-content,
+.vol-modal-panel,
+.faltas-modal-panel {
+  border: 1px solid var(--ui-border-strong) !important;
+  box-shadow: var(--ui-shadow-lg), var(--ui-highlight) !important;
+}
+
+/* Respeto a usuarios con movimiento reducido */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
