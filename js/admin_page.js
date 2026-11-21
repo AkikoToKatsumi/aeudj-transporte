@@ -233,7 +233,9 @@ function initClickEvents() {
   const btnResetCuatrimestre = document.getElementById('btnResetCuatrimestre');
   if (btnResetCuatrimestre) btnResetCuatrimestre.addEventListener('click', () => resetCuatrimestre());
 
-  // Reset Faltas Cuatrimestre Button (Penalidades)
+  // Reset Faltas Cuatrimestre & Depurar Faltas Buttons (Penalidades)
+  const btnDepurarFaltasSinLista = document.getElementById('btnDepurarFaltasSinLista');
+  if (btnDepurarFaltasSinLista) btnDepurarFaltasSinLista.addEventListener('click', () => depurarFaltasSinPaseLista());
   const btnResetFaltasCuatrimestre = document.getElementById('btnResetFaltasCuatrimestre');
   if (btnResetFaltasCuatrimestre) btnResetFaltasCuatrimestre.addEventListener('click', () => resetFaltasCuatrimestre());
 
@@ -3431,6 +3433,143 @@ function renderPasesListaTable(rows, activeDate, activeIndex, totalDays) {
   if (innerNextBtn) innerNextBtn.addEventListener('click', () => { pasesInnerPage++; window.filterPasesListaTable(false); });
 
   if (window.lucide) window.lucide.createIcons();
+}
+
+// ══════════════════════════════════════════════
+// DEPURAR FALTAS SIN PASE DE LISTA DE VOLUNTARIO
+// ══════════════════════════════════════════════
+async function fetchAllPaginated(table, selectCols, filterFn) {
+  let all = [];
+  let start = 0;
+  const batchSize = 1000;
+  while (true) {
+    let q = supabase.from(table).select(selectCols).range(start, start + batchSize - 1);
+    if (filterFn) q = filterFn(q);
+    const { data, error } = await q;
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+    all = all.concat(data);
+    if (data.length < batchSize) break;
+    start += batchSize;
+  }
+  return all;
+}
+
+async function depurarFaltasSinPaseLista() {
+  const btn = document.getElementById('btnDepurarFaltasSinLista');
+  const originalText = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Analizando...';
+  }
+
+  try {
+    const normalizeKey = (horario, fecha) => {
+      const hNorm = (horario || '').replace('->', '→').replace(/\s+/g, ' ').trim().toLowerCase();
+      return `${hNorm}|${fecha || ''}`;
+    };
+
+    const [logs, faltas, votosCero, penRows] = await Promise.all([
+      fetchAllPaginated('puntos_log', 'motivo', q => q.ilike('motivo', 'Pase de lista%')),
+      fetchAllPaginated('faltas', 'id, usuario_id, voto_id, nombre, matricula, email, horario, fecha'),
+      fetchAllPaginated('votos', 'id, usuario_id, horario, fecha', q => q.eq('se_monto', 0)),
+      fetchAllPaginated('penalidades', 'usuario_id, nombre, matricula, email, fecha_penalidad')
+    ]);
+
+    const validPaseKeys = new Set();
+    logs.forEach(l => {
+      const m = (l.motivo || '').match(/^Pase de lista(?:\s+completo)?\s*-\s*(.+?)\s*\((\d{4}-\d{2}-\d{2})\)\s*$/i);
+      if (m) validPaseKeys.add(normalizeKey(m[1], m[2]));
+    });
+
+    const unfairFaltas = faltas.filter(f => !validPaseKeys.has(normalizeKey(f.horario, f.fecha)));
+    const unfairVotos = votosCero.filter(v => !validPaseKeys.has(normalizeKey(v.horario, v.fecha)));
+
+    if (unfairFaltas.length === 0 && unfairVotos.length === 0) {
+      window.showAdminToast('✅ Todas las faltas registradas coinciden con un pase de lista real.', 'success');
+      return;
+    }
+
+    const msg = `Se encontraron ${unfairFaltas.length} falta(s) activas y ${unfairVotos.length} registro(s) en historial que NO tienen un pase de lista de voluntario asociado.\n\n¿Deseas eliminar esas faltas injustas y recalcular las penalidades? Las faltas donde sí se pasó lista se conservarán intactas.`;
+    const confirmed = typeof window.aeudjConfirm === 'function'
+      ? await window.aeudjConfirm(msg)
+      : confirm(msg);
+
+    if (!confirmed) return;
+
+    if (btn) btn.textContent = 'Depurando...';
+
+    // 1. Eliminar faltas injustas en lotes
+    const unfairFaltaIds = unfairFaltas.map(f => f.id).filter(Boolean);
+    for (let i = 0; i < unfairFaltaIds.length; i += 100) {
+      const chunk = unfairFaltaIds.slice(i, i + 100);
+      const { error } = await supabase.from('faltas').delete().in('id', chunk);
+      if (error) throw error;
+    }
+
+    // 2. Actualizar votos se_monto = 0 sin pase de lista a se_monto = 1
+    const unfairVotoIds = unfairVotos.map(v => v.id).filter(Boolean);
+    for (let i = 0; i < unfairVotoIds.length; i += 100) {
+      const chunk = unfairVotoIds.slice(i, i + 100);
+      const { error } = await supabase.from('votos').update({ se_monto: 1 }).in('id', chunk);
+      if (error) throw error;
+    }
+
+    // 3. Recalcular penalidades para los usuarios afectados
+    const unfairIdSet = new Set(unfairFaltaIds);
+    const remainingCountByUser = {};
+    faltas.forEach(f => {
+      if (!unfairIdSet.has(f.id) && f.usuario_id) {
+        remainingCountByUser[f.usuario_id] = (remainingCountByUser[f.usuario_id] || 0) + 1;
+      }
+    });
+
+    const affectedUsers = new Set();
+    unfairFaltas.forEach(f => { if (f.usuario_id) affectedUsers.add(f.usuario_id); });
+    const penMap = {};
+    penRows.forEach(p => { if (p.usuario_id) penMap[p.usuario_id] = p; });
+
+    const userMeta = {};
+    unfairFaltas.forEach(f => {
+      if (f.usuario_id && !userMeta[f.usuario_id]) {
+        userMeta[f.usuario_id] = { nombre: f.nombre, matricula: f.matricula, email: f.email };
+      }
+    });
+
+    const upserts = Array.from(affectedUsers).map(uid => {
+      const newCount = remainingCountByUser[uid] || 0;
+      const penalizado = newCount >= 3;
+      const oldPen = penMap[uid] || {};
+      const meta = userMeta[uid] || {};
+      return {
+        usuario_id: uid,
+        nombre: oldPen.nombre || meta.nombre || '',
+        matricula: oldPen.matricula || meta.matricula || '',
+        email: oldPen.email || meta.email || '',
+        total_faltas: newCount,
+        penalizado,
+        fecha_penalidad: penalizado ? (oldPen.fecha_penalidad || getCycleDate()) : null,
+        updated_at: new Date().toISOString()
+      };
+    });
+
+    for (let i = 0; i < upserts.length; i += 100) {
+      const chunk = upserts.slice(i, i + 100);
+      const { error } = await supabase.from('penalidades').upsert(chunk, { onConflict: 'usuario_id' });
+      if (error) throw error;
+    }
+
+    window.showAdminToast(`✅ Depuración completada: ${unfairFaltaIds.length} faltas eliminadas y ${affectedUsers.size} estudiantes recalculados.`, 'success');
+    loadPenalidadesData();
+  } catch (err) {
+    console.error('Error depurando faltas:', err);
+    window.showAdminToast(`Error al depurar: ${err.message}`, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  }
 }
 
 
