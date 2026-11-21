@@ -314,16 +314,10 @@ async function renderHorarios(group) {
 
     const hNorm = s.fullText.replace('->', '→').trim();
     const count = countsMap[hNorm] || 0;
-    const remaining = 30 - count;
     let quotaBadge = '';
     if (!expired) {
-      if (count >= 30) {
-        quotaBadge = `<div class="ts-quota ts-quota-wait">⏳ ${count}/30 · Lista de espera</div>`;
-      } else if (remaining <= 5) {
-        quotaBadge = `<div class="ts-quota ts-quota-low">⚠️ ${count}/30 · Quedan ${remaining}</div>`;
-      } else {
-        quotaBadge = `<div class="ts-quota ts-quota-ok">👥 ${count}/30 cupos</div>`;
-      }
+      const cls = count > 30 ? 'ts-quota-wait' : 'ts-quota-ok';
+      quotaBadge = `<div class="ts-quota ${cls}">🪑 Asientos: ${count}/30</div>`;
     }
 
     const slot = document.createElement('div');
