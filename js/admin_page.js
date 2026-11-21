@@ -143,6 +143,19 @@ async function initAdminDashboard() {
 }
 
 function initClickEvents() {
+  // Sidebar collapse / expand toggle
+  const adminWrapper = document.querySelector('.admin-wrapper');
+  const btnToggleSidebar = document.getElementById('btnToggleSidebar');
+  if (adminWrapper && localStorage.getItem('aeudj_admin_sidebar_collapsed') === '1') {
+    adminWrapper.classList.add('sidebar-collapsed');
+  }
+  if (btnToggleSidebar && adminWrapper) {
+    btnToggleSidebar.addEventListener('click', () => {
+      const collapsed = adminWrapper.classList.toggle('sidebar-collapsed');
+      localStorage.setItem('aeudj_admin_sidebar_collapsed', collapsed ? '1' : '0');
+    });
+  }
+
   // Global actions
   const btnRefreshScreen = document.getElementById('btnRefreshScreen');
   if (btnRefreshScreen) btnRefreshScreen.addEventListener('click', () => window.refreshCurrentScreen());

@@ -93,9 +93,14 @@
     <!-- Main Content Area -->
     <main class="content-wrapper">
       <header class="content-header flex justify-between items-center mb-6">
-        <div>
-          <h1 id="screenTitle" class="text-2xl font-bold text-white">Dashboard Informativo</h1>
-          <p class="text-sm text-gray-500">Transporte activo para el <span id="fechaAdmin"></span></p>
+        <div class="flex items-center gap-3">
+          <button type="button" id="btnToggleSidebar" class="sidebar-toggle-btn" title="Ocultar / Mostrar menú">
+            <i data-lucide="panel-left" style="width:18px;height:18px;"></i>
+          </button>
+          <div>
+            <h1 id="screenTitle" class="text-2xl font-bold text-white">Dashboard Informativo</h1>
+            <p class="text-sm text-gray-500">Transporte activo para el <span id="fechaAdmin"></span></p>
+          </div>
         </div>
         <div class="flex gap-3">
           <button type="button" class="btn-pill-outline btn-small" id="btnRefreshScreen">
