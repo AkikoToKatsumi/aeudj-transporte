@@ -59,6 +59,7 @@ BEGIN
   DELETE FROM public.penalidades WHERE usuario_id = target_user_id;
   DELETE FROM public.faltas WHERE usuario_id = target_user_id;
   DELETE FROM public.votos WHERE usuario_id = target_user_id;
+  UPDATE public.puntos_log SET otorgado_por = NULL WHERE otorgado_por = target_user_id;
   DELETE FROM public.puntos_log WHERE voluntario_id = target_user_id;
   DELETE FROM public.profiles WHERE id = target_user_id;
   DELETE FROM auth.users WHERE id = target_user_id;

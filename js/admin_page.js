@@ -1040,6 +1040,13 @@ window.deleteUserNew = async (userId) => {
       return;
     }
 
+    // Si la función RPC existe pero devolvió un error real (ej. No autorizado o llave foránea), mostrarlo
+    if (rpcErr.code !== 'PGRST202') {
+      console.error('admin_delete_user RPC error:', rpcErr);
+      window.showAdminToast(`Error al eliminar: ${rpcErr.message}`, 'error');
+      return;
+    }
+
     // 2. Fallback: borrar dependencias y perfil público
     await supabase.from('penalidades').delete().eq('usuario_id', userId);
     await supabase.from('faltas').delete().eq('usuario_id', userId);
