@@ -102,7 +102,10 @@ async function initAdminDashboard() {
   // 3. Navigation Setup
   initNavigation();
 
-  // 4. Load Initial Data (Dashboard)
+  // 4. Auto-marcar listas vencidas sin pasar como "Subió" y cargar Dashboard
+  if (typeof window.autoMarkExpiredUnpassedVotes === 'function') {
+    await window.autoMarkExpiredUnpassedVotes();
+  }
   loadDashboardData();
   initSessionControl();
 
@@ -189,6 +192,29 @@ function initClickEvents() {
   const auditDatePick = document.getElementById('auditDatePick');
   if (auditDatePick) auditDatePick.addEventListener('change', () => window.loadAuditData());
 
+  // Pases de Lista (Voluntarios) section
+  const pasesSearch = document.getElementById('pasesSearch');
+  if (pasesSearch) pasesSearch.addEventListener('input', () => window.filterPasesListaTable());
+
+  const pasesDatePick = document.getElementById('pasesDatePick');
+  if (pasesDatePick) pasesDatePick.addEventListener('change', () => window.filterPasesListaTable());
+
+  const pasesBtnToday = document.getElementById('pasesBtnToday');
+  if (pasesBtnToday) {
+    pasesBtnToday.addEventListener('click', () => {
+      if (pasesDatePick) pasesDatePick.value = getCycleDate();
+      window.filterPasesListaTable();
+    });
+  }
+
+  const pasesBtnAllDates = document.getElementById('pasesBtnAllDates');
+  if (pasesBtnAllDates) {
+    pasesBtnAllDates.addEventListener('click', () => {
+      if (pasesDatePick) pasesDatePick.value = '';
+      window.filterPasesListaTable();
+    });
+  }
+
 
 
   // Penalidades Search/Date
@@ -257,6 +283,7 @@ async function switchScreen(screenId) {
     'horarios': 'Gestión de Turnos',
     'staff': 'Gestión de Personal',
     'logs': 'Registro de Auditoría',
+    'paseslista': 'Registro de Pases de Lista',
     'penalidades': 'Gestión de Penalidades',
     'pasarlista': 'Pase de Lista Activo',
     'ranking': 'Ranking de Voluntarios'
@@ -272,6 +299,7 @@ async function switchScreen(screenId) {
   if (screenId === 'penalidades') loadPenalidadesData();
   if (screenId === 'pasarlista') loadAdminLista();
   if (screenId === 'logs') window.loadAuditData();
+  if (screenId === 'paseslista') window.loadPasesListaData();
   if (screenId === 'ranking') loadRankingAdminData();
 
   if (window.lucide) window.lucide.createIcons();
@@ -2052,6 +2080,9 @@ async function loadAdminLista() {
   }
 
   adminListaData = data || [];
+  if (typeof window.autoMarkExpiredUnpassedVotes === 'function') {
+    await window.autoMarkExpiredUnpassedVotes(adminListaData);
+  }
 
   const uniqueMap = new Map();
   const IDA_KW = ['Jarabacoa -> La Vega', 'Jarabacoa \u2192 La Vega'];
@@ -3006,4 +3037,207 @@ async function resetCuatrimestre() {
     }
   }
 }
+
+// ══════════════════════════════════════════════
+// REGISTRO DE PASES DE LISTA POR VOLUNTARIO (ADMIN)
+// ══════════════════════════════════════════════
+let allPasesListaRows = [];
+
+function parsePaseListaMotivo(motivo, fallbackIso) {
+  const m = (motivo || '').match(/^Pase de lista(?:\s+completo)?\s*-\s*(.+?)\s*\((\d{4}-\d{2}-\d{2})\)\s*$/i);
+  if (m) {
+    return { horario: m[1].trim(), fecha: m[2] };
+  }
+  const fallbackDate = fallbackIso ? new Date(fallbackIso).toLocaleDateString('en-CA', { timeZone: 'America/Santo_Domingo' }) : '';
+  return { horario: motivo || 'Pase de lista', fecha: fallbackDate };
+}
+
+window.loadPasesListaData = async function () {
+  const container = document.getElementById('pasesTableContainer');
+  if (!container) return;
+  container.innerHTML = '<div class="audit-empty"><div class="audit-spinner"></div><p>Cargando pases de lista…</p></div>';
+
+  try {
+    const [logsRes, profRes] = await Promise.all([
+      supabase
+        .from('puntos_log')
+        .select('id, voluntario_id, puntos, motivo, created_at')
+        .ilike('motivo', 'Pase de lista%')
+        .order('created_at', { ascending: false })
+        .limit(1000),
+      supabase
+        .from('profiles')
+        .select('id, nombre, matricula, rol')
+    ]);
+
+    if (logsRes.error) throw logsRes.error;
+    if (profRes.error) throw profRes.error;
+
+    const profMap = {};
+    (profRes.data || []).forEach(p => {
+      profMap[p.id] = p;
+    });
+
+    // Deduplicar registros repetidos por doble clic (mismo voluntario + horario + fecha)
+    const dedupMap = new Map();
+    (logsRes.data || []).forEach(log => {
+      const { horario, fecha } = parsePaseListaMotivo(log.motivo, log.created_at);
+      const horarioNorm = horario.replace('->', '→').trim();
+      const key = `${log.voluntario_id}|${horarioNorm}|${fecha}`;
+      if (!dedupMap.has(key)) {
+        const prof = profMap[log.voluntario_id] || {};
+        dedupMap.set(key, {
+          id: log.id,
+          voluntario_id: log.voluntario_id,
+          nombre: prof.nombre || 'Usuario desconocido',
+          matricula: prof.matricula || '—',
+          rol: prof.rol || 'voluntario',
+          horario,
+          fecha,
+          puntos: log.puntos ?? 3,
+          created_at: log.created_at
+        });
+      }
+    });
+
+    allPasesListaRows = Array.from(dedupMap.values())
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    window.filterPasesListaTable();
+    if (window.lucide) window.lucide.createIcons();
+  } catch (err) {
+    console.error('Error cargando pases de lista:', err);
+    container.innerHTML = `<div class="audit-empty" style="color:#f87171;">Error: ${sanitize(err.message)}</div>`;
+  }
+};
+
+window.filterPasesListaTable = function () {
+  const searchEl = document.getElementById('pasesSearch');
+  const dateEl = document.getElementById('pasesDatePick');
+  const q = (searchEl ? searchEl.value : '').toLowerCase().trim();
+  const dateVal = dateEl ? dateEl.value : '';
+
+  const filtered = allPasesListaRows.filter(r => {
+    if (dateVal && r.fecha !== dateVal) return false;
+    if (!q) return true;
+    return (
+      (r.nombre || '').toLowerCase().includes(q) ||
+      (r.matricula || '').toLowerCase().includes(q) ||
+      (r.horario || '').toLowerCase().includes(q) ||
+      (r.fecha || '').includes(q)
+    );
+  });
+
+  const statTotal = document.getElementById('pasesStatTotal');
+  const statVol = document.getElementById('pasesStatVoluntarios');
+  const statUltimo = document.getElementById('pasesStatUltimo');
+
+  if (statTotal) statTotal.textContent = filtered.length;
+  if (statVol) statVol.textContent = new Set(filtered.map(r => r.voluntario_id)).size;
+  if (statUltimo) {
+    if (filtered.length > 0) {
+      const latest = filtered[0];
+      const horaRD = new Date(latest.created_at).toLocaleTimeString('en-US', {
+        timeZone: 'America/Santo_Domingo',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+      const firstName = (latest.nombre || 'Voluntario').split(' ')[0];
+      statUltimo.textContent = `${horaRD} · ${firstName}`;
+    } else {
+      statUltimo.textContent = '—';
+    }
+  }
+
+  renderPasesListaTable(filtered);
+};
+
+function renderPasesListaTable(rows) {
+  const container = document.getElementById('pasesTableContainer');
+  if (!container) return;
+
+  if (!rows.length) {
+    container.innerHTML = '<div class="audit-empty"><p>No hay pases de lista registrados para este filtro.</p></div>';
+    return;
+  }
+
+  const fmtFechaViaje = (fechaStr) => {
+    if (!fechaStr) return '—';
+    const d = new Date(fechaStr + 'T12:00:00');
+    if (isNaN(d.getTime())) return sanitize(fechaStr);
+    return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
+  const fmtHoraPase = (iso) => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    const time = d.toLocaleTimeString('en-US', {
+      timeZone: 'America/Santo_Domingo',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+    const date = d.toLocaleDateString('es-ES', {
+      timeZone: 'America/Santo_Domingo',
+      day: '2-digit',
+      month: 'short'
+    });
+    return `${time} <span style="opacity:0.65;font-size:0.75rem;">(${date})</span>`;
+  };
+
+  const getPunctualityBadge = (horario, fecha, createdAt) => {
+    if (typeof window.getScheduledDateTime !== 'function') return '';
+    const scheduled = window.getScheduledDateTime(horario, fecha);
+    if (!scheduled || !createdAt) return '<span class="audit-badge voto">Registrado</span>';
+    const diffMin = Math.round((new Date(createdAt).getTime() - scheduled.getTime()) / 60000);
+    if (diffMin < -15) {
+      return `<span class="audit-badge voto">${Math.abs(diffMin)} min antes</span>`;
+    }
+    if (diffMin <= 20) {
+      return `<span class="audit-badge activo">✓ A tiempo (${diffMin >= 0 ? '+' + diffMin : diffMin} min)</span>`;
+    }
+    if (diffMin <= 60) {
+      return `<span class="audit-badge falta">+${diffMin} min</span>`;
+    }
+    return `<span class="audit-badge penalidad">+${diffMin} min tarde</span>`;
+  };
+
+  let html = `
+    <table class="audit-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Voluntario</th>
+          <th>Horario</th>
+          <th>Fecha Viaje</th>
+          <th>Hora de Pase</th>
+          <th>Puntualidad</th>
+          <th>Puntos</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  rows.forEach((r, i) => {
+    html += `
+      <tr>
+        <td class="audit-time">${i + 1}</td>
+        <td>
+          <div class="audit-name">${sanitize(r.nombre)}</div>
+          <div class="audit-mat">${sanitize(r.matricula)} · ${sanitize(r.rol)}</div>
+        </td>
+        <td class="audit-horario">${sanitize(r.horario)}</td>
+        <td class="audit-time">${fmtFechaViaje(r.fecha)}</td>
+        <td class="audit-time">${fmtHoraPase(r.created_at)}</td>
+        <td>${getPunctualityBadge(r.horario, r.fecha, r.created_at)}</td>
+        <td><span class="audit-badge activo">+${r.puntos} pts</span></td>
+      </tr>
+    `;
+  });
+
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
 

@@ -148,6 +148,9 @@ async function loadData() {
     }
     
     allVotos = fetchedVotos;
+    if (typeof window.autoMarkExpiredUnpassedVotes === 'function') {
+      await window.autoMarkExpiredUnpassedVotes(allVotos);
+    }
     // Sincronizar estado local con DB usando la columna correcta (se_monto)
     allVotos.forEach(v => {
       if (v.se_monto === 1) attendanceState[v.id] = 'subio';

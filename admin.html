@@ -60,6 +60,10 @@
           <i data-lucide="activity"></i>
           <span>Actividad</span>
         </a>
+        <a href="#" class="nav-item" data-screen="paseslista">
+          <i data-lucide="history"></i>
+          <span>Pases de Lista</span>
+        </a>
         <a href="#" class="nav-item" data-screen="penalidades">
           <i data-lucide="alert-triangle"></i>
           <span>Penalidades</span>
@@ -517,6 +521,54 @@
               <div class="audit-empty">
                 <div class="audit-spinner"></div>
                 <p>Cargando registros…</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== PASES DE LISTA (VOLUNTARIOS) SCREEN ===== -->
+      <section id="screen-paseslista" class="admin-screen hidden">
+        <!-- Stat cards -->
+        <div class="audit-stats">
+          <div class="audit-stat">
+            <div class="audit-stat-icon blue"><i data-lucide="clipboard-check" class="text-blue-400 w-5 h-5"></i></div>
+            <div>
+              <div class="audit-stat-num" id="pasesStatTotal">–</div>
+              <div class="audit-stat-lbl">Listas pasadas</div>
+            </div>
+          </div>
+          <div class="audit-stat">
+            <div class="audit-stat-icon amber"><i data-lucide="users" class="text-amber-400 w-5 h-5"></i></div>
+            <div>
+              <div class="audit-stat-num" id="pasesStatVoluntarios">–</div>
+              <div class="audit-stat-lbl">Voluntarios activos</div>
+            </div>
+          </div>
+          <div class="audit-stat">
+            <div class="audit-stat-icon green"><i data-lucide="clock" class="text-green-400 w-5 h-5"></i></div>
+            <div>
+              <div class="audit-stat-num" id="pasesStatUltimo" style="font-size:1.05rem;">–</div>
+              <div class="audit-stat-lbl">Último pase registrado</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="audit-toolbar">
+          <input type="search" class="audit-search" id="pasesSearch" placeholder="🔍  Buscar por voluntario, matrícula u horario…">
+          <input type="date" class="audit-date" id="pasesDatePick">
+          <button type="button" id="pasesBtnToday" class="btn-pill-outline btn-small">Hoy</button>
+          <button type="button" id="pasesBtnAllDates" class="btn-pill-outline btn-small">Todas las fechas</button>
+        </div>
+
+        <!-- Table -->
+        <div class="audit-table-wrap">
+          <div class="custom-scroll overflow-x-auto">
+            <div id="pasesTableContainer">
+              <div class="audit-empty">
+                <div class="audit-spinner"></div>
+                <p>Cargando pases de lista…</p>
               </div>
             </div>
           </div>

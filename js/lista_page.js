@@ -56,7 +56,13 @@ async function loadData() {
       }
     });
     
-    votos = Array.from(uniqueVotosMap.values()).filter(v => v.se_monto === null);
+    votos = Array.from(uniqueVotosMap.values()).filter(v => {
+      if (v.se_monto !== null) return false;
+      if (typeof window.isScheduleExpired === 'function' && window.isScheduleExpired(v.horario, v.fecha)) {
+        return false;
+      }
+      return true;
+    });
 
     // ── SISTEMA DE PENALIZACIÓN SILENCIOSA ──
     votos.sort((a, b) => {

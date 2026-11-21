@@ -130,7 +130,7 @@ async function loadData() {
         groups[v.horario].confirmados.push(v);
       }
 
-      if (v.se_monto === null) {
+      if (v.se_monto === null && !(typeof window.isScheduleExpired === 'function' && window.isScheduleExpired(v.horario, v.fecha))) {
         groups[v.horario].todos_pasados = false;
       }
     });

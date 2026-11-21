@@ -367,6 +367,9 @@ async function checkYaVotado() {
         }
       });
       const dedupedData = Array.from(uniqueMap.values());
+      if (typeof window.autoMarkExpiredUnpassedVotes === 'function') {
+        await window.autoMarkExpiredUnpassedVotes(dedupedData, currentUser.id);
+      }
       const pendingVotes = dedupedData.filter(v => v.se_monto === null);
       
       if (pendingVotes.length > 0) {

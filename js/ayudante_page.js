@@ -118,6 +118,9 @@ async function loadData() {
     if (error) throw error;
     
     allVotos = data || [];
+    if (typeof window.autoMarkExpiredUnpassedVotes === 'function') {
+      await window.autoMarkExpiredUnpassedVotes(allVotos);
+    }
 
     // Sincronizar estado local con la base de datos
     allVotos.forEach(v => {
