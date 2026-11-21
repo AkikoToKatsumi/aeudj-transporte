@@ -293,27 +293,33 @@ async function switchScreen(screenId) {
   const target = document.getElementById(`screen-${screenId}`);
   if (target) target.classList.remove('hidden');
 
-  // Update Header Title with distinct per-module icon & gradient styling
+  // Update Header Title with distinct per-module icon, eyebrow & accent theme
   const moduleThemes = {
-    'dashboard':   { title: 'Resumen General',           icon: 'layout-dashboard', bg: 'rgba(59,130,246,0.16)',  border: 'rgba(59,130,246,0.35)',  color: '#60a5fa', grad: 'linear-gradient(90deg, #f8fafc, #93c5fd)' },
-    'votos':       { title: 'Listado de Pasajeros',      icon: 'users',            bg: 'rgba(99,102,241,0.16)',  border: 'rgba(99,102,241,0.35)',  color: '#818cf8', grad: 'linear-gradient(90deg, #f8fafc, #a5b4fc)' },
-    'horarios':    { title: 'Gestión de Turnos',         icon: 'calendar',         bg: 'rgba(14,165,233,0.16)',  border: 'rgba(14,165,233,0.35)',  color: '#38bdf8', grad: 'linear-gradient(90deg, #f8fafc, #7dd3fc)' },
-    'staff':       { title: 'Directorio de Personal',    icon: 'shield-check',     bg: 'rgba(16,185,129,0.16)',  border: 'rgba(16,185,129,0.35)',  color: '#34d399', grad: 'linear-gradient(90deg, #f8fafc, #6ee7b7)' },
-    'logs':        { title: 'Registro de Auditoría',     icon: 'activity',         bg: 'rgba(168,85,247,0.16)',  border: 'rgba(168,85,247,0.35)',  color: '#c084fc', grad: 'linear-gradient(90deg, #f8fafc, #d8b4fe)' },
-    'paseslista':  { title: 'Libro de Pases de Lista',   icon: 'history',          bg: 'rgba(56,189,248,0.16)',  border: 'rgba(56,189,248,0.35)',  color: '#38bdf8', grad: 'linear-gradient(90deg, #f8fafc, #7dd3fc)' },
-    'penalidades': { title: 'Gestión de Penalidades',    icon: 'alert-triangle',   bg: 'rgba(244,63,94,0.16)',   border: 'rgba(244,63,94,0.35)',   color: '#fb7185', grad: 'linear-gradient(90deg, #f8fafc, #fda4af)' },
-    'pasarlista':  { title: 'Pase de Lista Activo',      icon: 'clipboard-check',  bg: 'rgba(20,184,166,0.16)',  border: 'rgba(20,184,166,0.35)',  color: '#2dd4bf', grad: 'linear-gradient(90deg, #f8fafc, #5eead4)' },
-    'ranking':     { title: 'Ranking de Voluntarios',    icon: 'trophy',           bg: 'rgba(245,158,11,0.16)',  border: 'rgba(245,158,11,0.35)',  color: '#fbbf24', grad: 'linear-gradient(90deg, #f8fafc, #fcd34d)' }
+    'dashboard':   { title: 'Resumen General',           tag: 'Panel Principal',  icon: 'layout-dashboard', bg: 'linear-gradient(135deg, rgba(59,130,246,0.28), rgba(37,99,235,0.12))',  border: 'rgba(96,165,250,0.45)',  color: '#60a5fa' },
+    'votos':       { title: 'Listado de Pasajeros',      tag: 'Reservas de Hoy',  icon: 'users',            bg: 'linear-gradient(135deg, rgba(99,102,241,0.28), rgba(79,70,229,0.12))',  border: 'rgba(129,140,248,0.45)', color: '#818cf8' },
+    'horarios':    { title: 'Gestión de Turnos',         tag: 'Asignación',       icon: 'calendar',         bg: 'linear-gradient(135deg, rgba(14,165,233,0.28), rgba(2,132,199,0.12))',  border: 'rgba(56,189,248,0.45)',  color: '#38bdf8' },
+    'staff':       { title: 'Directorio de Personal',    tag: 'Cuentas y Roles',  icon: 'shield-check',     bg: 'linear-gradient(135deg, rgba(16,185,129,0.28), rgba(5,150,105,0.12))',  border: 'rgba(52,211,153,0.45)',  color: '#34d399' },
+    'logs':        { title: 'Registro de Auditoría',     tag: 'Actividad',        icon: 'activity',         bg: 'linear-gradient(135deg, rgba(168,85,247,0.28), rgba(147,51,234,0.12))', border: 'rgba(192,132,252,0.45)', color: '#c084fc' },
+    'paseslista':  { title: 'Libro de Pases de Lista',   tag: 'Historial Diario', icon: 'history',          bg: 'linear-gradient(135deg, rgba(56,189,248,0.28), rgba(14,165,233,0.12))', border: 'rgba(125,211,252,0.45)', color: '#38bdf8' },
+    'penalidades': { title: 'Gestión de Penalidades',    tag: 'Control Faltas',   icon: 'alert-triangle',   bg: 'linear-gradient(135deg, rgba(244,63,94,0.28), rgba(225,29,72,0.12))',   border: 'rgba(251,113,133,0.45)', color: '#fb7185' },
+    'pasarlista':  { title: 'Pase de Lista Activo',      tag: 'En Vivo',          icon: 'clipboard-check',  bg: 'linear-gradient(135deg, rgba(20,184,166,0.28), rgba(13,148,136,0.12))', border: 'rgba(45,212,191,0.45)',  color: '#2dd4bf' },
+    'ranking':     { title: 'Ranking de Voluntarios',    tag: 'Cuatrimestre',     icon: 'trophy',           bg: 'linear-gradient(135deg, rgba(245,158,11,0.28), rgba(217,119,6,0.12))',  border: 'rgba(251,191,36,0.45)',  color: '#fbbf24' }
   };
   const screenTitle = document.getElementById('screenTitle');
   if (screenTitle) {
-    const theme = moduleThemes[screenId] || { title: 'Panel Administrativo', icon: 'layout-dashboard', bg: 'rgba(59,130,246,0.16)', border: 'rgba(59,130,246,0.35)', color: '#60a5fa', grad: 'linear-gradient(90deg, #f8fafc, #cbd5e1)' };
+    const theme = moduleThemes[screenId] || { title: 'Panel Administrativo', tag: 'AEUDJ', icon: 'layout-dashboard', bg: 'linear-gradient(135deg, rgba(59,130,246,0.25), rgba(37,99,235,0.1))', border: 'rgba(96,165,250,0.4)', color: '#60a5fa' };
     screenTitle.innerHTML = `
       <span class="module-title-wrap">
-        <span class="module-title-icon" style="background:${theme.bg};border:1px solid ${theme.border};color:${theme.color};">
-          <i data-lucide="${theme.icon}" style="width:18px;height:18px;"></i>
+        <span class="module-title-icon" style="background:${theme.bg};border:1px solid ${theme.border};color:${theme.color};box-shadow:0 8px 20px -6px ${theme.border}, inset 0 1px 0 rgba(255,255,255,0.2);">
+          <i data-lucide="${theme.icon}" style="width:20px;height:20px;"></i>
         </span>
-        <span class="module-title-text" style="background:${theme.grad};-webkit-background-clip:text;-webkit-text-fill-color:transparent;">${theme.title}</span>
+        <span class="module-title-col">
+          <span class="module-eyebrow" style="color:${theme.color};">
+            <span class="module-eyebrow-dot" style="background:${theme.color};box-shadow:0 0 8px ${theme.color};"></span>
+            ${theme.tag}
+          </span>
+          <span class="module-title-text">${theme.title}</span>
+        </span>
       </span>
     `;
   }
