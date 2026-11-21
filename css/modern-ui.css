@@ -1063,3 +1063,186 @@ body[data-page="ayudante"] .att-btn.no-subio.active {
 .check-badge {
   box-shadow: 0 0 28px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
+
+/* ============================================================
+   PORTAL DEL ESTUDIANTE (estudiante.html)
+   ============================================================ */
+body[data-page="estudiante"] .estudiante-container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+body[data-page="estudiante"] .top-nav {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--ui-border);
+  border-radius: 1rem;
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--ui-shadow-sm), var(--ui-highlight);
+}
+
+body[data-page="estudiante"] .portal-title {
+  font-size: 1.85rem;
+  font-weight: 800;
+  background: linear-gradient(90deg, #ffffff 0%, #93c5fd 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 1.25rem;
+}
+
+body[data-page="estudiante"] .estudiante-card {
+  border-radius: 1.25rem !important;
+  margin-bottom: 1.15rem;
+}
+
+body[data-page="estudiante"] .profile-avatar {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.28), rgba(99, 102, 241, 0.22)) !important;
+  border: 1px solid rgba(96, 165, 250, 0.45) !important;
+  box-shadow: 0 8px 24px -6px rgba(59, 130, 246, 0.45);
+}
+
+body[data-page="estudiante"] .status-box {
+  background: rgba(15, 23, 42, 0.55) !important;
+  border: 1px solid var(--ui-border) !important;
+  border-radius: 1rem !important;
+  box-shadow: var(--ui-highlight);
+}
+
+body[data-page="estudiante"] .status-banner {
+  border-radius: 0.9rem !important;
+  backdrop-filter: blur(10px);
+}
+
+/* ============================================================
+   LISTA PÚBLICA DE PASAJEROS (lista.html)
+   ============================================================ */
+body[data-page="lista"] .btn-nav {
+  background: rgba(15, 23, 42, 0.72) !important;
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--ui-border-strong) !important;
+  border-radius: 999px !important;
+  box-shadow: var(--ui-shadow-sm), var(--ui-highlight);
+  transition: all 0.2s var(--ui-ease);
+}
+
+body[data-page="lista"] .btn-nav:hover {
+  border-color: rgba(96, 165, 250, 0.55) !important;
+  transform: translateY(-1px);
+}
+
+body[data-page="lista"] header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(90deg, #ffffff 0%, #93c5fd 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+body[data-page="lista"] .date-badge {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(59, 130, 246, 0.14) !important;
+  border: 1px solid rgba(96, 165, 250, 0.35) !important;
+  color: #93c5fd !important;
+  border-radius: 999px !important;
+  padding: 0.35rem 0.95rem !important;
+  font-weight: 700 !important;
+}
+
+body[data-page="lista"] .summary-bar {
+  gap: 0.75rem;
+}
+
+body[data-page="lista"] .summary-item {
+  background: linear-gradient(165deg, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.82)) !important;
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--ui-border) !important;
+  border-radius: 1rem !important;
+  box-shadow: var(--ui-shadow-sm), var(--ui-highlight);
+}
+
+body[data-page="lista"] .horario-section {
+  border-radius: 1.15rem !important;
+  overflow: hidden;
+}
+
+body[data-page="lista"] .section-header {
+  background: rgba(15, 23, 42, 0.52);
+  border-bottom: 1px solid var(--ui-border);
+}
+
+body[data-page="lista"] .reload-fab {
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 12px 28px -4px rgba(37, 99, 235, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+  transition: transform 0.2s var(--ui-ease), filter 0.2s var(--ui-ease) !important;
+}
+
+body[data-page="lista"] .reload-fab:hover {
+  transform: translateY(-2px) scale(1.04);
+  filter: brightness(1.08);
+}
+
+/* ============================================================
+   AJUSTES SUPERIORES EN TELÉFONO (TODAS LAS PÁGINAS)
+   ============================================================ */
+@media (max-width: 640px) {
+  body[data-page="lista"] main {
+    padding-top: 4.5rem !important;
+  }
+
+  body[data-page="lista"] .btn-nav {
+    top: 0.85rem !important;
+    left: 0.85rem !important;
+    padding: 0.42rem 0.85rem !important;
+    font-size: 0.82rem !important;
+  }
+
+  body[data-page="lista"] header h1,
+  body[data-page="voluntario"] header h1,
+  body[data-page="ayudante"] header h1,
+  body[data-page="estudiante"] .portal-title {
+    font-size: 1.5rem !important;
+    line-height: 1.2 !important;
+  }
+
+  body[data-page="estudiante"] .top-nav,
+  body[data-page="voluntario"] .top-nav,
+  body[data-page="ayudante"] .top-nav {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+    padding: 0.55rem 0.7rem !important;
+  }
+
+  body[data-page="estudiante"] .nav-btn,
+  body[data-page="voluntario"] .nav-btn,
+  body[data-page="ayudante"] .nav-btn {
+    padding: 0.4rem 0.7rem !important;
+    font-size: 0.76rem !important;
+  }
+
+  body[data-page="admin"] .sidebar-wrapper {
+    padding: 0.6rem 0.85rem !important;
+  }
+
+  body[data-page="admin"] .sidebar-header {
+    width: 100% !important;
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+  }
+
+  body[data-page="admin"] .sidebar-logo img {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  body[data-page="admin"] .sidebar-title h2 {
+    font-size: 1rem !important;
+  }
+}
