@@ -102,11 +102,15 @@ async function initAdminDashboard() {
   // 3. Navigation Setup
   initNavigation();
 
-  // 4. Auto-marcar listas vencidas sin pasar como "Subió" y cargar Dashboard
+  // 4. Auto-marcar listas vencidas sin pasar como "Subió" y restaurar la pantalla activa al recargar
   if (typeof window.autoMarkExpiredUnpassedVotes === 'function') {
     await window.autoMarkExpiredUnpassedVotes();
   }
-  switchScreen('dashboard');
+  const hashScreen = window.location.hash ? window.location.hash.replace('#', '').trim() : '';
+  const savedScreen = localStorage.getItem('aeudj_admin_active_screen') || '';
+  const candidateScreen = hashScreen || savedScreen || 'dashboard';
+  const initialScreen = document.getElementById(`screen-${candidateScreen}`) ? candidateScreen : 'dashboard';
+  switchScreen(initialScreen);
   initSessionControl();
 
 
@@ -286,6 +290,17 @@ function initNavigation() {
 }
 
 async function switchScreen(screenId) {
+  // Persist active screen across page refreshes
+  localStorage.setItem('aeudj_admin_active_screen', screenId);
+  if (window.location.hash !== `#${screenId}`) {
+    history.replaceState(null, '', `#${screenId}`);
+  }
+
+  // Sync sidebar active item
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.screen === screenId);
+  });
+
   // Hide all screens
   document.querySelectorAll('.admin-screen').forEach(s => s.classList.add('hidden'));
 
