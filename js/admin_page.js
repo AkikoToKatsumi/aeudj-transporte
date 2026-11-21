@@ -788,8 +788,12 @@ function updateStaffCounts() {
   setTotal('staff-count-chofer', 'tab-count-chofer', choferes);
 }
 
+let staffCurrentPage = 0;
+const STAFF_PAGE_SIZE = 6;
+
 window.setStaffFilterNew = (f) => {
   staffFilter = f;
+  staffCurrentPage = 0;
   document.querySelectorAll('.staff-filter-tab').forEach(el => {
     el.className = 'staff-filter-tab';
   });
@@ -801,11 +805,13 @@ window.setStaffFilterNew = (f) => {
 };
 
 window.filterStaffNew = () => {
+  staffCurrentPage = 0;
   renderStaffTableNew();
 };
 
 async function renderStaffTableNew() {
   const tbody = document.getElementById('staffTableBodyNew');
+  const pagContainer = document.getElementById('staffPaginationContainer');
   if (!tbody) return;
 
   const searchInput = document.getElementById('staffSearchNew');
@@ -830,14 +836,22 @@ async function renderStaffTableNew() {
         <p style="font-weight:600;font-size:0.9rem;">No se encontraron resultados para tu búsqueda</p>
       </td></tr>
     `;
+    if (pagContainer) pagContainer.innerHTML = '';
     return;
   }
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / STAFF_PAGE_SIZE));
+  if (staffCurrentPage >= totalPages) staffCurrentPage = totalPages - 1;
+  if (staffCurrentPage < 0) staffCurrentPage = 0;
+
+  const startIdx = staffCurrentPage * STAFF_PAGE_SIZE;
+  const pageItems = filtered.slice(startIdx, startIdx + STAFF_PAGE_SIZE);
 
   const userData = localStorage.getItem('aeudj_user');
   const localUser = userData ? JSON.parse(userData) : {};
   const currentId = localUser?.id || null;
 
-  tbody.innerHTML = filtered.map(u => {
+  tbody.innerHTML = pageItems.map(u => {
     const isSelf = u.id === currentId;
     const initials = (u.nombre || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
@@ -924,6 +938,28 @@ async function renderStaffTableNew() {
       if (editBtn) window.editUserNew(editBtn.dataset.userId);
       if (deleteBtn) window.deleteUserNew(deleteBtn.dataset.userId);
     });
+  }
+
+  if (pagContainer) {
+    if (totalPages > 1) {
+      pagContainer.innerHTML = `
+        <div class="pen-pagination" style="padding: 0.85rem 1rem; border-top: 1px solid rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:space-between; gap:0.75rem;">
+          <button type="button" class="logbook-nav-btn" id="staffPrevPageBtn" ${staffCurrentPage === 0 ? 'disabled' : ''} title="Página anterior">
+            <i data-lucide="chevron-left" style="width:18px;height:18px;"></i>
+          </button>
+          <span class="pen-page-info">Pág. ${staffCurrentPage + 1} / ${totalPages} &nbsp;·&nbsp; ${filtered.length} registros</span>
+          <button type="button" class="logbook-nav-btn" id="staffNextPageBtn" ${staffCurrentPage >= totalPages - 1 ? 'disabled' : ''} title="Página siguiente">
+            <i data-lucide="chevron-right" style="width:18px;height:18px;"></i>
+          </button>
+        </div>
+      `;
+      const prevBtn = pagContainer.querySelector('#staffPrevPageBtn');
+      const nextBtn = pagContainer.querySelector('#staffNextPageBtn');
+      if (prevBtn) prevBtn.addEventListener('click', () => { staffCurrentPage--; renderStaffTableNew(); });
+      if (nextBtn) nextBtn.addEventListener('click', () => { staffCurrentPage++; renderStaffTableNew(); });
+    } else {
+      pagContainer.innerHTML = '';
+    }
   }
 
   if (window.lucide) window.lucide.createIcons();
