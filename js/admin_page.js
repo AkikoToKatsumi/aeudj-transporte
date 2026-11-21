@@ -3042,6 +3042,7 @@ async function resetCuatrimestre() {
 // REGISTRO DE PASES DE LISTA POR VOLUNTARIO (ADMIN)
 // ══════════════════════════════════════════════
 let allPasesListaRows = [];
+let pasesActiveDateIndex = 0;
 
 function parsePaseListaMotivo(motivo, fallbackIso) {
   const m = (motivo || '').match(/^Pase de lista(?:\s+completo)?\s*-\s*(.+?)\s*\((\d{4}-\d{2}-\d{2})\)\s*$/i);
@@ -3103,7 +3104,8 @@ window.loadPasesListaData = async function () {
     allPasesListaRows = Array.from(dedupMap.values())
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-    window.filterPasesListaTable();
+    pasesActiveDateIndex = 0;
+    window.filterPasesListaTable(true);
     if (window.lucide) window.lucide.createIcons();
   } catch (err) {
     console.error('Error cargando pases de lista:', err);
@@ -3111,7 +3113,7 @@ window.loadPasesListaData = async function () {
   }
 };
 
-window.filterPasesListaTable = function () {
+window.filterPasesListaTable = function (resetDay = true) {
   const searchEl = document.getElementById('pasesSearch');
   const dateEl = document.getElementById('pasesDatePick');
   const q = (searchEl ? searchEl.value : '').toLowerCase().trim();
@@ -3150,40 +3152,52 @@ window.filterPasesListaTable = function () {
     }
   }
 
-  renderPasesListaTable(filtered);
+  // Agrupar por fecha (estilo libro de datos como Penalidades)
+  const groupedByDate = {};
+  filtered.forEach(r => {
+    const fDate = r.fecha || 'Sin fecha';
+    if (!groupedByDate[fDate]) groupedByDate[fDate] = [];
+    groupedByDate[fDate].push(r);
+  });
+
+  const sortedDates = Object.keys(groupedByDate).sort((a, b) => b.localeCompare(a));
+
+  if (resetDay) {
+    pasesActiveDateIndex = 0;
+  } else if (pasesActiveDateIndex >= sortedDates.length) {
+    pasesActiveDateIndex = Math.max(0, sortedDates.length - 1);
+  }
+
+  const activeDateStr = dateVal || sortedDates[pasesActiveDateIndex] || 'Sin registros';
+  const activeRows = groupedByDate[activeDateStr] || [];
+
+  renderPasesListaTable(activeRows, activeDateStr, pasesActiveDateIndex, sortedDates.length);
 };
 
-function renderPasesListaTable(rows) {
+function renderPasesListaTable(rows, activeDate, activeIndex, totalDays) {
   const container = document.getElementById('pasesTableContainer');
   if (!container) return;
 
-  if (!rows.length) {
-    container.innerHTML = '<div class="audit-empty"><p>No hay pases de lista registrados para este filtro.</p></div>';
-    return;
+  let formattedDate = 'Sin registros';
+  if (activeDate && activeDate !== 'Sin registros' && activeDate !== 'Sin fecha') {
+    const d = new Date(activeDate + 'T12:00:00');
+    if (!isNaN(d.getTime())) {
+      formattedDate = d.toLocaleDateString('es-ES', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+      formattedDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+    } else {
+      formattedDate = sanitize(activeDate);
+    }
   }
-
-  const fmtFechaViaje = (fechaStr) => {
-    if (!fechaStr) return '—';
-    const d = new Date(fechaStr + 'T12:00:00');
-    if (isNaN(d.getTime())) return sanitize(fechaStr);
-    return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
-  };
 
   const fmtHoraPase = (iso) => {
     if (!iso) return '—';
     const d = new Date(iso);
-    const time = d.toLocaleTimeString('en-US', {
+    return d.toLocaleTimeString('en-US', {
       timeZone: 'America/Santo_Domingo',
       hour: 'numeric',
       minute: '2-digit',
       hour12: true
     });
-    const date = d.toLocaleDateString('es-ES', {
-      timeZone: 'America/Santo_Domingo',
-      day: '2-digit',
-      month: 'short'
-    });
-    return `${time} <span style="opacity:0.65;font-size:0.75rem;">(${date})</span>`;
   };
 
   const getPunctualityBadge = (horario, fecha, createdAt) => {
@@ -3203,41 +3217,84 @@ function renderPasesListaTable(rows) {
     return `<span class="audit-badge penalidad">+${diffMin} min tarde</span>`;
   };
 
-  let html = `
-    <table class="audit-table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Voluntario</th>
-          <th>Horario</th>
-          <th>Fecha Viaje</th>
-          <th>Hora de Pase</th>
-          <th>Puntualidad</th>
-          <th>Puntos</th>
-        </tr>
-      </thead>
-      <tbody>
+  const prevDisabled = activeIndex >= totalDays - 1 || totalDays <= 1;
+  const nextDisabled = activeIndex <= 0 || totalDays <= 1;
+
+  let tableHtml = '';
+  if (!rows || rows.length === 0) {
+    tableHtml = `
+      <div class="logbook-empty-state">
+        <div class="logbook-empty-icon">
+          <i data-lucide="calendar-x" style="width:24px;height:24px;"></i>
+        </div>
+        <div style="font-weight:700;color:#94a3b8;font-size:0.95rem;margin-bottom:0.25rem;">No hay pases de lista</div>
+        <p style="font-size:0.8rem;color:#64748b;margin:0;max-width:300px;">No se encontraron pases de lista registrados para este día o filtro.</p>
+      </div>
+    `;
+  } else {
+    tableHtml = `
+      <div class="logbook-table-container">
+        <table class="logbook-table">
+          <thead>
+            <tr>
+              <th style="width:55px;">#</th>
+              <th>Voluntario</th>
+              <th>Horario</th>
+              <th>Hora de Pase</th>
+              <th>Puntualidad</th>
+              <th>Puntos</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map((r, i) => `
+              <tr>
+                <td style="font-weight:700;color:#60a5fa;">${i + 1}</td>
+                <td>
+                  <div class="audit-name">${sanitize(r.nombre)}</div>
+                  <div class="audit-mat">${sanitize(r.matricula)} · ${sanitize(r.rol)}</div>
+                </td>
+                <td class="audit-horario">${sanitize(r.horario)}</td>
+                <td class="audit-time" style="font-weight:700;color:#e2e8f0;">${fmtHoraPase(r.created_at)}</td>
+                <td>${getPunctualityBadge(r.horario, r.fecha, r.created_at)}</td>
+                <td><span class="audit-badge activo">+${r.puntos} pts</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  const paginationInfo = totalDays > 0 ? `Día ${activeIndex + 1} de ${totalDays} · ${rows.length} ${rows.length === 1 ? 'pase' : 'pases'}` : 'Día 0 de 0';
+
+  container.innerHTML = `
+    <div class="logbook-card">
+      <div class="logbook-header">
+        <div class="logbook-title-area">
+          <span class="logbook-subtitle">📖 LIBRO DE REGISTRO DE PASES DE LISTA</span>
+          <span class="logbook-date-display">${formattedDate}</span>
+        </div>
+        <div class="logbook-nav">
+          <button class="logbook-nav-btn" id="pasesPrevBtn" ${prevDisabled ? 'disabled' : ''} title="Día anterior">
+            <i data-lucide="chevron-left" style="width:20px;height:20px;"></i>
+          </button>
+          <span class="logbook-nav-info">${paginationInfo}</span>
+          <button class="logbook-nav-btn" id="pasesNextBtn" ${nextDisabled ? 'disabled' : ''} title="Día siguiente">
+            <i data-lucide="chevron-right" style="width:20px;height:20px;"></i>
+          </button>
+        </div>
+      </div>
+
+      ${tableHtml}
+    </div>
   `;
 
-  rows.forEach((r, i) => {
-    html += `
-      <tr>
-        <td class="audit-time">${i + 1}</td>
-        <td>
-          <div class="audit-name">${sanitize(r.nombre)}</div>
-          <div class="audit-mat">${sanitize(r.matricula)} · ${sanitize(r.rol)}</div>
-        </td>
-        <td class="audit-horario">${sanitize(r.horario)}</td>
-        <td class="audit-time">${fmtFechaViaje(r.fecha)}</td>
-        <td class="audit-time">${fmtHoraPase(r.created_at)}</td>
-        <td>${getPunctualityBadge(r.horario, r.fecha, r.created_at)}</td>
-        <td><span class="audit-badge activo">+${r.puntos} pts</span></td>
-      </tr>
-    `;
-  });
+  const prevBtn = container.querySelector('#pasesPrevBtn');
+  const nextBtn = container.querySelector('#pasesNextBtn');
+  if (prevBtn) prevBtn.addEventListener('click', () => { pasesActiveDateIndex++; window.filterPasesListaTable(false); });
+  if (nextBtn) nextBtn.addEventListener('click', () => { pasesActiveDateIndex--; window.filterPasesListaTable(false); });
 
-  html += '</tbody></table>';
-  container.innerHTML = html;
+  if (window.lucide) window.lucide.createIcons();
 }
 
 
