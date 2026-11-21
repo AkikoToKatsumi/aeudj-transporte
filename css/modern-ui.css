@@ -142,6 +142,41 @@ body[data-page="index"] .premium-select {
   border-radius: 0.85rem !important;
 }
 
+/* Evitar que el autocompletado del navegador ponga los inputs blancos */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px rgba(15, 23, 42, 0.94) inset !important;
+  -webkit-text-fill-color: #f8fafc !important;
+  caret-color: #f8fafc !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+#forgotPasswordBtn,
+#forgotPasswordBtn:visited,
+#showRegisterBtn,
+#showRegisterBtn:visited,
+#showLoginBtn,
+#showLoginBtn:visited {
+  color: #60a5fa !important;
+}
+
+#forgotPasswordBtn:hover,
+#showRegisterBtn:hover,
+#showLoginBtn:hover {
+  color: #93c5fd !important;
+}
+
+.akiko-copyright {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #ff2e93 !important;
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+  text-shadow: 0 0 12px rgba(255, 46, 147, 0.55), 0 0 24px rgba(255, 46, 147, 0.25);
+}
+
 body[data-page="index"] .btn-premium {
   height: 46px !important;
   border-radius: 0.85rem !important;
@@ -856,4 +891,175 @@ body[data-page="admin"] .content-header {
   .admin-wrapper.sidebar-collapsed .sidebar-toggle-btn {
     transform: rotate(180deg);
   }
+}
+
+/* ============================================================
+   PORTAL VOLUNTARIO Y AYUDANTE (voluntario.html / ayudante.html)
+   ============================================================ */
+body[data-page="voluntario"] main,
+body[data-page="ayudante"] main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+body[data-page="voluntario"] .top-nav,
+body[data-page="ayudante"] .top-nav {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--ui-border);
+  border-radius: 1rem;
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--ui-shadow-sm), var(--ui-highlight);
+}
+
+body[data-page="voluntario"] .nav-btn,
+body[data-page="ayudante"] .nav-btn {
+  border-radius: 0.7rem !important;
+  font-weight: 600 !important;
+  font-size: 0.82rem !important;
+  padding: 0.48rem 0.85rem !important;
+}
+
+body[data-page="voluntario"] header h1,
+body[data-page="ayudante"] header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(90deg, #ffffff 0%, #93c5fd 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+body[data-page="voluntario"] .date-badge,
+body[data-page="ayudante"] .date-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(59, 130, 246, 0.14) !important;
+  border: 1px solid rgba(96, 165, 250, 0.35) !important;
+  color: #93c5fd !important;
+  border-radius: 999px !important;
+  padding: 0.35rem 0.95rem !important;
+  font-weight: 700 !important;
+  font-size: 0.8rem !important;
+  box-shadow: 0 4px 14px -4px rgba(59, 130, 246, 0.35);
+}
+
+body[data-page="voluntario"] .stat-card.stat-blue,
+body[data-page="ayudante"] .stat-card.stat-cyan {
+  border-top: 2px solid #38bdf8 !important;
+}
+body[data-page="voluntario"] .stat-card.stat-green,
+body[data-page="ayudante"] .stat-card.stat-green {
+  border-top: 2px solid #34d399 !important;
+}
+body[data-page="voluntario"] .stat-card.stat-purple {
+  border-top: 2px solid #a78bfa !important;
+}
+
+body[data-page="voluntario"] .horario-section,
+body[data-page="ayudante"] .horario-section {
+  border-radius: 1.15rem !important;
+  overflow: hidden;
+  margin-bottom: 1.15rem;
+}
+
+body[data-page="voluntario"] .horario-header,
+body[data-page="ayudante"] .horario-header {
+  background: rgba(15, 23, 42, 0.55);
+  border-bottom: 1px solid var(--ui-border);
+  padding: 1rem 1.25rem;
+}
+
+body[data-page="voluntario"] .row-num,
+body[data-page="ayudante"] .row-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  color: #93c5fd;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+body[data-page="voluntario"] .att-btn,
+body[data-page="ayudante"] .att-btn {
+  border-radius: 0.65rem !important;
+  font-weight: 700 !important;
+  padding: 0.45rem 0.85rem !important;
+  border: 1px solid var(--ui-border) !important;
+  transition: all 0.18s var(--ui-ease) !important;
+}
+
+body[data-page="voluntario"] .att-btn.subio.active,
+body[data-page="ayudante"] .att-btn.subio.active {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.32), rgba(5, 150, 105, 0.25)) !important;
+  border-color: rgba(52, 211, 153, 0.6) !important;
+  color: #6ee7b7 !important;
+  box-shadow: 0 4px 14px -4px rgba(16, 185, 129, 0.45);
+}
+
+body[data-page="voluntario"] .att-btn.no-subio.active,
+body[data-page="ayudante"] .att-btn.no-subio.active {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.32), rgba(220, 38, 38, 0.25)) !important;
+  border-color: rgba(248, 113, 113, 0.6) !important;
+  color: #fca5a5 !important;
+  box-shadow: 0 4px 14px -4px rgba(239, 68, 68, 0.45);
+}
+
+/* ============================================================
+   SELECTOR DE HORARIOS (votar.html)
+   ============================================================ */
+#staffMenu {
+  background: rgba(15, 23, 42, 0.62);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--ui-border);
+  border-radius: 1rem;
+  padding: 0.55rem 0.75rem;
+  box-shadow: var(--ui-shadow-sm), var(--ui-highlight);
+}
+
+#staffMenu a {
+  border-radius: 0.65rem !important;
+  font-weight: 700 !important;
+  font-size: 0.78rem !important;
+  transition: transform 0.18s var(--ui-ease), filter 0.18s var(--ui-ease) !important;
+}
+
+#staffMenu a:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.12);
+}
+
+.trip-card {
+  background: linear-gradient(160deg, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.86)) !important;
+  border: 1px solid var(--ui-border) !important;
+  box-shadow: var(--ui-shadow-sm), var(--ui-highlight) !important;
+}
+
+.trip-card-interactive:hover {
+  border-color: rgba(96, 165, 250, 0.55) !important;
+  transform: translateY(-2px);
+}
+
+.btn-action {
+  border-radius: 0.85rem !important;
+  font-weight: 700 !important;
+  box-shadow: var(--ui-highlight);
+  transition: all 0.2s var(--ui-ease) !important;
+}
+
+.btn-action:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+
+.check-badge {
+  box-shadow: 0 0 28px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
