@@ -924,6 +924,9 @@ async function renderStaffTableNew() {
         </td>
         <td>
           <div class="staff-row-actions" style="display:flex;gap:0.5rem;justify-content:flex-end;">
+            <button class="staff-icon-btn btn-reset-pass-user" data-user-id="${u.id}" data-user-name="${sanitize(u.nombre)}" style="color:#fbbf24;border:1px solid rgba(251,191,36,0.3);background:rgba(251,191,36,0.1);padding:0.4rem;border-radius:0.4rem;cursor:pointer;" title="Cambiar Contraseña">
+              🔑
+            </button>
             <button class="staff-icon-btn btn-edit-user" data-user-id="${u.id}" style="color:#60a5fa;border:1px solid rgba(96,165,250,0.3);background:rgba(96,165,250,0.1);padding:0.4rem;border-radius:0.4rem;cursor:pointer;" title="Editar Datos">
               ✏️
             </button>
@@ -945,8 +948,10 @@ async function renderStaffTableNew() {
       }
     });
     tbody.addEventListener('click', (e) => {
+      const resetPassBtn = e.target.closest('.btn-reset-pass-user');
       const editBtn = e.target.closest('.btn-edit-user');
       const deleteBtn = e.target.closest('.btn-delete-user');
+      if (resetPassBtn) window.adminResetUserPassword(resetPassBtn.dataset.userId, resetPassBtn.dataset.userName);
       if (editBtn) window.editUserNew(editBtn.dataset.userId);
       if (deleteBtn) window.deleteUserNew(deleteBtn.dataset.userId);
     });
@@ -1006,19 +1011,26 @@ window.deleteUserNew = async (userId) => {
   window.showAdminToast('Eliminando registros...', 'info');
 
   try {
-    // 1. Borrar dependencias (penalidades, faltas, votos) para evitar errores de llave foránea
+    // 1. Intentar eliminación completa vía RPC de administrador (incluye auth.users + profiles + dependencias)
+    const { error: rpcErr } = await supabase.rpc('admin_delete_user', { target_user_id: userId });
+    if (!rpcErr) {
+      window.showAdminToast('Usuario eliminado completamente del sistema', 'success');
+      await loadStaffData();
+      return;
+    }
+
+    // 2. Fallback: borrar dependencias y perfil público
     await supabase.from('penalidades').delete().eq('usuario_id', userId);
     await supabase.from('faltas').delete().eq('usuario_id', userId);
     await supabase.from('votos').delete().eq('usuario_id', userId);
 
-    // 2. Borrar el perfil público
     const { data, error } = await supabase.from('profiles').delete().eq('id', userId).select();
 
     if (error) {
       console.error('Delete error:', error);
       window.showAdminToast(error.message || 'Error al eliminar usuario', 'error');
     } else if (!data || data.length === 0) {
-      window.showAdminToast('Permiso denegado por políticas de seguridad (RLS)', 'error');
+      window.showAdminToast('Permiso denegado por RLS. Ejecuta el script SQL de permisos admin en Supabase.', 'error');
     } else {
       window.showAdminToast('Usuario y sus registros eliminados correctamente', 'success');
       await loadStaffData();
@@ -1026,6 +1038,28 @@ window.deleteUserNew = async (userId) => {
   } catch (err) {
     console.error('Process error:', err);
     window.showAdminToast('Error inesperado al limpiar registros', 'error');
+  }
+};
+
+window.adminResetUserPassword = async (userId, userName) => {
+  const newPass = prompt(`Ingresa la nueva contraseña para ${userName || 'este usuario'} (mínimo 6 caracteres):`);
+  if (!newPass) return;
+  if (newPass.trim().length < 6) {
+    window.showAdminToast('La contraseña debe tener al menos 6 caracteres', 'error');
+    return;
+  }
+
+  window.showAdminToast('Actualizando contraseña...', 'info');
+  try {
+    const { error } = await supabase.rpc('admin_reset_user_password', {
+      target_user_id: userId,
+      new_password: newPass.trim()
+    });
+    if (error) throw error;
+    window.showAdminToast(`✅ Contraseña actualizada para ${userName}`, 'success');
+  } catch (err) {
+    console.error('Error reset password admin:', err);
+    window.showAdminToast(err.message || 'Falta ejecutar el SQL admin_reset_user_password en Supabase.', 'error');
   }
 };
 

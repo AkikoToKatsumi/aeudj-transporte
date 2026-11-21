@@ -265,37 +265,43 @@ function initIndexPage() {
 
       // 1. Si el input ya parece un email, lo usamos directamente
       if (rawInput.includes('@')) {
-        authEmail = rawInput;
+        authEmail = rawInput.toLowerCase();
       } else {
-        // 2. Intentar buscar el perfil para saber el email real
-        const { data: profile, error: searchError } = await supabase
-          .from('profiles')
-          .select('*')
-          .or(`matricula.eq.${rawInput},telefono.eq.${rawInput},matricula.eq.${cleanInput}`)
-          .maybeSingle();
-        
-        if (profile) {
-          userData = profile;
-          authEmail = profile.email; // Usamos el email real del perfil
-          console.log('Perfil encontrado. Email:', authEmail);
-        } else {
-          // 2.1 Si no hay perfil (por RLS o no existe), buscamos en la tabla de votos (que es pública)
-          console.log('Perfil no accesible. Buscando en historial de votos...');
-          const { data: lastVote } = await supabase
-            .from('votos')
-            .select('email')
-            .or(`matricula.eq.${rawInput},matricula.eq.${cleanInput}`)
-            .order('created_at', { ascending: false })
-            .limit(1)
+        // 1.1 Intentar resolver el email real mediante RPC segura (funciona aunque RLS bloquee profiles para anon)
+        try {
+          const { data: rpcEmail, error: rpcErr } = await supabase.rpc('get_login_email', { p_identifier: rawInput });
+          if (!rpcErr && rpcEmail) {
+            authEmail = rpcEmail;
+          }
+        } catch (e) {}
+
+        // 2. Fallback: intentar buscar el perfil directamente
+        if (!authEmail) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .or(`matricula.eq.${rawInput},telefono.eq.${rawInput},telefono.eq.${cleanInput},matricula.eq.${cleanInput}`)
             .maybeSingle();
-          
-          if (lastVote && lastVote.email) {
-            authEmail = lastVote.email;
-            console.log('Email recuperado de votos:', authEmail);
+
+          if (profile) {
+            userData = profile;
+            authEmail = profile.email;
           } else {
-            // 2.2 Fallback final al pseudo-email
-            authEmail = `${cleanInput}@aeudj.com`;
-            console.log('Sin historial, usando pseudo-email:', authEmail);
+            // 2.1 Buscar en la tabla de votos (pública)
+            const { data: lastVote } = await supabase
+              .from('votos')
+              .select('email')
+              .or(`matricula.eq.${rawInput},matricula.eq.${cleanInput},telefono.eq.${rawInput},telefono.eq.${cleanInput}`)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+
+            if (lastVote && lastVote.email) {
+              authEmail = lastVote.email;
+            } else {
+              // 2.2 Fallback final al pseudo-email
+              authEmail = `${cleanInput}@aeudj.com`;
+            }
           }
         }
       }
@@ -490,13 +496,19 @@ function initIndexPage() {
     });
   }
 
-  // Detectar callback de recuperación de contraseña al cargar la página
+  // Detectar callback de recuperación de contraseña al cargar la página (hash, query o evento Supabase)
+  if (supabase && supabase.auth && supabase.auth.onAuthStateChange) {
+    supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        showResetPasswordModal();
+      }
+    });
+  }
   const isRecovery = window.location.hash.includes('type=recovery') || 
                      window.location.hash.includes('access_token') || 
                      window.location.search.includes('type=recovery') ||
                      window.location.search.includes('code=');
   if (isRecovery) {
-    // Dar tiempo a Supabase para procesar el token en el hash
     setTimeout(() => {
       showResetPasswordModal();
     }, 300);
@@ -536,7 +548,7 @@ function showForgotPasswordModal() {
     btn.onclick = async () => {
       const rawInput = (input?.value || '').trim();
       if (!rawInput) {
-        if (errDiv) { errDiv.textContent = 'Por favor ingresa tu matrícula.'; errDiv.style.display = 'block'; }
+        if (errDiv) { errDiv.textContent = 'Por favor ingresa tu matrícula, correo o teléfono.'; errDiv.style.display = 'block'; }
         return;
       }
       if (errDiv) errDiv.style.display = 'none';
@@ -548,42 +560,50 @@ function showForgotPasswordModal() {
       try {
         const cleanInput = rawInput.replace(/[\s-]+/g, '');
 
-        // 1. Buscar el email real del estudiante en profiles
+        // 1. Buscar el email real del estudiante (RPC segura -> profiles -> votos)
         let realEmail = null;
 
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('email, matricula')
-          .or(`matricula.eq.${rawInput},matricula.eq.${cleanInput}`)
-          .maybeSingle();
-
-        if (profile && profile.email && !profile.email.endsWith('@aeudj.com')) {
-          // Tiene correo real registrado → usarlo para el reset
-          realEmail = profile.email;
+        if (rawInput.includes('@')) {
+          realEmail = rawInput.toLowerCase();
         } else {
-          // Fallback: buscar en historial de votos
-          const { data: voto } = await supabase
-            .from('votos')
-            .select('email')
-            .or(`matricula.eq.${rawInput},matricula.eq.${cleanInput}`)
-            .not('email', 'is', null)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
+          try {
+            const { data: rpcEmail, error: rpcErr } = await supabase.rpc('get_login_email', { p_identifier: rawInput });
+            if (!rpcErr && rpcEmail) {
+              realEmail = rpcEmail;
+            }
+          } catch (e) {}
 
-          if (voto && voto.email && !voto.email.endsWith('@aeudj.com')) {
-            realEmail = voto.email;
+          if (!realEmail) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('email, matricula')
+              .or(`matricula.eq.${rawInput},matricula.eq.${cleanInput},telefono.eq.${rawInput},telefono.eq.${cleanInput}`)
+              .maybeSingle();
+
+            if (profile && profile.email) {
+              realEmail = profile.email;
+            } else {
+              const { data: voto } = await supabase
+                .from('votos')
+                .select('email')
+                .or(`matricula.eq.${rawInput},matricula.eq.${cleanInput},telefono.eq.${rawInput},telefono.eq.${cleanInput}`)
+                .not('email', 'is', null)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+              if (voto && voto.email) {
+                realEmail = voto.email;
+              }
+            }
           }
         }
 
-        if (!realEmail) {
-          // Si solo existe el pseudo-email, igualmente lo usamos
-          // (el link llegará a @aeudj.com que no existe, pero al menos no exponemos datos)
-          realEmail = `${cleanInput}@aeudj.com`;
+        if (!realEmail || realEmail.endsWith('@aeudj.com')) {
+          throw new Error('No encontramos un correo real asociado a esa matrícula/teléfono. Pide a un administrador que restablezca tu contraseña desde el panel.');
         }
 
         // 2. Enviar el email de reset a través de Supabase Auth
-        // Determinar URL base del proyecto para el redirectTo
         const redirectTo = `${window.location.origin}${window.location.pathname.replace(/\/[^/]*$/, '/')  }index.html`;
 
         const { error } = await supabase.auth.resetPasswordForEmail(realEmail, {
@@ -594,7 +614,8 @@ function showForgotPasswordModal() {
 
         btn.textContent = '¡Enviado!';
         if (okDiv) {
-          okDiv.textContent = `✅ Si existe una cuenta para esa matrícula, recibirás un correo con el enlace de recuperación en unos minutos. Revisa también tu carpeta de spam.`;
+          const masked = realEmail.replace(/^(.{2})(.*)(@.*)$/, (_, a, b, c) => a + '*'.repeat(Math.min(b.length, 6)) + c);
+          okDiv.textContent = `✅ Enlace de recuperación enviado a ${masked}. Revisa tu bandeja de entrada y carpeta de spam.`;
           okDiv.style.display = 'block';
         }
         if (cancelBtn) cancelBtn.textContent = 'Cerrar';
