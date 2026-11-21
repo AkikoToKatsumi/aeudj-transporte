@@ -178,6 +178,30 @@ h1 {
   transition: opacity 0.15s;
 }
 .time-slot.selected .ts-check { opacity: 1; }
+.time-slot.expired {
+  opacity: 0.42;
+  cursor: not-allowed;
+  background: rgba(15, 23, 42, 0.55);
+  border-color: rgba(255, 255, 255, 0.04);
+  transform: none !important;
+}
+.time-slot.expired:hover {
+  background: rgba(15, 23, 42, 0.55);
+  border-color: rgba(255, 255, 255, 0.04);
+  transform: none;
+}
+.tag-expired {
+  display: inline-block;
+  font-size: 0.58rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  margin-top: 0.35rem;
+  background: rgba(239, 68, 68, 0.16);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
 
 .tag-ida {
   display: inline-block;

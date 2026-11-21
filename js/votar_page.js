@@ -210,6 +210,45 @@ function buildStaffMenu(user) {
 
 
 
+function getHorarioDir(h) {
+  const s = SCHEDULES.find(x => x.fullText === h);
+  return s ? s.dir : ((h.includes('-> La Vega') || h.includes('→ La Vega')) ? 'ida' : 'vuelta');
+}
+
+function isHorarioExpiredForVoting(horario, fecha) {
+  return typeof window.isScheduleExpired === 'function' && window.isScheduleExpired(horario, fecha, 0);
+}
+
+function isVoteLocked(v, fallbackDate) {
+  if (!v) return false;
+  return v.se_monto !== null || isHorarioExpiredForVoting(v.horario, v.fecha || fallbackDate);
+}
+
+function getLockedDirs(cycleDateStr) {
+  const locked = new Set();
+  (initialVotes || []).forEach(v => {
+    if (v.fecha === cycleDateStr && isVoteLocked(v, cycleDateStr)) {
+      locked.add(getHorarioDir(v.horario));
+    }
+  });
+  return locked;
+}
+
+function updateSubmitState(cycleDateStr, visibleSchedules) {
+  if (!submitBtn) return;
+  const lockedDirs = getLockedDirs(cycleDateStr);
+  const hasAvailableIda = visibleSchedules.some(s => s.dir === 'ida' && !isHorarioExpiredForVoting(s.fullText, cycleDateStr));
+  const hasAvailableVuelta = visibleSchedules.some(s => s.dir === 'vuelta' && !isHorarioExpiredForVoting(s.fullText, cycleDateStr));
+
+  const hasSelectedIda = selectedHorarios.some(h => getHorarioDir(h) === 'ida');
+  const hasSelectedVuelta = selectedHorarios.some(h => getHorarioDir(h) === 'vuelta');
+
+  const idaOk = !hasAvailableIda || lockedDirs.has('ida') || hasSelectedIda;
+  const vueltaOk = !hasAvailableVuelta || lockedDirs.has('vuelta') || hasSelectedVuelta;
+
+  submitBtn.disabled = !(selectedHorarios.length > 0 && idaOk && vueltaOk);
+}
+
 // ── RENDER HORARIOS ─────────────────────────────────────
 async function renderHorarios(group) {
   if (!scheduleGrid) return;
@@ -223,25 +262,38 @@ async function renderHorarios(group) {
     visible = visible.filter(s => s.time === '7:00 AM' || s.time === '12:10 PM');
   }
 
-  // ── PROTECCIÓN: Purgar selecciones que no pertenecen al grupo activo ──
+  const lockedDirs = getLockedDirs(cycleDateStr);
+
+  // ── PROTECCIÓN: Purgar selecciones inválidas, expiradas o de dirección ya pasada ──
   const validFullTexts = new Set(visible.map(s => s.fullText));
   const before = selectedHorarios.length;
-  selectedHorarios = selectedHorarios.filter(h => validFullTexts.has(h));
+  selectedHorarios = selectedHorarios.filter(h =>
+    validFullTexts.has(h) &&
+    !isHorarioExpiredForVoting(h, cycleDateStr) &&
+    !lockedDirs.has(getHorarioDir(h))
+  );
   if (selectedHorarios.length !== before) {
-    console.warn(`⚠️ Se purgaron ${before - selectedHorarios.length} horario(s) inválidos para el grupo "${group}"`);
+    console.warn(`⚠️ Se purgaron ${before - selectedHorarios.length} horario(s) inválidos o expirados para "${group}"`);
   }
 
   scheduleGrid.innerHTML = '';
 
   if (visible.length === 0) {
     scheduleGrid.innerHTML = '<p class="loading-text">No hay horarios disponibles en este momento.</p>';
+    if (submitBtn) submitBtn.disabled = true;
     return;
   }
 
+  const anyOpen = visible.some(s => !isHorarioExpiredForVoting(s.fullText, cycleDateStr) && !lockedDirs.has(s.dir));
+
   visible.forEach(s => {
-    const isSelected = selectedHorarios.includes(s.fullText);
+    const expired = isHorarioExpiredForVoting(s.fullText, cycleDateStr);
+    const dirLocked = lockedDirs.has(s.dir);
+    const disabled = expired || dirLocked;
+    const isSelected = !disabled && selectedHorarios.includes(s.fullText);
+
     const slot = document.createElement('div');
-    slot.className = 'time-slot' + (isSelected ? ' selected' : '');
+    slot.className = 'time-slot' + (isSelected ? ' selected' : '') + (disabled ? ' expired' : '');
     slot.dataset.dir      = s.dir;
     slot.dataset.fulltext = s.fullText;
     slot.innerHTML = `
@@ -251,27 +303,40 @@ async function renderHorarios(group) {
       <div class="ts-time">${s.time}</div>
       <div class="ts-route">${s.route}</div>
       <span class="${s.dir === 'ida' ? 'tag-ida' : 'tag-vuelta'}">${s.dir === 'ida' ? '↗ Ida' : '↙ Vuelta'}</span>
-      <div class="ts-check">✓</div>
+      ${expired ? '<div class="tag-expired">Cerrado · Ya pasó</div>' : (dirLocked ? '<div class="tag-expired">Turno ya registrado</div>' : '<div class="ts-check">✓</div>')}
     `;
-    slot.addEventListener('click', () => toggleSlot(slot, s.fullText, s.dir));
+    if (!disabled) {
+      slot.addEventListener('click', () => toggleSlot(slot, s.fullText, s.dir, cycleDateStr, visible));
+    } else {
+      slot.addEventListener('click', () => {
+        setStatus(
+          expired
+            ? `⏰ El horario de las ${s.time} ya pasó y está cerrado.`
+            : `🔒 Ya tienes un viaje de ${s.dir === 'ida' ? 'ida' : 'vuelta'} registrado que no puede modificarse.`,
+          '#fbbf24'
+        );
+      });
+    }
     scheduleGrid.appendChild(slot);
   });
 
+  if (!anyOpen) {
+    setStatus('⏰ Todos los horarios de esta sesión ya pasaron.', '#fbbf24');
+  }
+
+  updateSubmitState(cycleDateStr, visible);
   if (window.lucide) window.lucide.createIcons();
 }
 
-function toggleSlot(el, fullText, dir) {
+function toggleSlot(el, fullText, dir, cycleDateStr, visibleSchedules) {
+  const wasSelected = el.classList.contains('selected');
+
   // Limpiar selecciones previas de la misma dirección en el DOM
   document.querySelectorAll(`.time-slot.selected[data-dir="${dir}"]`).forEach(n => n.classList.remove('selected'));
-  
-  // Limpiar selecciones previas de la misma dirección en el array
-  selectedHorarios = selectedHorarios.filter(h => {
-    const s = SCHEDULES.find(x => x.fullText === h);
-    const direction = s ? s.dir : ((h.includes('-> La Vega') || h.includes('→ La Vega')) ? 'ida' : 'vuelta');
-    return direction !== dir;
-  });
 
-  const wasSelected = el.classList.contains('selected');
+  // Limpiar selecciones previas de la misma dirección en el array
+  selectedHorarios = selectedHorarios.filter(h => getHorarioDir(h) !== dir);
+
   if (!wasSelected) {
     el.classList.add('selected');
     if (!selectedHorarios.includes(fullText)) {
@@ -279,16 +344,7 @@ function toggleSlot(el, fullText, dir) {
     }
   }
 
-  // Enable submit only if one ida + one vuelta
-  const hasIda    = selectedHorarios.some(h => { 
-    const s = SCHEDULES.find(x=>x.fullText===h); 
-    return s ? s.dir==='ida' : (h.includes('-> La Vega') || h.includes('→ La Vega')); 
-  });
-  const hasVuelta = selectedHorarios.some(h => { 
-    const s = SCHEDULES.find(x=>x.fullText===h); 
-    return s ? s.dir==='vuelta' : (h.includes('-> Jarabacoa') || h.includes('→ Jarabacoa')); 
-  });
-  if (submitBtn) submitBtn.disabled = !(hasIda && hasVuelta);
+  updateSubmitState(cycleDateStr, visibleSchedules);
 }
 
 // ── CONFIRMED VIEW ──────────────────────────────────────
@@ -404,14 +460,19 @@ async function confirmarConEspera(puntoEspera) {
   if (modal) modal.classList.add('hidden');
   if (!pendingSubmitData) return;
 
-  // ── PROTECCIÓN FINAL: Re-validar grupo activo antes de insertar ──
+  // ── PROTECCIÓN FINAL: Re-validar grupo activo y horarios no expirados antes de insertar ──
   const { group: currentGroup } = await getActiveGroup();
   const currentCycleDate = await getCycleDate(currentGroup);
   const allowedFT = new Set(SCHEDULES.filter(s => s.group === currentGroup).map(s => s.fullText));
-  const invalid = selectedHorarios.filter(h => !allowedFT.has(h));
+  const lockedDirs = getLockedDirs(currentCycleDate);
+  const invalid = selectedHorarios.filter(h =>
+    !allowedFT.has(h) ||
+    isHorarioExpiredForVoting(h, currentCycleDate) ||
+    lockedDirs.has(getHorarioDir(h))
+  );
   if (invalid.length > 0) {
-    console.error('❌ Bloqueo final: horarios inválidos para grupo activo:', invalid);
-    setStatus('⚠️ La sesión cambió. Selecciona horarios válidos.', '#f87171');
+    console.error('❌ Bloqueo final: horarios inválidos o cerrados:', invalid);
+    setStatus('⚠️ Uno o más horarios seleccionados ya pasaron o no son válidos.', '#f87171');
     selectedHorarios = [];
     pendingSubmitData = null;
     if (submitBtn) submitBtn.disabled = false;
@@ -422,9 +483,20 @@ async function confirmarConEspera(puntoEspera) {
   const cycleDate = currentCycleDate;
 
   try {
-    await supabase.from('votos').delete()
+    // Obtener votos actuales del usuario hoy para NO borrar/reinsertar listas ya pasadas o cerradas
+    const { data: existingToday } = await supabase
+      .from('votos')
+      .select('*')
       .eq('usuario_id', currentUser.id)
       .eq('fecha', cycleDate);
+
+    const editableIds = (existingToday || [])
+      .filter(v => !isVoteLocked(v, cycleDate))
+      .map(v => v.id);
+
+    if (editableIds.length > 0) {
+      await supabase.from('votos').delete().in('id', editableIds);
+    }
 
     const rows = selectedHorarios.map(h => ({
       usuario_id: currentUser.id,
@@ -439,7 +511,8 @@ async function confirmarConEspera(puntoEspera) {
     const { data, error } = await supabase.from('votos').insert(rows).select();
     if (error) throw error;
 
-    initialVotes = data;
+    const lockedVotes = (existingToday || []).filter(v => isVoteLocked(v, cycleDate));
+    initialVotes = [...lockedVotes, ...(data || [])];
     setStatus('✅ ¡Horarios confirmados!', '#34d399');
     setTimeout(() => showConfirmed(data), 800);
 
@@ -454,24 +527,29 @@ async function confirmarConEspera(puntoEspera) {
 if (submitBtn) {
     submitBtn.addEventListener('click', async (e) => {
       e.preventDefault();
-      if (selectedHorarios.length < 2) {
-        setStatus('Selecciona un viaje de ida y uno de vuelta.', '#f87171');
+      if (selectedHorarios.length < 1) {
+        setStatus('Selecciona al menos un horario disponible.', '#f87171');
         return;
       }
       submitBtn.disabled = true;
       setStatus('Verificando sesión...');
 
-      // ── PROTECCIÓN: Re-verificar grupo activo al momento del submit ──
+      // ── PROTECCIÓN: Re-verificar grupo activo y horarios no expirados al momento del submit ──
       const { group } = await getActiveGroup();
+      const cycleDate = await getCycleDate(group);
       const allowedSchedules = SCHEDULES.filter(s => s.group === group);
       const allowedFullTexts = new Set(allowedSchedules.map(s => s.fullText));
+      const lockedDirs = getLockedDirs(cycleDate);
 
-      const invalidSelections = selectedHorarios.filter(h => !allowedFullTexts.has(h));
+      const invalidSelections = selectedHorarios.filter(h =>
+        !allowedFullTexts.has(h) ||
+        isHorarioExpiredForVoting(h, cycleDate) ||
+        lockedDirs.has(getHorarioDir(h))
+      );
       if (invalidSelections.length > 0) {
-        console.error('❌ Horarios inválidos para el grupo activo:', invalidSelections);
-        setStatus('⚠️ Tu sesión cambió. Los horarios seleccionados ya no son válidos. La página se recargará.', '#f87171');
+        console.error('❌ Horarios inválidos o cerrados:', invalidSelections);
+        setStatus('⚠️ Uno o más horarios seleccionados ya pasaron o no son válidos.', '#f87171');
         submitBtn.disabled = false;
-        // Re-renderizar con el grupo correcto después de un breve retraso
         setTimeout(async () => {
           selectedHorarios = [];
           await showForm();
@@ -480,7 +558,6 @@ if (submitBtn) {
       }
 
       setStatus('Guardando tu selección...');
-      const cycleDate = await getCycleDate(group);
 
       pendingSubmitData = { group, cycleDate };
       const modal = document.getElementById('esperaModal');
@@ -543,23 +620,24 @@ function openActionModal(actionStr) {
       let parts = v.horario.split(' ');
       let time = parts.slice(0, 2).join(' ');
       let route = parts.slice(2).join(' ');
-      
+      const locked = isVoteLocked(v, v.fecha);
+
       let btn = document.createElement('div');
-      btn.className = 'trip-card trip-card-interactive';
-      
-      // Remove mouse events as they are now handled by CSS :hover
-      
+      btn.className = 'trip-card ' + (locked ? 'opacity-50 cursor-not-allowed' : 'trip-card-interactive');
+
       btn.innerHTML = `
         <div class="trip-icon ${dir}">
           <i data-lucide="${dir === 'ida' ? 'arrow-right' : 'arrow-left'}"></i>
         </div>
         <div class="trip-info">
-          <div class="trip-label ${dir === 'ida' ? 'trip-label-ida' : 'trip-label-vuelta'}">${dir === 'ida' ? 'Salida' : 'Regreso'}</div>
+          <div class="trip-label ${dir === 'ida' ? 'trip-label-ida' : 'trip-label-vuelta'}">${dir === 'ida' ? 'Salida' : 'Regreso'}${locked ? ' · Ya pasó' : ''}</div>
           <div class="trip-time text-white">${time}</div>
           <div class="trip-route text-slate-400">${route}</div>
         </div>
       `;
-      btn.onclick = () => executeAction(v);
+      if (!locked) {
+        btn.onclick = () => executeAction(v);
+      }
       if (actionModalContent) actionModalContent.appendChild(btn);
     });
   }
@@ -582,24 +660,34 @@ async function executeAction(voteObj) {
 
   if (currentAction === 'despues') {
     isEditing = true;
-    selectedHorarios = initialVotes.map(v => v.horario).filter(h => h !== horarioToChange);
+    selectedHorarios = initialVotes
+      .filter(v => !isVoteLocked(v, voteDate) && v.horario !== horarioToChange)
+      .map(v => v.horario);
     showForm();
     window.scrollTo({ top: 0, behavior: 'smooth' });
     return;
   }
 
   try {
-    let query = supabase.from('votos').delete().eq('usuario_id', currentUser.id).eq('fecha', voteDate);
-    if (horarioToChange !== 'ambos') {
-       query = query.eq('horario', horarioToChange);
-    }
-    
-    const { error } = await query;
-    if (error) throw error;
-
     if (horarioToChange === 'ambos') {
-      initialVotes = [];
+      const editableIds = (initialVotes || [])
+        .filter(v => !isVoteLocked(v, voteDate))
+        .map(v => v.id);
+      if (editableIds.length > 0) {
+        const { error } = await supabase.from('votos').delete().in('id', editableIds);
+        if (error) throw error;
+      }
+      initialVotes = (initialVotes || []).filter(v => isVoteLocked(v, voteDate));
       selectedHorarios = [];
+    } else {
+      const { error } = await supabase
+        .from('votos')
+        .delete()
+        .eq('usuario_id', currentUser.id)
+        .eq('fecha', voteDate)
+        .eq('horario', horarioToChange)
+        .is('se_monto', null);
+      if (error) throw error;
     }
 
     await checkYaVotado(); 
@@ -620,7 +708,9 @@ if (btnOtros) btnOtros.onclick = () => openActionModal('otros');
 if (btnCambiar) {
     btnCambiar.onclick = () => {
       isEditing = true;
-      selectedHorarios = [...initialVotes.map(v => v.horario)];
+      selectedHorarios = (initialVotes || [])
+        .filter(v => !isVoteLocked(v, v.fecha))
+        .map(v => v.horario);
       showForm();
     };
 }
