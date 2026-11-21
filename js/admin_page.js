@@ -3606,15 +3606,33 @@ async function depurarFaltasSinPaseLista() {
       if (m) validPaseKeys.add(normalizeKey(m[1], m[2]));
     });
 
-    const unfairFaltas = faltas.filter(f => !validPaseKeys.has(normalizeKey(f.horario, f.fecha)));
+    // Verificar también faltas huérfanas (cuyo voto_id ya no existe en votos o su se_monto !== 0)
+    const votoIds = [...new Set(faltas.map(f => f.voto_id).filter(Boolean))];
+    const existingVotosMap = new Map();
+    for (let i = 0; i < votoIds.length; i += 150) {
+      const chunk = votoIds.slice(i, i + 150);
+      const { data: vBatch, error: vErr } = await supabase
+        .from('votos')
+        .select('id, se_monto')
+        .in('id', chunk);
+      if (vErr) throw vErr;
+      (vBatch || []).forEach(v => existingVotosMap.set(v.id, v));
+    }
+
+    const unfairFaltas = faltas.filter(f => {
+      const sinPase = !validPaseKeys.has(normalizeKey(f.horario, f.fecha));
+      const votoObj = f.voto_id ? existingVotosMap.get(f.voto_id) : null;
+      const huerfana = !votoObj || votoObj.se_monto !== 0;
+      return sinPase || huerfana;
+    });
     const unfairVotos = votosCero.filter(v => !validPaseKeys.has(normalizeKey(v.horario, v.fecha)));
 
     if (unfairFaltas.length === 0 && unfairVotos.length === 0) {
-      window.showAdminToast('✅ Todas las faltas registradas coinciden con un pase de lista real.', 'success');
+      window.showAdminToast('✅ Todas las faltas registradas son válidas (tienen pase de lista y voto vigente).', 'success');
       return;
     }
 
-    const msg = `Se encontraron ${unfairFaltas.length} falta(s) activas y ${unfairVotos.length} registro(s) en historial que NO tienen un pase de lista de voluntario asociado.\n\n¿Deseas eliminar esas faltas injustas y recalcular las penalidades? Las faltas donde sí se pasó lista se conservarán intactas.`;
+    const msg = `Se encontraron ${unfairFaltas.length} falta(s) inválidas (sin pase de lista de voluntario o huérfanas de votos eliminados) y ${unfairVotos.length} registro(s) históricos sin pase de lista.\n\n¿Deseas eliminarlas y recalcular las penalidades de todos los estudiantes afectados?`;
     const confirmed = typeof window.aeudjConfirm === 'function'
       ? await window.aeudjConfirm(msg)
       : confirm(msg);
