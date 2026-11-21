@@ -1064,6 +1064,35 @@ body[data-page="ayudante"] .att-btn.no-subio.active {
   box-shadow: 0 0 28px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
+/* Badges de cupos en tarjetas de votar.html */
+.ts-quota {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  margin-top: 0.45rem;
+  padding: 0.16rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.ts-quota-ok {
+  background: rgba(16, 185, 129, 0.14);
+  color: #6ee7b7;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+.ts-quota-low {
+  background: rgba(245, 158, 11, 0.16);
+  color: #fcd34d;
+  border: 1px solid rgba(251, 191, 36, 0.38);
+}
+.ts-quota-wait {
+  background: rgba(244, 63, 94, 0.16);
+  color: #fda4af;
+  border: 1px solid rgba(251, 113, 133, 0.38);
+}
+
 /* ============================================================
    PORTAL DEL ESTUDIANTE (estudiante.html)
    ============================================================ */

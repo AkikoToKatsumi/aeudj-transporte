@@ -286,11 +286,45 @@ async function renderHorarios(group) {
 
   const anyOpen = visible.some(s => !isHorarioExpiredForVoting(s.fullText, cycleDateStr) && !lockedDirs.has(s.dir));
 
+  // Obtener conteo actual de cupos por horario (sin bloquear votación)
+  const countsMap = {};
+  try {
+    const { data: dayVotes } = await supabase
+      .from('votos')
+      .select('horario, matricula, usuario_id')
+      .eq('fecha', cycleDateStr);
+    const seen = new Set();
+    (dayVotes || []).forEach(v => {
+      const hNorm = (v.horario || '').replace('->', '→').trim();
+      const key = `${v.matricula || v.usuario_id}|${hNorm}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        countsMap[hNorm] = (countsMap[hNorm] || 0) + 1;
+      }
+    });
+  } catch (e) {
+    console.warn('No se pudieron cargar conteos de cupos:', e);
+  }
+
   visible.forEach(s => {
     const expired = isHorarioExpiredForVoting(s.fullText, cycleDateStr);
     const dirLocked = lockedDirs.has(s.dir);
     const disabled = expired || dirLocked;
     const isSelected = !disabled && selectedHorarios.includes(s.fullText);
+
+    const hNorm = s.fullText.replace('->', '→').trim();
+    const count = countsMap[hNorm] || 0;
+    const remaining = 30 - count;
+    let quotaBadge = '';
+    if (!expired) {
+      if (count >= 30) {
+        quotaBadge = `<div class="ts-quota ts-quota-wait">⏳ ${count}/30 · Lista de espera</div>`;
+      } else if (remaining <= 5) {
+        quotaBadge = `<div class="ts-quota ts-quota-low">⚠️ ${count}/30 · Quedan ${remaining}</div>`;
+      } else {
+        quotaBadge = `<div class="ts-quota ts-quota-ok">👥 ${count}/30 cupos</div>`;
+      }
+    }
 
     const slot = document.createElement('div');
     slot.className = 'time-slot' + (isSelected ? ' selected' : '') + (disabled ? ' expired' : '');
@@ -303,6 +337,7 @@ async function renderHorarios(group) {
       <div class="ts-time">${s.time}</div>
       <div class="ts-route">${s.route}</div>
       <span class="${s.dir === 'ida' ? 'tag-ida' : 'tag-vuelta'}">${s.dir === 'ida' ? '↗ Ida' : '↙ Vuelta'}</span>
+      ${quotaBadge}
       ${expired ? '<div class="tag-expired">Cerrado · Ya pasó</div>' : (dirLocked ? '<div class="tag-expired">Turno ya registrado</div>' : '<div class="ts-check">✓</div>')}
     `;
     if (!disabled) {
