@@ -56,6 +56,9 @@ BEGIN
     RAISE EXCEPTION 'No autorizado';
   END IF;
 
+  IF to_regclass('public.auditoria_seguridad') IS NOT NULL THEN
+    EXECUTE 'DELETE FROM public.auditoria_seguridad WHERE usuario_id = $1' USING target_user_id;
+  END IF;
   DELETE FROM public.penalidades WHERE usuario_id = target_user_id;
   DELETE FROM public.faltas WHERE usuario_id = target_user_id;
   DELETE FROM public.votos WHERE usuario_id = target_user_id;
