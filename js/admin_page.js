@@ -242,7 +242,9 @@ function initClickEvents() {
   const rankingAdminSearch = document.getElementById('rankingAdminSearch');
   if (rankingAdminSearch) rankingAdminSearch.addEventListener('input', () => filterRankingAdmin());
 
-  // Reset Cuatrimestre Button (Ranking)
+  // Reset Cuatrimestre & Puntos a Todos Buttons (Ranking)
+  const btnPuntosTodosVol = document.getElementById('btnPuntosTodosVol');
+  if (btnPuntosTodosVol) btnPuntosTodosVol.addEventListener('click', () => openTopActionAllVolunteers());
   const btnResetCuatrimestre = document.getElementById('btnResetCuatrimestre');
   if (btnResetCuatrimestre) btnResetCuatrimestre.addEventListener('click', () => resetCuatrimestre());
 
@@ -3094,6 +3096,29 @@ function openTopActionBox(volId, volNombre, volMatricula, volPuntos, volIniciale
   document.getElementById('topActionCantidad')?.focus();
 }
 
+function openTopActionAllVolunteers() {
+  if (!rankingAdminList || rankingAdminList.length === 0) {
+    window.showAdminToast('No hay voluntarios cargados en el ranking.', 'error');
+    return;
+  }
+  const box = document.getElementById('rankingTopActionBox');
+  if (!box) return;
+
+  document.getElementById('topActionVolId').value = '__ALL__';
+  document.getElementById('topActionAvatar').textContent = '👥';
+  document.getElementById('topActionVolName').textContent = 'Asignar Puntos a TODOS los Voluntarios';
+  document.getElementById('topActionVolMeta').textContent = `Se aplicará simultáneamente a ${rankingAdminList.length} voluntarios activos`;
+  document.getElementById('topActionCantidad').value = '';
+  document.getElementById('topActionMotivo').value = '';
+
+  const errDiv = document.getElementById('topActionError');
+  if (errDiv) errDiv.style.display = 'none';
+
+  box.style.display = 'block';
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  document.getElementById('topActionCantidad')?.focus();
+}
+
 function closeTopActionBox() {
   const box = document.getElementById('rankingTopActionBox');
   if (box) box.style.display = 'none';
@@ -3123,18 +3148,42 @@ async function submitTopActionPuntos() {
   submitBtn.textContent = 'Aplicando...';
 
   try {
-    const { error } = await supabase
-      .from('puntos_log')
-      .insert({
-        voluntario_id: volId,
+    if (volId === '__ALL__') {
+      const msg = `¿Confirmas aplicar ${puntos > 0 ? '+' : ''}${puntos} puntos a TODOS los ${rankingAdminList.length} voluntarios activos por "${motivo}"?`;
+      const confirmed = typeof window.aeudjConfirm === 'function'
+        ? await window.aeudjConfirm(msg)
+        : confirm(msg);
+      if (!confirmed) return;
+
+      const rows = rankingAdminList.map(v => ({
+        voluntario_id: v.id,
         puntos: puntos,
         motivo: motivo,
         otorgado_por: currentUser ? currentUser.id : null
-      });
+      }));
 
-    if (error) throw error;
+      for (let i = 0; i < rows.length; i += 100) {
+        const chunk = rows.slice(i, i + 100);
+        const { error } = await supabase.from('puntos_log').insert(chunk);
+        if (error) throw error;
+      }
 
-    window.showAdminToast(`Puntos modificados correctamente (${puntos > 0 ? '+' : ''}${puntos} pts)`, 'success');
+      window.showAdminToast(`✅ ${puntos > 0 ? '+' : ''}${puntos} pts asignados a ${rows.length} voluntarios`, 'success');
+    } else {
+      const { error } = await supabase
+        .from('puntos_log')
+        .insert({
+          voluntario_id: volId,
+          puntos: puntos,
+          motivo: motivo,
+          otorgado_por: currentUser ? currentUser.id : null
+        });
+
+      if (error) throw error;
+
+      window.showAdminToast(`Puntos modificados correctamente (${puntos > 0 ? '+' : ''}${puntos} pts)`, 'success');
+    }
+
     closeTopActionBox();
     loadRankingAdminData(); // Recargar tabla
 

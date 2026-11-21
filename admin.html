@@ -698,15 +698,15 @@
           <div id="topActionError" style="display:none; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:0.5rem; padding:0.5rem 0.75rem; font-size:0.8rem; color:#fca5a5; margin-bottom:0.75rem;"></div>
 
           <!-- FORMULARIO HORIZONTAL -->
-          <div class="flex items-end gap-3 flex-wrap" style="width:100%;">
+          <div class="ranking-action-row">
             <!-- Input Cantidad -->
             <div style="flex:0 0 170px;">
               <label class="text-xs text-gray-400 font-semibold mb-1 block">Puntos (+ / -):</label>
-              <input type="number" id="topActionCantidad" class="premium-input" placeholder="ej: 3 o -3" style="padding:0.5rem 0.75rem;font-size:0.875rem;height:38px;width:100%;margin:0;" required>
+              <input type="number" id="topActionCantidad" class="premium-input" placeholder="ej: 3 o -3" style="padding:0.5rem 0.75rem;font-size:0.875rem;height:40px;width:100%;margin:0;" required>
             </div>
 
             <!-- Botones de atajo rápido -->
-            <div class="flex gap-1 mb-1 items-center">
+            <div class="flex gap-1 items-center" style="margin-bottom:0;">
               <button type="button" class="btn-fast-pt btn-quick-pt" data-pts="3">+3</button>
               <button type="button" class="btn-fast-pt btn-quick-pt" data-pts="5">+5</button>
               <button type="button" class="btn-fast-pt btn-quick-pt" data-pts="10">+10</button>
@@ -714,14 +714,14 @@
             </div>
 
             <!-- Input Motivo -->
-            <div style="flex:1;min-width:260px;">
+            <div style="flex:1;min-width:240px;">
               <label class="text-xs text-gray-400 font-semibold mb-1 block">Motivo de la asignación:</label>
-              <input type="text" id="topActionMotivo" class="premium-input" placeholder="ej: Actividad del comité, apoyo especial..." style="padding:0.5rem 0.75rem;font-size:0.875rem;height:38px;width:100%;margin:0;" required>
+              <input type="text" id="topActionMotivo" class="premium-input" placeholder="ej: Actividad del comité, apoyo especial..." style="padding:0.5rem 0.75rem;font-size:0.875rem;height:40px;width:100%;margin:0;" required>
             </div>
 
             <!-- Botón Aplicar -->
-            <div>
-              <button type="button" id="btnSubmitTopAction" style="height:38px;padding:0 1.25rem;display:flex;align-items:center;gap:0.5rem;background:linear-gradient(135deg,#eab308,#f59e0b);color:#000;font-weight:700;font-size:0.85rem;border:none;border-radius:0.6rem;cursor:pointer;transition:transform 0.15s;">
+            <div style="display:flex;align-items:flex-end;">
+              <button type="button" id="btnSubmitTopAction">
                 ⭐ Aplicar Puntos
               </button>
             </div>
@@ -740,6 +740,9 @@
                 <span class="staff-search-icon">🔍</span>
                 <input class="staff-search-input" type="text" id="rankingAdminSearch" placeholder="Buscar por nombre, matrícula…">
               </div>
+              <button type="button" id="btnPuntosTodosVol" class="btn-pill-outline btn-small" style="color: #fbbf24; border-color: rgba(251, 191, 36, 0.35); white-space:nowrap;">
+                ⭐ Puntos a Todos
+              </button>
               <button type="button" id="btnResetCuatrimestre" class="btn-pill-outline btn-small text-red-400 border-red-500/30 hover:bg-red-500/10" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3); white-space:nowrap;">
                 ⚠️ Reiniciar Cuatrimestre
               </button>
